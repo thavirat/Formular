@@ -1,0 +1,1 @@
+                        $("[for={{$id}}_"+res.content.{{$name}}+"]").click();
