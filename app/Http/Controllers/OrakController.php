@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 class OrakController extends Controller
 {
 
@@ -36,7 +37,7 @@ class OrakController extends Controller
 		//$filename = time().'_'.strtolower($_GET['filename']);
 		$f = $_GET['filename'];
 		$spl = explode('.', $f);
-		$filename = time().'-'.str_random(5).'.'.$spl[sizeof($spl)-1];
+		$filename = time().'-'.\Str::random(5).'.'.$spl[sizeof($spl)-1];
 		$filename = preg_replace("#\\s+#", "_", $filename);
 
 		$cyr = array(
@@ -53,7 +54,7 @@ class OrakController extends Controller
 			$main_path.'/'.($filename),
 			file_get_contents('php://input')
 		);
-        if (array_get(request()->all(), 'type_file')) {
+        if (Arr::get(request()->all(), 'type_file')) {
             return $filename;
         }
 
