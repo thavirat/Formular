@@ -50,7 +50,7 @@ $model = [];
 @endphp
 @foreach($select as $k=>$v)
     @if(!in_array($v, $model))
-    $data['{{ucfirst(str_plural($v))}}'] = {{$v}}::orderBy('{{$select_field[$k]}}')->get();
+    $data['{{ucfirst(\Str::plural($v))}}'] = {{$v}}::orderBy('{{$select_field[$k]}}')->get();
 @php
 $model[] = $v;
 @endphp
@@ -75,7 +75,7 @@ $model = [];
 @endphp
 @foreach($select as $k=>$v)
     @if(!in_array($v, $model))
-    $data['{{ucfirst(str_plural($v))}}'] = {{$v}}::orderBy('{{$select_field[$k]}}')->get();
+    $data['{{ucfirst(\Str::plural($v))}}'] = {{$v}}::orderBy('{{$select_field[$k]}}')->get();
 @php
 $model[] = $v;
 @endphp
@@ -110,7 +110,7 @@ $model[] = $v;
             @include('install.skeleton.request_input_'.$input_in_form[$key] , ['name'=>$key , 'checkbox'=>(isset($checkbox[$key])? $checkbox[$key] : []) , 'model_name'=>$model_name])
 @endif
 @endforeach
-            
+
             DB::beginTransaction();
             try {
                 ${{$model_name}} = new {{$model_name}};
@@ -140,8 +140,8 @@ $model[] = $v;
                 $return['title'] = __('messages.error');
                 $return['content'].= 'จำเป็นต้องระบุฟิล{{$key}}<br>';
             }
-@endif 
-@endforeach @endif 
+@endif
+@endforeach @endif
 @if(isset($unique_field))
     @foreach ($unique_field as $key=>$unique)
         @if($unique=="T")
@@ -209,7 +209,7 @@ $model = [];
 @endphp
 @foreach($select as $k=>$v)
     @if(!in_array($v, $model))
-    $data['{{ucfirst(str_plural($v))}}'] = {{$v}}::orderBy('{{$select_field[$k]}}')->get();
+    $data['{{ucfirst(\Str::plural($v))}}'] = {{$v}}::orderBy('{{$select_field[$k]}}')->get();
 @php
 $model[] = $v;
 @endphp
@@ -245,7 +245,7 @@ $model[] = $v;
             @include('install.skeleton.request_edit_input_'.$input_in_form[$key] , ['name'=>$key , 'checkbox'=>(isset($checkbox[$key])? $checkbox[$key] : []) , 'model_name'=>$model_name])
 @endif
 @endforeach
-            
+
             DB::beginTransaction();
             try {
                 ${{$model_name}} = {{$model_name}}::find($id);
@@ -275,8 +275,8 @@ $model[] = $v;
                 $return['title'] = __('messages.error');
                 $return['content'].= 'จำเป็นต้องระบุฟิล{{$key}}<br>';
             }
-@endif 
-@endforeach @endif 
+@endif
+@endforeach @endif
 @if(isset($unique_field))
     @foreach ($unique_field as $key=>$unique)
         @if($unique=="T")
@@ -288,7 +288,7 @@ if(isset($failedRules['{{$key}}']['Unique'])) {
     @endif
 @endforeach
 @endif
-            
+
         }
         return $return;
     }

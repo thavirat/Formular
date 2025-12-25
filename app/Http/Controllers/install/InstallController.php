@@ -72,7 +72,7 @@ class InstallController extends Controller
         $model = '\\App\Models\\'.$request->input('model');
         $m = new $model;
         $table = $m->getTable();
-        return DB::select('SHOW COLUMNS FROM '.env('DB_PREFIX').$table); 
+        return DB::select('SHOW COLUMNS FROM '.env('DB_PREFIX').$table);
     }
 
     public function genModel($input){
@@ -85,7 +85,7 @@ class InstallController extends Controller
         if(!Storage::disk('models')->exists($path)){
             Storage::disk('models')->put($path, $default_view);
         }
-        
+
         return $default_view;
     }
 
@@ -128,11 +128,12 @@ class InstallController extends Controller
             $menu = new Menu;
             $menu->icon = 'fa fa-th-large';
             $menu->url = $model_name;
-            $menu->title = $menu_name;
+            $menu->title_th = $menu_name;
+            $menu->title_en = $menu_name;
             $menu->show = 'T';
             $menu->sort_id = 1;
             $menu->save();
-            
+
             $crudMenu = new CrudMenu;
             $crudMenu->user_id = 1;
             $crudMenu->menu_id = $menu->id;

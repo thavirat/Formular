@@ -90,7 +90,7 @@
                                                             $logo = ( sizeof( $logo ) > 0 ? $logo[0] : null );
                                                         }
                                                     @endphp
-                                                    <img src="{{ asset('uploads/SettingSystem/'.$logo) }}" alt="">
+                                                    <img src="{{ asset('uploads/SettingSystem/'.$logo) }}" alt="" class="w-50">
                                                 </a>
                                                 <h1 class="text-170">
                                                     <span class="text-blue-d1">
@@ -123,13 +123,18 @@
                                                         </label>
                                                     </div>
                                                 </div>
+                                                <div class="form-group col-sm-10 offset-sm-1 col-md-8 offset-md-2 mt-2 mt-md-1">
+                                                    <select id="lang"  class="form-control">
+                                                        <option value="en">English</option>
+                                                        <option value="th">ไทย</option>
+                                                    </select>
+                                                </div>
 
                                                 <div class="form-group col-sm-10 offset-sm-1 col-md-8 offset-md-2">
                                                     <label class="d-inline-block mt-3 mb-0 text-dark-l1">
                                                         <input type="checkbox" class="mr-1" name="remember_me" id="id-remember-me">
                                                         Remember me
                                                     </label>
-
                                                     <button type="submit" class="btn btn-primary btn-block px-4 btn-bold mt-2 mb-4">
                                                         Sign In
                                                     </button>
@@ -198,7 +203,7 @@
                 if(url_redirect){
                     window.location = url_redirect;
                 }else{
-                    window.location = "{{url('/admin')}}";
+                    window.location = "{{url('/admin')}}/"+$('#lang').val();
                 }
             }
         }).fail(function(res){

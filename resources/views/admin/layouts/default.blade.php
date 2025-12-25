@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <base href="../" />
 
-    <title>Dashboard - Ace Admin</title>
+    <title>{{$currentMenu ? $currentMenu->{'title_'.$lang}.' | ':'' }} Formular CRM</title>
 
     <!-- include common vendor stylesheets & fontawesome -->
     <link rel="stylesheet" type="text/css" href="{{asset('assets/admin/node_modules/bootstrap/dist/css/bootstrap.css')}}">
@@ -134,14 +134,14 @@
                                     @if ( isset($my_menu_permission['Profile']['u']) && $my_menu_permission['Profile']['u'] == 'T' )
                                     <a class="mt-1 dropdown-item btn btn-outline-grey bgc-h-primary-l3 btn-h-light-primary btn-a-light-primary" href="{{ url('admin/Profile') }}">
                                         <i class="fa fa-user-circle text-primary-m1 text-105 mr-1"></i>
-                                        ข้อมูลส่วนตัว
+                                        {{__('Profile')}}
                                     </a>
                                     @endif
 
                                     @if ( isset($my_menu_permission['SettingSystem']['u']) && $my_menu_permission['SettingSystem']['u'] == 'T' )
                                         <a class="dropdown-item btn btn-outline-grey bgc-h-success-l3 btn-h-light-success btn-a-light-success" href="{{ url('admin/SettingSystem') }}">
                                             <i class="fa fa-cog text-success-m1 text-105 mr-1"></i>
-                                            ตั้งค่าระบบ
+                                            {{__('SystemSetting')}}
                                         </a>
                                     @endif
 
@@ -149,7 +149,7 @@
 
                                     <a class="dropdown-item btn btn-outline-grey bgc-h-secondary-l3 btn-h-light-secondary btn-a-light-secondary" href="{{ url('admin/Logout') }}">
                                         <i class="fa fa-power-off text-warning-d1 text-105 mr-1"></i>
-                                        ออกจากระบบ
+                                        {{__('Logout')}}
                                     </a>
                                 </div>
                             </li><!-- /.nav-item:last -->
@@ -171,18 +171,18 @@
                         <ul class="nav has-active-border active-on-right">
 
                             @php
-                                function recursiveMenu($Menus, $currentMenu = null)
+                                function recursiveMenu($Menus, $currentMenu = null , $lang , $main_menu)
                                 {
                                     $htmlMenu = '';
                                     foreach ($Menus as $key => $Menu) {
-                                        $SubMenu = ( sizeof($Menu->SubMenu) > 0 ? null : url('admin/'.$Menu->url ) );
+                                        $SubMenu = ( sizeof($Menu->SubMenu) > 0 ? null : url('admin/'.$lang.'/'.$Menu->url ) );
                                         $dropdown_toggle = ( sizeof($Menu->SubMenu) > 0 ? 'dropdown-toggle collapsed' : '' );
                                         $htmlMenu .= '
                                                         <li class="nav-item nav-item-menu '. ( $currentMenu && $currentMenu->url == $Menu->url ? 'active' : '' ) .'" id="'. ( $currentMenu && $currentMenu->url == $Menu->url ? 'active_menu' : '' ) .'" >
                                                             <a href="'.$SubMenu.'" class="nav-link '.$dropdown_toggle.'">
-                                                                '.( $Menu->icon ? '<i class=" nav-icon '.$Menu->icon.'"></i>' : '' ).'
+                                                                '.( $main_menu&&$Menu->icon ? '<i class=" nav-icon '.$Menu->icon.'"></i>' : '' ).'
                                                                 <span class="nav-text fadeable">
-                                                                    <span>'.$Menu->title.'</span>
+                                                                    <span>'.$Menu->{'title_'.$lang}.'</span>
                                                                 </span>
                                                                 '. ( !$SubMenu ? '<b class="caret fa fa-angle-left rt-n90"></b>' : '' ) .'
                                                             </a>
@@ -193,7 +193,7 @@
                                                             <div class="hideable submenu collapse">
                                                                 <ul class="submenu-inner">
                                                         ';
-                                            $htmlMenu .= recursiveMenu($Menu->SubMenu, $currentMenu);
+                                            $htmlMenu .= recursiveMenu($Menu->SubMenu, $currentMenu , $lang , false);
                                             $htmlMenu .='
                                                                 </ul>
                                                             </div>
@@ -211,7 +211,7 @@
 
                             @endphp
 
-                            {!! recursiveMenu($SidebarMenus, $currentMenu) !!}
+                            {!! recursiveMenu($SidebarMenus, $currentMenu , $lang , true) !!}
 
                         </ul>
                     </div>
@@ -304,7 +304,11 @@
     {{-- typeahead --}}
 
     @yield('js')
+    <script>
+        $.fn.modal.Constructor.prototype._enforceFocus = function() {};
+    </script>
     @stack('scripts')
+
 </body>
 
 </html>

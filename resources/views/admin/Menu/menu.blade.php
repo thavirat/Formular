@@ -85,8 +85,15 @@
 
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="add_title" class=""> ชื่อเมนู </label>
-                                    <input type="text" class="form-control" name="title" id="add_title" value="">
+                                    <label for="add_title" class=""> ชื่อเมนูไทย </label>
+                                    <input type="text" class="form-control" name="title_th" id="add_title" value="">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="add_title_en" class=""> ชื่อเมนูอังกฤษ </label>
+                                    <input type="text" class="form-control" name="title_en" id="add_title_en" value="">
                                 </div>
                             </div>
 
@@ -163,7 +170,7 @@
                                     <select class="form-control w-100" id="edit_main_menu_id" name="main_menu_id" >
                                         <option value="">เมนูหลัก</option>
                                         @foreach ($Menus as $Menu)
-                                            <option value="{{ $Menu->id }}">{{ $Menu->title }}</option>
+                                            <option value="{{ $Menu->id }}">{{ $Menu->title_th }} | {{ $Menu->title_en }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -171,8 +178,15 @@
 
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="edit_title" class=""> ชื่อเมนู </label>
-                                    <input type="text" class="form-control" name="title" id="edit_title" value="">
+                                    <label for="edit_title_th" class=""> ชื่อเมนูไทย </label>
+                                    <input type="text" class="form-control" name="title_th" id="edit_title_th" value="">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="edit_title_en" class=""> ชื่อเมนูอังกฤษ </label>
+                                    <input type="text" class="form-control" name="title_en" id="edit_title_en" value="">
                                 </div>
                             </div>
 
@@ -249,8 +263,8 @@
         		},
 
         		"columns": [
-        			{"data" : "main_menu_title", "name": 'main_menus.title'},
-        			{"data" : "title"},
+        			{"data" : "main_menu_title", "name": 'main_menus.title_th'},
+        			{"data" : "title_th"},
         			{"data" : "url"},
         			{"data" : "icon"},
         			{"data" : "sort_id"},
@@ -289,6 +303,8 @@
                 $('#edit_url').val(rec.url);
                 $('#edit_sort_id').val(rec.sort_id);
                 $('#edit_show').val(rec.show);
+                $('#edit_title_th').val(rec.title_th);
+                $('#edit_title_en').val(rec.title_en);
 
                 resetButton(btn)
                 ShowModal('ModalEdit');

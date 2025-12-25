@@ -61,14 +61,14 @@ class MenuController extends Controller
              return json_encode($return);
          }
          $validator = Validator::make($request->all(), [
-             'title'=>'required',
              'url'=>'required',
          ]);
          if (!$validator->fails()) {
              $menu = new Menu;
              $menu->main_menu_id = $request->input('main_menu_id');
              $menu->icon = $request->input('icon');
-             $menu->title = $request->input('title');
+             $menu->title_th = $request->input('title_th');
+             $menu->title_en = $request->input('title_en');
              $menu->url = $request->input('url');
              $menu->show = $request->input('show');
              $menu->sort_id = $request->input('sort_id');
@@ -142,14 +142,14 @@ class MenuController extends Controller
              return json_encode($return);
          }
          $validator = Validator::make($request->all(), [
-             'title'=>'required',
              'url'=>'required',
          ]);
          if (!$validator->fails()) {
              $menu = Menu::find($id);
              $menu->main_menu_id = $request->input('main_menu_id');
              $menu->icon = $request->input('icon');
-             $menu->title = $request->input('title');
+             $menu->title_th = $request->input('title_th');
+             $menu->title_en = $request->input('title_en');
              $menu->url = $request->input('url');
              $menu->show = $request->input('show');
              $menu->sort_id = $request->input('sort_id');
@@ -216,7 +216,7 @@ class MenuController extends Controller
 
     public function lists(Request $request)
     {
-        $result = Menu::select('menus.*','main_menus.title as main_menu_title')
+        $result = Menu::select('menus.*','main_menus.title_th as main_menu_title')
                       ->leftJoin('menus as main_menus','main_menus.id','menus.main_menu_id');
 
         return DataTables::of($result)
