@@ -7,5 +7,10 @@ use App\Http\Controllers\Controller;
 
 class AdminController extends Controller
 {
-    //
+    public $lang;
+
+    public function __construct(Request $request)
+    {
+        $this->lang = config('app.fallback_locale', 'en');
+    }
 }

@@ -232,6 +232,13 @@
                             </div>
 
                             <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="add_price">ราคา</label>
+                                    <input type="text" name="price" id="add_price" class="form-control " >
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12">
                             <div class="custom-control custom-checkbox">
                                 <input type="checkbox" class="custom-control-input" name="active" value="T" id="add_active" >
                                 <label class="custom-control-label" for="add_active" value="T">เปิดใช้งาน</label>
@@ -386,6 +393,13 @@
                                 <div class="form-group">
                                     <label for="edit_cube">คิว</label>
                                     <input type="text" name="cube" id="edit_cube" class="form-control " >
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="edit_price">ราคา</label>
+                                    <input type="text" name="price" id="edit_price" class="form-control " >
                                 </div>
                             </div>
 
@@ -567,6 +581,7 @@
             $("#edit_height").val(res.content.height);
             $("#edit_length").val(res.content.length);
             $("#edit_weight").val(res.content.weight);
+            $("#edit_price").val(res.content.price);
             $("#edit_cube").val(res.content.cube);
             if(res.content.active=='T'){
                             $("#edit_active").prop('checked' , 'checked');

@@ -4,6 +4,7 @@ use Session;
 use \App\Models\User;
 use \App\Models\Order;
 use \App\Models\Live;
+use NumberFormatter;
 class Help
 {
     public static function DateThai($strDate , $format ='d/m/Y' , $para = '/')
@@ -85,6 +86,13 @@ class Help
     {
         $dateSplit = explode($para, $date);
         return $dateSplit[2].'-'.$dateSplit[1].'-'.$dateSplit[0];
+    }
+
+    public static function numberToWords($number , $symbol) {
+        $formatter = new NumberFormatter("en", NumberFormatter::SPELLOUT);
+        $cleanNumber = str_replace(',', '', $number);
+        $words = $formatter->format($cleanNumber);
+        return strtoupper($words) . ' ' . $symbol;
     }
 
 

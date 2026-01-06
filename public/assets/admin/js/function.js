@@ -82,13 +82,14 @@ function resetButton(btn){
 
 if($('.init-date').length>0){
     $('.init-date').datepicker({
-        format : 'dd/mm/yyyy',
-        language: 'th',
+        format : 'yyyy-mm-dd',
         minView : 2,
         startView : 0,
         autoclose : true,
-        thaiyear: true              //Set เป็นปี พ.ศ
-    }).datepicker("setDate", "0");  //กำหนดเป็นวันปัจุบัน
+        thaiyear: true,
+        todayBtn: "linked",
+        todayHighlight: true
+    });
 }
 
 if($('.init-time').length>0){
@@ -115,7 +116,8 @@ $('.modal').on('shown.bs.modal', function() {
 function ajaxFail(res , form){
     var res = $.parseJSON(res.responseText);
     var str = "กรุณาถ่ายรูปหน้าจอนี้ให้กับเจ้าหน้าที่\n\r"+res.message+"\n\r"+res.exception+"\n\r"+res.file+" Line : "+res.line;
-    swal("โอ๊ะโอ! ขอโทษด้วยมีบางอย่างผิดพลาด",str,'error');
+
+    Swal.fire('Please photo send to programmer.', str,'error');
     if(form){
         resetButton(form.find('button[type=submit]'));
     }

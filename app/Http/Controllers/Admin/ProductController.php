@@ -89,7 +89,7 @@ class ProductController extends AdminController
             $weight = $request->input('weight');
             $cube = $request->input('cube');
             $active = $request->input('active' , 'F');
-
+            $user = Auth::user();
             DB::beginTransaction();
             try {
                 $Product = new Product;
@@ -109,6 +109,7 @@ class ProductController extends AdminController
                 $Product->weight = $weight;
                 $Product->cube = $cube;
                 $Product->active = $active;
+                $Product->status_id = 1;
                 $Product->save();
                 DB::commit();
                 $return['status'] = 1;
@@ -341,6 +342,33 @@ class ProductController extends AdminController
         $data['result'] = $result->get();
 
         return view('admin.Product.product_export_pdf', $data);
+    }
+
+    public function Search(Request $request) {
+        $q = $request->input('q');
+
+        $products = Product::where('code', 'LIKE', '%' . $q . '%')
+            ->orWhere('name_th', 'LIKE', '%' . $q . '%')
+            ->orWhere('name_en', 'LIKE', '%' . $q . '%')
+            ->orWhere('name_cn', 'LIKE', '%' . $q . '%')
+            ->limit(20)
+            ->get();
+
+        $items = [];
+        foreach ($products as $product) {
+            $items[] = [
+                'id' => $product->id,
+                'text' => $product->code . ' : ' . $product->name_en,
+                'drawing' => $product->drawing_no,
+                'description' => $product->name_en,
+                'price' => $product->unit_price ?? 0
+            ];
+        }
+
+        // ส่งกลับตามรูปแบบที่ Select2 และสคริปต์หน้าบ้านต้องการ
+        return response()->json([
+            'items' => $items
+        ]);
     }
 
 }

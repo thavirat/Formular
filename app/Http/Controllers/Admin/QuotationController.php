@@ -1,0 +1,408 @@
+<?php
+namespace App\Http\Controllers\Admin;
+
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Models\Menu;
+use App\Models\Quotation;
+use DataTables;
+use Help;
+use DB;
+use Validator;
+use Storage;
+use Auth;
+use App\Models\Customer;
+use App\Models\Incoterm;
+use App\Models\Currency;
+use App\Models\CreditPayment;
+use App\Models\QuotationProduct;
+class QuotationController extends AdminController
+{
+    public $current_menu;
+
+    public function __construct() {
+        $this->current_menu = 'Quotation';
+    }
+
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        $permission = Help::CheckPermissionMenu($this->current_menu , 'r');
+        if(!$permission){
+            return redirect('/admin/PermissionDenined');
+        }
+        $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
+        $data['SidebarMenus'] = Menu::Active()->get();
+        $data['Customers'] = Customer::orderBy('company_name')->get();
+        $data['Incoterms'] = Incoterm::orderBy('code')->get();
+        $data['Currencies'] = Currency::orderBy('name')->get();
+        $data['CreditPayments'] = CreditPayment::orderBy('name')->get();
+        return view('admin.Quotation.quotation',$data);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        $data['SidebarMenus'] = Menu::Active()->get();
+        $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
+        $data['Customers'] = Customer::orderBy('company_name')->get();
+        $data['Incoterms'] = Incoterm::orderBy('code')->get();
+        $data['Currencies'] = Currency::orderBy('name')->get();
+        $data['CreditPayments'] = CreditPayment::orderBy('name')->get();
+        return view('admin.Quotation.quotation_create',$data);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        $permission = Help::CheckPermissionMenu($this->current_menu , 'c');
+        if(!$permission){
+            return redirect('/admin/PermissionDenined');
+        }
+        $validator = Validator::make($request->all(), [
+        ]);
+        if (!$validator->fails()) {
+            $customer_id = $request->input('customer_id');
+            $contact_name = $request->input('contact_name');
+            $company_name = $request->input('company_name');
+            $tax_id = $request->input('tax_id');
+            $address = $request->input('address');
+            $phone = $request->input('phone');
+            $mobile = $request->input('mobile');
+            $fax_no = $request->input('fax_no');
+            $currency_id = $request->input('currency_id');
+            $credit_payment_id = $request->input('credit_payment_id');
+            $incoterm_id = $request->input('incoterm_id');
+            $grand_total = str_replace(',' , '' , $request->input('grand_total'));
+            $product = $request->input('product');
+            $drawing = $request->input('drawing');
+            $customer_code = $request->input('customer_code');
+            $description = $request->input('description');
+            $qty = $request->input('qty');
+            $unit_price = $request->input('unit_price');
+            $amount = $request->input('amount');
+            $doc_date = $request->input('doc_date');
+            $user = Auth::user();
+
+            $check = Quotation::where('doc_date' , $doc_date)->orderBy('run_no' , 'desc')->first();
+            if($check){
+                $run_no = $check->run_no + 1;
+            }else{
+                $run_no = 1;
+            }
+            $doc_no = 'QT'.date('ymd').sprintf('%03d' , $run_no);
+
+            DB::beginTransaction();
+            try {
+                $Quotation = new Quotation;
+                $Quotation->customer_id = $customer_id;
+                $Quotation->contact_name = $contact_name;
+                $Quotation->company_name = $company_name;
+                $Quotation->tax_id = $tax_id;
+                $Quotation->address = $address;
+                $Quotation->phone = $phone;
+                $Quotation->mobile = $mobile;
+                $Quotation->fax_no = $fax_no;
+                $Quotation->currency_id = $currency_id;
+                $Quotation->credit_payment_id = $credit_payment_id;
+                $Quotation->incoterm_id = $incoterm_id;
+                $Quotation->doc_no = $doc_no;
+                $Quotation->run_no = $run_no;
+                $Quotation->doc_date = $doc_date;
+                $Quotation->subtotal = $grand_total;
+                $Quotation->total = $grand_total;
+                $Quotation->status_id = 1;
+                $Quotation->created_by = $user->id;
+                $Quotation->save();
+                $quotation_detail = [];
+                foreach($product as $key => $value) {
+                    if($value){
+                        $quotation_detail[] =[
+                            'quotation_id' => $Quotation->id,
+                            'product_id' => $value,
+                            'drawing' => $drawing[$key],
+                            'cus_code' => $customer_code[$key],
+                            'detail_eng' => $description[$key],
+                            'qty' => $qty[$key],
+                            'price_per_item' => $unit_price[$key],
+                            'total_price' => $amount[$key],
+                        ];
+                    }
+                }
+
+                QuotationProduct::insert($quotation_detail);
+
+
+
+
+                DB::commit();
+                $return['status'] = 1;
+                $return['title'] = __('messages.save');
+                $return['content'] = __('messages.success');
+            } catch (Exception $e) {
+                DB::rollBack();
+                $return['status'] = 0;
+                $return['title'] = __('messages.error');
+                $return['content'] = $e->getMessage();
+            }
+        }else{
+            $failedRules = $validator->failed();
+            $return['content'] = '';
+
+        }
+        return $return;
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        $Quotation = Quotation::find($id);
+
+                $return['status'] = 1;
+                $return['title'] = 'Get Quotation';
+                $return['content'] = $Quotation;
+                return $return;
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        $data['SidebarMenus'] = Menu::Active()->get();
+        $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
+        $data['Customers'] = Customer::orderBy('company_name')->get();
+        $data['Incoterms'] = Incoterm::orderBy('code')->get();
+        $data['Currencies'] = Currency::orderBy('name')->get();
+        $data['CreditPayments'] = CreditPayment::orderBy('name')->get();
+        return view('admin.Quotation.quotation_edit',$data);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        $permission = Help::CheckPermissionMenu($this->current_menu , 'u');
+        if(!$permission){
+            return redirect('/admin/PermissionDenined');
+        }
+        $validator = Validator::make($request->all(), [
+        ]);
+        if (!$validator->fails()) {
+            $customer_id = $request->input('customer_id');
+            $contact_name = $request->input('contact_name');
+            $company_name = $request->input('company_name');
+            $tax_id = $request->input('tax_id');
+            $address = $request->input('address');
+            $phone = $request->input('phone');
+            $mobile = $request->input('mobile');
+            $fax_no = $request->input('fax_no');
+            $currency_id = $request->input('currency_id');
+            $credit_payment_id = $request->input('credit_payment_id');
+
+            DB::beginTransaction();
+            try {
+                $Quotation = Quotation::find($id);
+                $Quotation->customer_id = $customer_id;
+                $Quotation->contact_name = $contact_name;
+                $Quotation->company_name = $company_name;
+                $Quotation->tax_id = $tax_id;
+                $Quotation->address = $address;
+                $Quotation->phone = $phone;
+                $Quotation->mobile = $mobile;
+                $Quotation->fax_no = $fax_no;
+                $Quotation->currency_id = $currency_id;
+                $Quotation->credit_payment_id = $credit_payment_id;
+                $Quotation->save();
+                DB::commit();
+                $return['status'] = 1;
+                $return['title'] = __('messages.save');
+                $return['content'] = __('messages.success');
+            } catch (Exception $e) {
+                DB::rollBack();
+                $return['status'] = 0;
+                $return['title'] = __('messages.error');
+                $return['content'] = $e->getMessage();
+            }
+        }else{
+            $failedRules = $validator->failed();
+            $return['content'] = '';
+
+        }
+        return $return;
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        DB::beginTransaction();
+        try {
+            $Quotation = Quotation::find($id);
+
+            Quotation::where('id' , $id)->delete();
+
+            DB::commit();
+            $return['status'] = 1;
+            $return['content'] = __('messages.success');
+        }catch (Exception $e) {
+            DB::rollBack();
+            $return['status'] = 0;
+            $return['title'] = __('messages.error');
+            $return['content'] = $e->getMessage();
+        }
+        $return['title'] = __('messages.delete_data');
+        return $return;
+    }
+
+    /**
+     * Show Data With Datatable from storage.
+     *
+     * @param   \Illuminate\Http\Request  $request
+     * @return  \Illuminate\Http\Response
+     */
+    public function report(){
+        $result = Quotation::leftJoin('admin_users' , 'quotations.created_by', '=', 'admin_users.id')
+        ->select(
+            'quotations.*'
+            , 'admin_users.firstname as created_by_name'
+            , 'admin_users.lastname as created_by_lastname'
+        );
+        return $result;
+    }
+
+    public function lists(Request $request)
+    {
+        $result = $this->report($request);
+        $lang = $this->lang;
+        return DataTables::of($result)
+        ->addColumn('total', function($rec) {
+            return number_format($rec->total , 2);
+        })
+        ->addColumn('created_by_name', function($rec) {
+            return $rec->created_by_name.' '.$rec->created_by_lastname;
+        })
+        ->addColumn('btn-view', function($rec) use ($lang){
+            $btnView = '<a href="'.url('admin/'.$lang.'/Quotation/'.$rec->id).'/pdf" class="btn btn-xs btn-info btn-view" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="ดูรายละเอียด">
+            <i class="fa fa-eye"></i>
+            </a> ';
+            return $btnView;
+        })
+        ->addColumn('btn-edit', function($rec){
+            $btnEdit = '<button class="btn btn-xs btn-warning btn-edit" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="แก้ไข">
+            <i class="fa fa-edit"></i>
+            </button> ';
+            return $btnEdit;
+        })
+        ->addColumn('btn-delete', function($rec){
+            $btnDelete = '<button class="btn btn-xs btn-danger btn-delete" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="ลบ">
+            <i class="fa fa-trash"></i>
+            </button> ';
+            return $btnDelete;
+        })
+        ->addColumn('action', function($rec){
+            $btnEdit = '<button class="btn btn-xs btn-warning btn-edit" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="แก้ไข">
+            <i class="fa fa-edit"></i>
+            </button> ';
+            $btnDelete = '<button class="btn btn-xs btn-danger btn-delete" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="ลบ">
+            <i class="fa fa-trash"></i>
+            </button> ';
+            $update = Help::CheckPermissionMenu($this->current_menu , 'u');
+            $str = '';
+            if($update){
+                $str.=$btnEdit;
+            }
+            $delete = Help::CheckPermissionMenu($this->current_menu , 'd');
+            if($delete){
+                $str.=$btnDelete;
+            }
+
+            return $str;
+        })
+        ->addIndexColumn()
+        ->rawColumns(['action' , 'btn-view' , 'btn-edit' , 'btn-delete'])
+        ->make(true);
+    }
+
+    public function export_excel(Request $request){
+        $result = $this->report($request);
+        $data['result'] = $result->get();
+
+        \Excel::create('รายงาน Quotation ', function ($excel) use ($data) {
+            $excel->sheet('รายงาน Quotation', function ($sheet) use ($data) {
+                $sheet->loadView('admin.Quotation.quotation_export_excel', $data);
+            });
+        })->export('xlsx');
+    }
+
+    public function export_print(Request $request){
+        $result = $this->report($request);
+        $data['result'] = $result->get();
+
+
+        $pdf = \PDF::loadView('admin.Quotation.quotation_export_print', $data);
+        return $pdf->stream('Quotation.pdf');
+    }
+
+    public function export_pdf(Request $request){
+        $result = $this->report($request);
+        $data['result'] = $result->get();
+
+        return view('admin.Quotation.quotation_export_pdf', $data);
+    }
+
+    public function view_pdf($id){
+        $data['Quotation'] = Quotation::with(['products'=>function($q){
+            $q->leftJoin('products' , 'quotation_products.product_id', '=', 'products.id');
+            $q->select(
+                'quotation_products.*'
+                , 'products.code as part_no'
+            );
+        }])
+        ->leftJoin('currencies' , 'quotations.currency_id', '=', 'currencies.id')
+        ->leftJoin('credit_payments' , 'quotations.credit_payment_id', '=', 'credit_payments.id')
+        ->leftJoin('admin_users' , 'quotations.created_by', '=', 'admin_users.id')
+        ->select(
+            'quotations.*'
+            , 'currencies.name as currency_name'
+            , 'currencies.symbol'
+            , 'credit_payments.name as credit_payment_name'
+            , 'admin_users.firstname'
+            , 'admin_users.lastname'
+        )
+        ->find($id);
+        $pdf = \PDF::loadView('admin.Quotation.quotation_pdf', $data);
+        return $pdf->stream('Quotation.pdf');
+    }
+
+}
