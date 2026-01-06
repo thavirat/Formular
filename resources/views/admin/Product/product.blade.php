@@ -424,8 +424,7 @@
 <script type="text/javascript">
 
     var tableProduct = $('#tableProduct').dataTable({
-        scrollY : height-500,
-        scrollX : true,
+
         "ajax": {
             "url": url_gb+"/admin/Product/Lists",
             "type": "POST",

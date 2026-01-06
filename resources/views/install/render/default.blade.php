@@ -3,7 +3,7 @@
 @@section('title', $currentMenu->title)
 
 @@push('css')
-	
+
 @@endpush
 
 @@section('body')
@@ -163,8 +163,7 @@
 <script type="text/javascript">
 
     var table{{ $model_name }} = $('#table{{ $model_name }}').dataTable({
-        scrollY : height-500,
-        scrollX : true,
+
         "ajax": {
             "url": url_gb+"/admin/{{$model_name}}/Lists",
             "type": "POST",
@@ -184,9 +183,9 @@
             {"data": "{{$k}}", "name": '{{$k}}'},
 @endforeach
             {
-                "data": "action" , 
-                "name": "action", 
-                "searchable": false, 
+                "data": "action" ,
+                "name": "action",
+                "searchable": false,
                 "sortable": false,
                 "class": "text-center"
             },
@@ -251,7 +250,7 @@ table{{ $model_name }}.api().ajax.reload();
                 ajaxFail(res , form);
             });
     });
-    
+
     $('body').on('click', '.btn-delete', function(){
         var id = $(this).data('id');
         Swal.fire({
@@ -297,7 +296,7 @@ table{{ $model_name }}.api().ajax.reload();
         }).done(function( res ) {
             resetButton(btn);
             @foreach($field_in_form as $k=>$input)
-            @if($input == "on") 
+            @if($input == "on")
             @include('install.skeleton.edit_'.$input_in_form[$k],['name'=>$k , 'id'=>'edit_'.$k ,'label'=>$name_in_form[$k] , 'radio'=>(isset($radio[$k]) ? $radio[$k]:''), 'checkbox'=>(isset($checkbox[$k]) ? $checkbox[$k]:'') ,'select_type'=>(isset($select_type[$k]) ? $select_type[$k] : '')])
             @endif
             @endforeach
@@ -309,7 +308,7 @@ table{{ $model_name }}.api().ajax.reload();
     });
 
 @foreach($field_in_form as $k => $input)
-@if($input == "on") 
+@if($input == "on")
 @include('install.skeleton.init_js_'.$input_in_form[$k],['name'=>$k , 'id'=>'add_'.$k ,'label'=>$name_in_form[$k] , 'radio'=>(isset($radio[$k]) ? $radio[$k]:''), 'checkbox'=>(isset($checkbox[$k]) ? $checkbox[$k]:'')])
 @endif
 @endforeach

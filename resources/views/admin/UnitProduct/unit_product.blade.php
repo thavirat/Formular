@@ -3,7 +3,7 @@
 @section('title', $currentMenu->title)
 
 @push('css')
-	
+
 @endpush
 
 @section('body')
@@ -151,8 +151,7 @@
 <script type="text/javascript">
 
     var tableUnitProduct = $('#tableUnitProduct').dataTable({
-        scrollY : height-500,
-        scrollX : true,
+
         "ajax": {
             "url": url_gb+"/admin/UnitProduct/Lists",
             "type": "POST",
@@ -170,9 +169,9 @@
             {"data": "DT_RowIndex", 'searchable': false, 'orderable': false, "class": "text-center"},
             {"data": "name", "name": 'name'},
             {
-                "data": "action" , 
-                "name": "action", 
-                "searchable": false, 
+                "data": "action" ,
+                "name": "action",
+                "searchable": false,
                 "sortable": false,
                 "class": "text-center"
             },
@@ -231,7 +230,7 @@
                 ajaxFail(res , form);
             });
     });
-    
+
     $('body').on('click', '.btn-delete', function(){
         var id = $(this).data('id');
         Swal.fire({
@@ -276,15 +275,15 @@
             dataType: 'json',
         }).done(function( res ) {
             resetButton(btn);
-                         
-            $("#edit_name").val(res.content.name);                        
+
+            $("#edit_name").val(res.content.name);
             $('#ModalEdit').modal('show');
         }).fail(function(res){
             ajaxFail(res , "");
         });
     });
 
- 
+
 
 
 </script>

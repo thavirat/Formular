@@ -3,7 +3,7 @@
 @section('title', $currentMenu->title)
 
 @push('css')
-	
+
 @endpush
 
 @section('body')
@@ -162,8 +162,7 @@
 <script type="text/javascript">
 
     var tableIncoterm = $('#tableIncoterm').dataTable({
-        scrollY : height-500,
-        scrollX : true,
+
         "ajax": {
             "url": url_gb+"/admin/Incoterm/Lists",
             "type": "POST",
@@ -182,9 +181,9 @@
             {"data": "code", "name": 'code'},
             {"data": "description", "name": 'description'},
             {
-                "data": "action" , 
-                "name": "action", 
-                "searchable": false, 
+                "data": "action" ,
+                "name": "action",
+                "searchable": false,
                 "sortable": false,
                 "class": "text-center"
             },
@@ -243,7 +242,7 @@
                 ajaxFail(res , form);
             });
     });
-    
+
     $('body').on('click', '.btn-delete', function(){
         var id = $(this).data('id');
         Swal.fire({
@@ -288,17 +287,17 @@
             dataType: 'json',
         }).done(function( res ) {
             resetButton(btn);
-                         
-            $("#edit_code").val(res.content.code);                                     
-            $("#edit_description").val(res.content.description);                        
+
+            $("#edit_code").val(res.content.code);
+            $("#edit_description").val(res.content.description);
             $('#ModalEdit').modal('show');
         }).fail(function(res){
             ajaxFail(res , "");
         });
     });
 
- 
- 
+
+
 
 
 </script>

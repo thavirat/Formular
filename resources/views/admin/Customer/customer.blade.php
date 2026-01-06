@@ -3,7 +3,7 @@
 @section('title', $currentMenu->title)
 
 @push('css')
-	
+
 @endpush
 
 @section('body')
@@ -252,8 +252,7 @@
 <script type="text/javascript">
 
     var tableCustomer = $('#tableCustomer').dataTable({
-        scrollY : height-500,
-        scrollX : true,
+
         "ajax": {
             "url": url_gb+"/admin/Customer/Lists",
             "type": "POST",
@@ -278,9 +277,9 @@
             {"data": "fax", "name": 'fax'},
             {"data": "remark", "name": 'remark'},
             {
-                "data": "action" , 
-                "name": "action", 
-                "searchable": false, 
+                "data": "action" ,
+                "name": "action",
+                "searchable": false,
                 "sortable": false,
                 "class": "text-center"
             },
@@ -339,7 +338,7 @@
                 ajaxFail(res , form);
             });
     });
-    
+
     $('body').on('click', '.btn-delete', function(){
         var id = $(this).data('id');
         Swal.fire({
@@ -384,29 +383,29 @@
             dataType: 'json',
         }).done(function( res ) {
             resetButton(btn);
-                         
-            $("#edit_contact_name").val(res.content.contact_name);                                     
-            $("#edit_company_name").val(res.content.company_name);                                     
-            $("#edit_address").val(res.content.address);                                     
-            $("#edit_tax_id").val(res.content.tax_id);                                     
-            $("#edit_phone").val(res.content.phone);                                     
-            $("#edit_mobile").val(res.content.mobile);                                     
-            $("#edit_fax").val(res.content.fax);                                     
-            $("#edit_remark").val(res.content.remark);                        
+
+            $("#edit_contact_name").val(res.content.contact_name);
+            $("#edit_company_name").val(res.content.company_name);
+            $("#edit_address").val(res.content.address);
+            $("#edit_tax_id").val(res.content.tax_id);
+            $("#edit_phone").val(res.content.phone);
+            $("#edit_mobile").val(res.content.mobile);
+            $("#edit_fax").val(res.content.fax);
+            $("#edit_remark").val(res.content.remark);
             $('#ModalEdit').modal('show');
         }).fail(function(res){
             ajaxFail(res , "");
         });
     });
 
- 
- 
- 
- 
- 
- 
- 
- 
+
+
+
+
+
+
+
+
 
 
 </script>

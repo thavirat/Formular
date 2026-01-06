@@ -3,7 +3,7 @@
 @section('title', $currentMenu->title)
 
 @push('css')
-	
+
 @endpush
 
 @section('body')
@@ -226,8 +226,7 @@
 <script type="text/javascript">
 
     var tableCurrency = $('#tableCurrency').dataTable({
-        scrollY : height-500,
-        scrollX : true,
+
         "ajax": {
             "url": url_gb+"/admin/Currency/Lists",
             "type": "POST",
@@ -250,9 +249,9 @@
             {"data": "selling", "name": 'selling'},
             {"data": "mid_rate", "name": 'mid_rate'},
             {
-                "data": "action" , 
-                "name": "action", 
-                "searchable": false, 
+                "data": "action" ,
+                "name": "action",
+                "searchable": false,
                 "sortable": false,
                 "class": "text-center"
             },
@@ -311,7 +310,7 @@
                 ajaxFail(res , form);
             });
     });
-    
+
     $('body').on('click', '.btn-delete', function(){
         var id = $(this).data('id');
         Swal.fire({
@@ -356,25 +355,25 @@
             dataType: 'json',
         }).done(function( res ) {
             resetButton(btn);
-                         
-            $("#edit_name").val(res.content.name);                                     
-            $("#edit_symbol").val(res.content.symbol);                                     
-            $("#edit_buying_sight").val(res.content.buying_sight);                                     
-            $("#edit_buying_transfer").val(res.content.buying_transfer);                                     
-            $("#edit_selling").val(res.content.selling);                                     
-            $("#edit_mid_rate").val(res.content.mid_rate);                        
+
+            $("#edit_name").val(res.content.name);
+            $("#edit_symbol").val(res.content.symbol);
+            $("#edit_buying_sight").val(res.content.buying_sight);
+            $("#edit_buying_transfer").val(res.content.buying_transfer);
+            $("#edit_selling").val(res.content.selling);
+            $("#edit_mid_rate").val(res.content.mid_rate);
             $('#ModalEdit').modal('show');
         }).fail(function(res){
             ajaxFail(res , "");
         });
     });
 
- 
- 
- 
- 
- 
- 
+
+
+
+
+
+
 
 
 </script>
