@@ -191,12 +191,28 @@ class QuotationController extends AdminController
     public function edit($id)
     {
         $data['SidebarMenus'] = Menu::Active()->get();
-        $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
+        $data['currentMenu'] = Menu::where('url', $this->current_menu)->first();
         $data['Customers'] = Customer::orderBy('company_name')->get();
         $data['Incoterms'] = Incoterm::orderBy('code')->get();
         $data['Currencies'] = Currency::orderBy('name')->get();
         $data['CreditPayments'] = CreditPayment::orderBy('name')->get();
-        return view('admin.Quotation.quotation_edit',$data);
+        $data['Quotation'] = Quotation::with(['products'=>function($q){
+            $q->leftJoin('products' , 'quotation_products.product_id', '=', 'products.id');
+            $q->select(
+                'quotation_products.*'
+                , 'products.code as part_no'
+            );
+        }])
+        ->leftJoin('currencies' , 'quotations.currency_id', '=', 'currencies.id')
+        ->leftJoin('credit_payments' , 'quotations.credit_payment_id', '=', 'credit_payments.id')
+        ->select(
+            'quotations.*'
+            , 'currencies.name as currency_name'
+            , 'currencies.symbol'
+            , 'credit_payments.name as credit_payment_name'
+        )
+        ->find($id);
+        return view('admin.Quotation.quotation_edit', $data);
     }
 
     /**
@@ -225,6 +241,16 @@ class QuotationController extends AdminController
             $fax_no = $request->input('fax_no');
             $currency_id = $request->input('currency_id');
             $credit_payment_id = $request->input('credit_payment_id');
+            $incoterm_id = $request->input('incoterm_id');
+            $grand_total = str_replace(',' , '' , $request->input('grand_total'));
+            $product = $request->input('product');
+            $drawing = $request->input('drawing');
+            $customer_code = $request->input('customer_code');
+            $description = $request->input('description');
+            $qty = $request->input('qty');
+            $unit_price = $request->input('unit_price');
+            $amount = $request->input('amount');
+            $doc_date = $request->input('doc_date');
 
             DB::beginTransaction();
             try {
@@ -239,7 +265,30 @@ class QuotationController extends AdminController
                 $Quotation->fax_no = $fax_no;
                 $Quotation->currency_id = $currency_id;
                 $Quotation->credit_payment_id = $credit_payment_id;
+                $Quotation->incoterm_id = $incoterm_id;
+                $Quotation->doc_date = $doc_date;
+                $Quotation->subtotal = $grand_total;
+                $Quotation->total = $grand_total;
                 $Quotation->save();
+                QuotationProduct::where('quotation_id' , $id)->delete();
+                $quotation_detail = [];
+                foreach($product as $key => $value) {
+                    if($value){
+                        $quotation_detail[] =[
+                            'quotation_id' => $Quotation->id,
+                            'product_id' => $value,
+                            'drawing' => $drawing[$key],
+                            'cus_code' => $customer_code[$key],
+                            'detail_eng' => $description[$key],
+                            'qty' => $qty[$key],
+                            'price_per_item' => $unit_price[$key],
+                            'total_price' => $amount[$key],
+                        ];
+                    }
+                }
+
+                QuotationProduct::insert($quotation_detail);
+
                 DB::commit();
                 $return['status'] = 1;
                 $return['title'] = __('messages.save');
@@ -304,7 +353,7 @@ class QuotationController extends AdminController
     public function lists(Request $request)
     {
         $result = $this->report($request);
-        $lang = $this->lang;
+        $lang = config('app.locale');
         return DataTables::of($result)
         ->addColumn('total', function($rec) {
             return number_format($rec->total , 2);
@@ -318,10 +367,10 @@ class QuotationController extends AdminController
             </a> ';
             return $btnView;
         })
-        ->addColumn('btn-edit', function($rec){
-            $btnEdit = '<button class="btn btn-xs btn-warning btn-edit" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="แก้ไข">
+        ->addColumn('btn-edit', function($rec) use ($lang){
+            $btnEdit = '<a href="'.url('admin/'.$lang.'/Quotation/'.$rec->id).'/edit" class="btn btn-xs btn-warning btn-edit" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="แก้ไข">
             <i class="fa fa-edit"></i>
-            </button> ';
+            </a> ';
             return $btnEdit;
         })
         ->addColumn('btn-delete', function($rec){

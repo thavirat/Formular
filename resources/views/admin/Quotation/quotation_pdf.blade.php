@@ -70,7 +70,7 @@
             </td>
         </tr>
     </table>
-    <table width="100%" border="1" cellspacing="0" cellpadding="5" style="margin-top: 10px; border-collapse: collapse;">
+    <table width="100%" border="1" cellspacing="0" cellpadding="5" style="margin-top: 10px; border-collapse: collapse; font-size: 10px;">
         <tr>
             <th>ITM.</th>
             <th>Part No.</th>
@@ -78,8 +78,8 @@
             <th>Cus.Code</th>
             <th>Description</th>
             <th>Qty</th>
-            <th>Unit Price ({{$Quotation->symbol}})</th>
-            <th>Amount ({{$Quotation->symbol}})</th>
+            <th width="90">Unit Price ({{$Quotation->symbol}})</th>
+            <th width="90">Amount ({{$Quotation->symbol}})</th>
         </tr>
         @foreach($Quotation->products as $product)
         <tr>

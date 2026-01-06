@@ -11,6 +11,6 @@ class AdminController extends Controller
 
     public function __construct(Request $request)
     {
-        $this->lang = config('app.fallback_locale', 'en');
+        $this->lang = $request->segment(2);
     }
 }
