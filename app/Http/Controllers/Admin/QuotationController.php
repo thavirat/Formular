@@ -72,9 +72,14 @@ class QuotationController extends AdminController
         if(!$permission){
             return redirect('/admin/PermissionDenined');
         }
+
         $validator = Validator::make($request->all(), [
+            'customer_id' => 'required',
+            'product' => 'required|array',
         ]);
+
         if (!$validator->fails()) {
+            // --- ข้อมูลทั่วไป ---
             $customer_id = $request->input('customer_id');
             $contact_name = $request->input('contact_name');
             $company_name = $request->input('company_name');
@@ -87,6 +92,10 @@ class QuotationController extends AdminController
             $credit_payment_id = $request->input('credit_payment_id');
             $incoterm_id = $request->input('incoterm_id');
             $grand_total = str_replace(',' , '' , $request->input('grand_total'));
+            $doc_date = $request->input('doc_date');
+            $user = Auth::user();
+
+            // --- ข้อมูลสินค้า (Array) ---
             $product = $request->input('product');
             $drawing = $request->input('drawing');
             $customer_code = $request->input('customer_code');
@@ -94,19 +103,19 @@ class QuotationController extends AdminController
             $qty = $request->input('qty');
             $unit_price = $request->input('unit_price');
             $amount = $request->input('amount');
-            $doc_date = $request->input('doc_date');
-            $user = Auth::user();
 
-            $check = Quotation::where('doc_date' , $doc_date)->orderBy('run_no' , 'desc')->first();
-            if($check){
-                $run_no = $check->run_no + 1;
-            }else{
-                $run_no = 1;
-            }
-            $doc_no = 'QT'.date('ymd').sprintf('%03d' , $run_no);
+            // เพิ่มการรับค่าส่วนลดจาก Request
+            $discount_percents = $request->input('disc_percent'); // ชื่อเดียวกับที่ตั้งในหน้า Blade
+            $discount_amounts = $request->input('disc_amount');   // ชื่อเดียวกับที่ตั้งในหน้า Blade
+
+            // --- จัดการเลขที่เอกสาร ---
+            $check = Quotation::where('doc_date' , '>=' , date("Y-m-01",str_totime($doc_date)))->where('doc_date' , '<=' , date("Y-m-t",str_totime($doc_date)))->orderBy('run_no' , 'desc')->first();
+            $run_no = $check ? $check->run_no + 1 : 1;
+            $doc_no = 'QT-'.date('ym', strtotime($doc_date)).sprintf('%03d' , $run_no);
 
             DB::beginTransaction();
             try {
+                // 1. บันทึกหัวเอกสาร (Header)
                 $Quotation = new Quotation;
                 $Quotation->customer_id = $customer_id;
                 $Quotation->contact_name = $contact_name;
@@ -127,42 +136,49 @@ class QuotationController extends AdminController
                 $Quotation->status_id = 1;
                 $Quotation->created_by = $user->id;
                 $Quotation->save();
-                $quotation_detail = [];
+
+                // 2. เตรียมข้อมูลสินค้า (Detail)
+                $quotation_details = [];
                 foreach($product as $key => $value) {
                     if($value){
-                        $quotation_detail[] =[
+                        $quotation_details[] = [
                             'quotation_id' => $Quotation->id,
                             'product_id' => $value,
-                            'drawing' => $drawing[$key],
-                            'cus_code' => $customer_code[$key],
-                            'detail_eng' => $description[$key],
-                            'qty' => $qty[$key],
-                            'price_per_item' => $unit_price[$key],
-                            'total_price' => $amount[$key],
+                            'drawing' => $drawing[$key] ?? null,
+                            'cus_code' => $customer_code[$key] ?? null,
+                            'detail_eng' => $description[$key] ?? null,
+                            'qty' => $qty[$key] ?? 0,
+                            'price_per_item' => $unit_price[$key] ?? 0,
+                            // บันทึกส่วนลดลงในแต่ละบรรทัด
+                            'discount_percents' => $discount_percents[$key] ?? 0,
+                            'discount_amount' => $discount_amounts[$key] ?? 0,
+                            'total_price' => $amount[$key] ?? 0,
                         ];
                     }
                 }
 
-                QuotationProduct::insert($quotation_detail);
-
-
-
+                // 3. บันทึกข้อมูลสินค้าทั้งหมดทีเดียว
+                if(count($quotation_details) > 0){
+                    QuotationProduct::insert($quotation_details);
+                }
 
                 DB::commit();
                 $return['status'] = 1;
                 $return['title'] = __('messages.save');
                 $return['content'] = __('messages.success');
-            } catch (Exception $e) {
+
+            } catch (\Exception $e) {
                 DB::rollBack();
                 $return['status'] = 0;
                 $return['title'] = __('messages.error');
                 $return['content'] = $e->getMessage();
             }
-        }else{
-            $failedRules = $validator->failed();
-            $return['content'] = '';
-
+        } else {
+            $return['status'] = 0;
+            $return['title'] = __('messages.error');
+            $return['content'] = 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน';
         }
+
         return $return;
     }
 

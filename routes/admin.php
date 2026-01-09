@@ -100,6 +100,12 @@ Route::middleware('authAdmin:admin')->group(function () {
     Route::get('/Quotation/ExportPrint', 'Admin\QuotationController@export_print');
     Route::resource('/Quotation', Admin\QuotationController::class);
 
+    Route::post('/CustomerLevel/Lists', 'Admin\CustomerLevelController@lists');
+    Route::get('/CustomerLevel/ExportPDF', 'Admin\CustomerLevelController@export_pdf');
+    Route::get('/CustomerLevel/ExportExcel', 'Admin\CustomerLevelController@export_excel');
+    Route::get('/CustomerLevel/ExportPrint', 'Admin\CustomerLevelController@export_print');
+    Route::resource('/CustomerLevel', Admin\CustomerLevelController::class);
+
     ##FOR##REPLACE##INSTALL##
         });
     }

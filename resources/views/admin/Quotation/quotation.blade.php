@@ -2,9 +2,59 @@
 
 @section('title', $currentMenu->title)
 
-@push('css')
+@section('css')
+<style>
+    /* ปรับแต่งหัวตารางให้ดูโมเดิร์น */
+    #tableQuotation thead th {
+        background-color: #f8fafc;
+        color: #475569;
+        font-weight: 600;
+        vertical-align: middle;
+        border-bottom: 2px solid #e2e8f0;
+        text-transform: none;
+    }
 
-@endpush
+    /* ปรับแต่งเนื้อหาตาราง */
+    #tableQuotation tbody td {
+        vertical-align: middle;
+        padding: 12px 8px;
+        color: #1e293b;
+    }
+
+    /* ตกแต่งเลขที่เอกสาร */
+    .doc-no {
+        font-family: 'Monaco', 'Consolas', monospace;
+        font-weight: bold;
+        color: #0284c7;
+        background: #f0f9ff;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+
+    /* ตกแต่งยอดเงินรวม */
+    .total-amount {
+        font-weight: bold;
+        color: #0f172a;
+    }
+
+    /* แถวสลับสีและเอฟเฟกต์ Hover */
+    #tableQuotation tbody tr:hover {
+        background-color: #f1f5f9 !important;
+        transition: all 0.2s ease;
+    }
+
+    /* จัดการปุ่ม Action ให้ดูสะอาดตา */
+    .btn-action {
+        border-radius: 6px;
+        margin: 0 2px;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        line-height: 32px;
+        display: inline-block;
+    }
+</style>
+@endsection
 
 @section('body')
 <div class="page-content container container-plus">
@@ -83,34 +133,49 @@
         },
         "responsive": false,
         "columns": [
-            {"data": "DT_RowIndex", 'searchable': false, 'orderable': false, "class": "text-center"},
-            {"data": "doc_no"},
-            {"data": "doc_date"},
-            {"data": "company_name"},
-
-            {"data": "total" , "class": "text-right"},
-            {"data": "created_by_name" , 'name':'admin_users.name'},
             {
-                "data": "btn-view",
-                "name": "action",
+                "data": "DT_RowIndex",
                 "searchable": false,
-                "sortable": false,
-                "class": "text-center"
+                "orderable": false,
+                "class": "text-center text-secondary"
             },
             {
-                "data": "btn-edit",
-                "name": "action",
-                "searchable": false,
-                "sortable": false,
-                "class": "text-center"
+                "data": "doc_no",
+                "render": function(data) {
+                    return '<span class="doc-no">' + data + '</span>';
+                }
             },
             {
-                "data": "btn-delete",
-                "name": "action",
-                "searchable": false,
-                "sortable": false,
-                "class": "text-center"
+                "data": "doc_date",
+                "render": function(data) {
+                    return '<span class="text-80 text-grey-d1"><i class="far fa-calendar-alt mr-1"></i>' + data + '</span>';
+                }
             },
+            {
+                "data": "company_name",
+                "render": function(data) {
+                    return '<div class="text-bold text-dark-m2">' + data + '</div>';
+                }
+            },
+            {
+                "data": "total",
+                "class": "text-right",
+                "render": function(data) {
+                    // ใส่คอมม่าและทศนิยม 2 ตำแหน่ง
+                    let val = parseFloat(data).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    return '<span class="total-amount">' + val + '</span>';
+                }
+            },
+            {
+                "data": "created_by_name",
+                "name": 'admin_users.name',
+                "render": function(data) {
+                    return '<span class="text-85"><i class="far fa-user mr-1 text-grey-l1"></i>' + data + '</span>';
+                }
+            },
+            { "data": "btn-view", "searchable": false, "sortable": false, "class": "text-center" },
+            { "data": "btn-edit", "searchable": false, "sortable": false, "class": "text-center" },
+            { "data": "btn-delete", "searchable": false, "sortable": false, "class": "text-center" },
         ]
     });
 

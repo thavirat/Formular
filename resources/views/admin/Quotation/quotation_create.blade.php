@@ -2,21 +2,24 @@
 
 @section('title', $currentMenu->title)
 
-@push('css')
+@section('css')
 <style>
     .product-select-container {
         width: 200px !important; /* ปรับตัวเลขความกว้างตามต้องการ */
         min-width: 200px !important;
+        max-width: 200px !important;
     }
 
-    /* จัดการเรื่องข้อความที่ยาวเกินไปให้แสดงเป็น ... (Ellipsis) */
+
+
+
     .select2-container--default .select2-selection--single .select2-selection__rendered {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 </style>
-@endpush
+@endsection
 
 @section('body')
 <div class="page-content container container-plus">
@@ -155,15 +158,17 @@
                             <table class="table table-bordered" id="productTable">
                                 <thead>
                                     <tr>
-                                        <th >{{__('ITM')}}</th>
+                                        <th width="5%" class="text-center">{{__('ITM')}}</th>
                                         <th width="15%" class="product-select-container">{{__('Part No.')}}</th>
-                                        <th width="10%">{{__('Drawing')}}</th>
-                                        <th width="10%">{{__('Cus.Code')}}</th>
+                                        <th width="8%">{{__('Drawing')}}</th>
+                                        <th width="8%">{{__('Cus.Code')}}</th>
                                         <th>{{__('Descript')}}</th>
-                                        <th width="10%">{{__('Qty')}}</th>
-                                        <th width="10%">{{__('Unit Price')}} (<span class="show_currency"></span>)</th>
+                                        <th width="8%">{{__('Qty')}}</th>
+                                        <th width="10%">{{__('Unit Price')}}</th>
+                                        <th width="7%">{{__('Disc %')}}</th>
+                                        <th width="10%">{{__('Disc Amt')}}</th>
                                         <th width="10%">{{__('Amount')}} (<span class="show_currency"></span>)</th>
-                                    </tr>
+                                        <th width="5%"></th> </tr>
                                 </thead>
                                 <tbody>
 
@@ -233,15 +238,42 @@ $( document ).ready(function() {
 
     function initSelect2(element) {
         element.select2({
-            placeholder: 'เลือกสินค้า...',
-            width: '100%',
+            placeholder: 'กรุณาเลือกคู่ค้าและสกุลเงินก่อน...',
+            width: 'resolve',
+            dropdownAutoWidth: false,
+            containerCssClass: 'fixed-select2',
             ajax: {
                 url: url_gb + "/admin/{{$lang}}/Product/Search",
                 dataType: 'json',
-                dropdownAutoWidth: false,
                 delay: 250,
+                transport: function (params, success, failure) {
+                    // ตรวจสอบเงื่อนไขก่อนส่ง Request
+                    var customer_id = $('#customer_id').val();
+                    var currency_id = $('#currency_id').val();
+
+                    if (!customer_id || !currency_id) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'กรุณากรอกข้อมูลให้ครบ',
+                            text: 'คุณต้องเลือก "ลูกค้า" และ "สกุลเงิน" ก่อนค้นหาสินค้า',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        return false; // ระงับการส่ง AJAX
+                    }
+
+                    // ถ้าครบถุกลักษณะ ให้ส่ง AJAX ปกติ
+                    var $request = $.ajax(params);
+                    $request.then(success);
+                    $request.fail(failure);
+                    return $request;
+                },
                 data: function (params) {
-                    return { q: params.term };
+                    return {
+                        q: params.term,
+                        customer_id: $('#customer_id').val(),
+                        currency_id: $('#currency_id').val()
+                    };
                 },
                 processResults: function (data) {
                     return { results: data.items };
@@ -250,47 +282,62 @@ $( document ).ready(function() {
             }
         });
 
-        // เมื่อเลือกสินค้าแล้ว ให้เอาค่าไปใส่ในช่องต่างๆ
         element.on('select2:select', function (e) {
-            console.log(e);
-            var data = e.params.data; // ข้อมูลที่ Return มาจาก Server
+            var data = e.params.data;
             var row = $(this).closest('tr');
+
+            // ล็อคการเปลี่ยนลูกค้าและสกุลเงินเมื่อมีการเลือกสินค้าแล้วเพื่อป้องกันยอดคำนวณผิดพลาด
+            $('#customer_id, #currency_id').attr('readonly', true).css('pointer-events', 'none');
 
             row.find('input[name="drawing[]"]').val(data.drawing);
             row.find('input[name="description[]"]').val(data.description);
             row.find('input[name="unit_price[]"]').val(data.price);
 
-            calculateRow(row); // คำนวณยอดทันทีที่เลือก
+            calculateRow(row);
         });
     }
 
 
     $('#addRow').click(function() {
-
         var rowCount = $('#productTable tbody tr').length + 1;
         var newRow = `
             <tr>
-                <td>${rowCount}</td>
-                <td class="product-select-container"><select class="form-control product" name="product[]"></select></td>
-                <td><input type="text"  class="form-control" name="drawing[]"></td>
+                <td class="text-center">${rowCount}</td>
+                <td class="product-select-container"><select class="form-control product" name="product[]" required></select></td>
+                <td><input type="text" class="form-control" name="drawing[]"></td>
                 <td><input type="text" class="form-control" name="customer_code[]"></td>
                 <td><input type="text" class="form-control" name="description[]"></td>
-                <td><input type="number" class="form-control qty" name="qty[]" value="1"></td>
-                <td><input type="number" class="form-control unit_price" name="unit_price[]"></td>
+                <td><input type="number" class="form-control qty" name="qty[]" value="1" min="1" step="any"></td>
+                <td><input type="number" class="form-control unit_price" name="unit_price[]" value="0" step="any"></td>
+                <td><input type="number" class="form-control disc_percent" name="disc_percent[]" value="0" min="0" max="100" step="any"></td>
+                <td><input type="number" class="form-control disc_amount" name="disc_amount[]" value="0" step="any"></td>
                 <td><input type="number" class="form-control amount" name="amount[]" readonly></td>
+                <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm removeRow"><i class="fa fa-trash"></i></button></td>
             </tr>`;
 
         var $newRow = $(newRow);
         $('#productTable tbody').append($newRow);
-
-        // ผูก Select2 ให้กับแถวใหม่ที่เพิ่งสร้าง
         initSelect2($newRow.find('.product'));
     });
 
     function calculateRow(row) {
         var qty = parseFloat(row.find('.qty').val()) || 0;
         var price = parseFloat(row.find('.unit_price').val()) || 0;
-        var amount = qty * price;
+        var discPercent = parseFloat(row.find('.disc_percent').val()) || 0;
+        var discAmount = parseFloat(row.find('.disc_amount').val()) || 0;
+
+        // คำนวณราคาก่อนหักส่วนลด
+        var totalBeforeDiscount = qty * price;
+
+        // ถ้ามีการใส่ % ให้คำนวณเงินส่วนลดจาก % (Priority 1)
+        if (discPercent > 0) {
+            discAmount = (totalBeforeDiscount * discPercent) / 100;
+            row.find('.disc_amount').val(discAmount.toFixed(2));
+        }
+
+        // คำนวณยอดสุทธิของแถว
+        var amount = totalBeforeDiscount - discAmount;
+
         row.find('.amount').val(amount.toFixed(2));
         calculateGrandTotal();
     }
@@ -300,11 +347,19 @@ $( document ).ready(function() {
         $('.amount').each(function() {
             grandTotal += parseFloat($(this).val()) || 0;
         });
-        $('#grand_total').val(grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2}));
+        // แสดงผลรวมตัวเลขแบบมี comma
+        $('#grand_total').val(grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
     }
 
-    $('body').on('input', '.qty, .unit_price', function() {
-        calculateRow($(this).closest('tr'));
+    $('body').on('input', '.qty, .unit_price, .disc_percent, .disc_amount', function() {
+        var row = $(this).closest('tr');
+
+        // Logic พิเศษ: ถ้าแก้ช่อง "จำนวนเงินส่วนลด" ให้ล้างช่อง "%" (ป้องกันการสับสน)
+        if($(this).hasClass('disc_amount')){
+            row.find('.disc_percent').val(0);
+        }
+
+        calculateRow(row);
     });
 
     $('#addRow').click();
@@ -335,6 +390,11 @@ $( document ).ready(function() {
         }).fail(function(res){
             ajaxFail(res , form);
         });
+    });
+
+    $('body').on('click', '.removeRow', function(){
+        $(this).closest('tr').remove();
+        calculateGrandTotal();
     });
 
 
