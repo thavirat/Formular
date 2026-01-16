@@ -70,41 +70,48 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::resource('/Currency', Admin\CurrencyController::class);
 
                 Route::post('/Customer/Lists', 'Admin\CustomerController@lists');
-    Route::get('/Customer/ExportPDF', 'Admin\CustomerController@export_pdf');
-    Route::get('/Customer/ExportExcel', 'Admin\CustomerController@export_excel');
-    Route::get('/Customer/ExportPrint', 'Admin\CustomerController@export_print');
-    Route::resource('/Customer', Admin\CustomerController::class);
+                Route::get('/Customer/ExportPDF', 'Admin\CustomerController@export_pdf');
+                Route::get('/Customer/ExportExcel', 'Admin\CustomerController@export_excel');
+                Route::get('/Customer/ExportPrint', 'Admin\CustomerController@export_print');
+                Route::resource('/Customer', Admin\CustomerController::class);
 
-    Route::post('/QuotationStatus/Lists', 'Admin\QuotationStatusController@lists');
-    Route::get('/QuotationStatus/ExportPDF', 'Admin\QuotationStatusController@export_pdf');
-    Route::get('/QuotationStatus/ExportExcel', 'Admin\QuotationStatusController@export_excel');
-    Route::get('/QuotationStatus/ExportPrint', 'Admin\QuotationStatusController@export_print');
-    Route::resource('/QuotationStatus', Admin\QuotationStatusController::class);
+                Route::post('/QuotationStatus/Lists', 'Admin\QuotationStatusController@lists');
+                Route::get('/QuotationStatus/ExportPDF', 'Admin\QuotationStatusController@export_pdf');
+                Route::get('/QuotationStatus/ExportExcel', 'Admin\QuotationStatusController@export_excel');
+                Route::get('/QuotationStatus/ExportPrint', 'Admin\QuotationStatusController@export_print');
+                Route::resource('/QuotationStatus', Admin\QuotationStatusController::class);
 
-    Route::post('/Incoterm/Lists', 'Admin\IncotermController@lists');
-    Route::get('/Incoterm/ExportPDF', 'Admin\IncotermController@export_pdf');
-    Route::get('/Incoterm/ExportExcel', 'Admin\IncotermController@export_excel');
-    Route::get('/Incoterm/ExportPrint', 'Admin\IncotermController@export_print');
-    Route::resource('/Incoterm', Admin\IncotermController::class);
+                Route::post('/Incoterm/Lists', 'Admin\IncotermController@lists');
+                Route::get('/Incoterm/ExportPDF', 'Admin\IncotermController@export_pdf');
+                Route::get('/Incoterm/ExportExcel', 'Admin\IncotermController@export_excel');
+                Route::get('/Incoterm/ExportPrint', 'Admin\IncotermController@export_print');
+                Route::resource('/Incoterm', Admin\IncotermController::class);
 
-    Route::post('/CreditPayment/Lists', 'Admin\CreditPaymentController@lists');
-    Route::get('/CreditPayment/ExportPDF', 'Admin\CreditPaymentController@export_pdf');
-    Route::get('/CreditPayment/ExportExcel', 'Admin\CreditPaymentController@export_excel');
-    Route::get('/CreditPayment/ExportPrint', 'Admin\CreditPaymentController@export_print');
-    Route::resource('/CreditPayment', Admin\CreditPaymentController::class);
+                Route::post('/CreditPayment/Lists', 'Admin\CreditPaymentController@lists');
+                Route::get('/CreditPayment/ExportPDF', 'Admin\CreditPaymentController@export_pdf');
+                Route::get('/CreditPayment/ExportExcel', 'Admin\CreditPaymentController@export_excel');
+                Route::get('/CreditPayment/ExportPrint', 'Admin\CreditPaymentController@export_print');
+                Route::resource('/CreditPayment', Admin\CreditPaymentController::class);
 
-    Route::post('/Quotation/Lists', 'Admin\QuotationController@lists');
-    Route::get('/Quotation/ExportPDF', 'Admin\QuotationController@export_pdf');
-    Route::get('/Quotation/{id}/pdf', 'Admin\QuotationController@view_pdf');
-    Route::get('/Quotation/ExportExcel', 'Admin\QuotationController@export_excel');
-    Route::get('/Quotation/ExportPrint', 'Admin\QuotationController@export_print');
-    Route::resource('/Quotation', Admin\QuotationController::class);
+                Route::post('/Quotation/Lists', 'Admin\QuotationController@lists');
+                Route::get('/Quotation/ExportPDF', 'Admin\QuotationController@export_pdf');
+                Route::get('/Quotation/{id}/pdf', 'Admin\QuotationController@view_pdf');
+                Route::get('/Quotation/ExportExcel', 'Admin\QuotationController@export_excel');
+                Route::get('/Quotation/ExportPrint', 'Admin\QuotationController@export_print');
+                Route::resource('/Quotation', Admin\QuotationController::class);
 
-    Route::post('/CustomerLevel/Lists', 'Admin\CustomerLevelController@lists');
-    Route::get('/CustomerLevel/ExportPDF', 'Admin\CustomerLevelController@export_pdf');
-    Route::get('/CustomerLevel/ExportExcel', 'Admin\CustomerLevelController@export_excel');
-    Route::get('/CustomerLevel/ExportPrint', 'Admin\CustomerLevelController@export_print');
-    Route::resource('/CustomerLevel', Admin\CustomerLevelController::class);
+                Route::post('/CustomerLevel/Lists', 'Admin\CustomerLevelController@lists');
+                Route::get('/CustomerLevel/Product', 'Admin\CustomerLevelController@product');
+                Route::get('/CustomerLevel/ExportPDF', 'Admin\CustomerLevelController@export_pdf');
+                Route::get('/CustomerLevel/ExportExcel', 'Admin\CustomerLevelController@export_excel');
+                Route::get('/CustomerLevel/ExportPrint', 'Admin\CustomerLevelController@export_print');
+                Route::resource('/CustomerLevel', Admin\CustomerLevelController::class);
+
+                Route::post('/AdminDepartment/Lists', 'Admin\AdminDepartmentController@lists');
+    Route::get('/AdminDepartment/ExportPDF', 'Admin\AdminDepartmentController@export_pdf');
+    Route::get('/AdminDepartment/ExportExcel', 'Admin\AdminDepartmentController@export_excel');
+    Route::get('/AdminDepartment/ExportPrint', 'Admin\AdminDepartmentController@export_print');
+    Route::resource('/AdminDepartment', Admin\AdminDepartmentController::class);
 
     ##FOR##REPLACE##INSTALL##
         });

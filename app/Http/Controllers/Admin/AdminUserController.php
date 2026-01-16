@@ -10,6 +10,7 @@ use App\Models\CrudMenu;
 use App\Models\AdminPermission;
 use App\Models\Permission;
 use App\Models\Prefix;
+use App\Models\AdminDepartment;
 use Auth;
 use Help;
 use DataTables;
@@ -45,6 +46,7 @@ class AdminUserController extends Controller
          $data['SidebarMenus'] = Menu::Active()->get();
          $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
          $data['Prefixs'] = Prefix::get();
+         $data['AdminDepartments'] = AdminDepartment::get();
          return view('admin.AdminUser.admin_user',$data);
      }
 
@@ -97,6 +99,7 @@ class AdminUserController extends Controller
              $AdminUser->active = $request->input('active','F');
              $AdminUser->username = $request->input('username');
              $AdminUser->remark = $request->input('remark');
+             $AdminUser->department_id = $request->input('department_id');
              $AdminUser->photo = json_encode($request->input('photo', []));
 
              if ( $request->input('password') ) {
@@ -341,6 +344,7 @@ class AdminUserController extends Controller
              $AdminUser->active = $request->input('active','F');
              $AdminUser->username = $request->input('username');
              $AdminUser->remark = $request->input('remark');
+             $AdminUser->department_id = $request->input('department_id');
              $this->removeFileOrak(json_decode($AdminUser->photo), 'AdminUser');
              foreach ($request->input('photo', []) as $photo) {
                  if (Storage::disk("uploads")->exists("temp/" . $photo) && !Storage::disk("uploads")->exists("AdminUser/" . $photo)) {

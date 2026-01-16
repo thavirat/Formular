@@ -11,38 +11,7 @@
     <div class="page-header mb-2 pb-2 flex-column flex-sm-row align-items-start align-items-sm-center py-25 px-1">
         <h1 class="page-title text-primary-d2 text-140">{{ $currentMenu->title }} </h1>
         <div class="page-tools mt-3 mt-sm-0 mb-sm-n1">
-             @if( $my_menu_permission[$currentMenu->url]['p'] == 'T' )
-                 <a href="{{ url("admin/CustomerLevel/ExportPrint") }}" target="_blank" class="btn btn-light-warning btn-h-warning btn-a-warning border-0 radius-3 py-2 text-600 text-90">
-                    <span class="d-none d-sm-inline mr-1">
-                        {{__('Export Print')}}
-                    </span>
-                    <i class="fas fa-print text-110 w-2 h-2"></i>
-                </a>
-            @endif
-            @if( $my_menu_permission[$currentMenu->url]['ep'] == 'T' )
-                <a href="{{ url("admin/CustomerLevel/ExportPDF") }}" target="_blank" class="btn btn-light-danger btn-h-danger btn-a-danger border-0 radius-3 py-2 text-600 text-90">
-                    <span class="d-none d-sm-inline mr-1">
-                        {{__('Export PDF')}}
-                    </span>
-                    <i class="fas fa-file-pdf text-110 w-2 h-2"></i>
-                </a>
-            @endif
-            @if( $my_menu_permission[$currentMenu->url]['ee'] == 'T' )
-                <a href="{{ url("admin/CustomerLevel/ExportExcel") }}" target="_blank" class="btn btn-light-primary btn-h-primary btn-a-primary border-0 radius-3 py-2 text-600 text-90">
-                    <span class="d-none d-sm-inline mr-1">
-                        {{__('Export Excel')}}
-                    </span>
-                    <i class="fas fa-file-excel text-110 w-2 h-2"></i>
-                </a>
-            @endif
-            @if( $my_menu_permission[$currentMenu->url]['c'] == 'T' )
-                <button type="button" class="btn btn-light-green btn-h-green btn-a-green border-0 radius-3 py-2 text-600 text-90 btn-add">
-                    <span class="d-none d-sm-inline mr-1">
-                        {{__('Create Data')}}
-                    </span>
-                    <i class="fa fa-plus text-110 w-2 h-2"></i>
-                </button>
-            @endif
+
         </div>
     </div>
 
@@ -56,22 +25,6 @@
                         </div>
                     </div>
 
-                    <table id="tableCustomerLevel" class="table table-border-x brc-secondary-l4 border-0 mb-0 w-100">
-                        <thead class="text-dark-tp3 bgc-grey-l4 text-90 border-b-1 brc-transparent">
-                            <tr>
-                                <th class="text-center" width="5%" rowspan="2"></th>
-                                <th rowspan="2">{{__('Name')}}</th>
-                                <th class="text-center" colspan="3" width="20%">{{__('Action')}}</th>
-                            </tr>
-                            <tr>
-                                <th>{{__('View')}}</th>
-                                <th>{{__('Edit')}}</th>
-                                <th>{{__('Delete')}}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="mt-1">
-                        </tbody>
-                    </table>
 
 
                 </div><!-- /.card-body -->
@@ -82,73 +35,6 @@
 </div>
 
 
-    <!-- Modal Add -->
-    <div class="modal fade modal-lg" id="ModalAdd" role="dialog" aria-labelledby="ModalAddLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <form id="FormAdd" data-parsley-validate="true">
-                    <div class="modal-header">
-                        <h5 class="modal-title text-primary-d3" id="ModalAddLabel">
-                            {{__('Create Data')}}{{ $currentMenu->title }}
-                        </h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="add_name">{{__('Name')}}</label>
-                                    <input type="text" name="name" id="add_name" class="form-control autofocus" >
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary px-4" data-dismiss="modal"> <i class="fa fa-window-close"></i> {{__('Close')}} </button>
-                        <button type="submit" class="btn btn-primary"> <i class="fa fa-save"></i> {{__('Save')}} </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Edit -->
-    <div class="modal fade modal-lg" id="ModalEdit" role="dialog" aria-labelledby="ModalEditLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <form id="FormEdit" data-parsley-validate="true">
-                    <input type="hidden" id="CustomerLevel_edit_id">
-                    <div class="modal-header">
-                        <h5 class="modal-title text-primary-d3" id="ModalEditLabel">
-                            {{__('Edit Data')}}{{ $currentMenu->title }}
-                        </h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-
-                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="edit_name">{{__('Name')}}</label>
-                                    <input type="text" name="name" id="edit_name" class="form-control " >
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary px-4" data-dismiss="modal"> <i class="fa fa-window-close"></i> {{__('Close')}} </button>
-                        <button type="submit" class="btn btn-primary"> <i class="fa fa-save"></i> {{__('Save')}} </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @push('scripts')

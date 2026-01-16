@@ -457,6 +457,7 @@ class QuotationController extends AdminController
         ->leftJoin('currencies' , 'quotations.currency_id', '=', 'currencies.id')
         ->leftJoin('credit_payments' , 'quotations.credit_payment_id', '=', 'credit_payments.id')
         ->leftJoin('admin_users' , 'quotations.created_by', '=', 'admin_users.id')
+        ->leftJoin('admin_departments' , 'admin_users.department_id', '=', 'admin_departments.id')
         ->select(
             'quotations.*'
             , 'currencies.name as currency_name'
@@ -464,6 +465,9 @@ class QuotationController extends AdminController
             , 'credit_payments.name as credit_payment_name'
             , 'admin_users.firstname'
             , 'admin_users.lastname'
+            , 'admin_users.mobile'
+            , 'admin_users.email'
+            , 'admin_departments.name as department_name'
         )
         ->find($id);
         $quotation = $data['Quotation'];

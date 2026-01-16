@@ -100,6 +100,17 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="add_department_id">{{__('Department')}}</label>
+                                    <select class="form-control" name="department_id" id="add_department_id" >
+                                        <option value="">{{__('Select Department')}}</option>
+                                        @foreach ($AdminDepartments as $AdminDepartment)
+                                            <option value="{{ $AdminDepartment->id }}">{{ $AdminDepartment->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
 
                         </div>
 
@@ -247,6 +258,17 @@
                                         <option value="">เลือกคำนำหน้าชื่อ</option>
                                         @foreach ($Prefixs as $Prefix)
                                             <option value="{{ $Prefix->id }}">{{ $Prefix->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="edit_department_id">{{__('Department')}}</label>
+                                    <select class="form-control" name="department_id" id="edit_department_id" >
+                                        <option value="">{{__('Select Department')}}</option>
+                                        @foreach ($AdminDepartments as $AdminDepartment)
+                                            <option value="{{ $AdminDepartment->id }}">{{ $AdminDepartment->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -482,6 +504,7 @@
                 $('#edit_nickname').val(rec.nickname);
                 $('#edit_email').val(rec.email);
                 $('#edit_mobile').val(rec.mobile);
+                $('#edit_department_id').val(rec.department_id);
                 $('#edit_active').prop('checked', false);
                 $('[id="edit_active"][value="'+rec.active+'"]').prop('checked', true);
                 $('#edit_username').val(rec.username);

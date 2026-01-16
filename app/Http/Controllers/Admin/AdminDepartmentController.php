@@ -4,18 +4,18 @@ namespace App\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Menu;
-use App\Models\CustomerLevel;
+use App\Models\AdminDepartment;
 use DataTables;
 use Help;
 use DB;
 use Validator;
 use Storage;
-class CustomerLevelController extends AdminController
+class AdminDepartmentController extends AdminController
 {
     public $current_menu;
 
     public function __construct() {
-        $this->current_menu = 'CustomerLevel';
+        $this->current_menu = 'AdminDepartment';
     }
 
     /**
@@ -31,7 +31,7 @@ class CustomerLevelController extends AdminController
         }
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         $data['SidebarMenus'] = Menu::Active()->get();
-        return view('admin.CustomerLevel.customer_level',$data);
+        return view('admin.AdminDepartment.admin_department',$data);
     }
 
     /**
@@ -43,7 +43,7 @@ class CustomerLevelController extends AdminController
     {
         $data['SidebarMenus'] = Menu::Active()->get();
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        return view('admin.CustomerLevel.customer_level_create',$data);
+        return view('admin.AdminDepartment.admin_department_create',$data);
     }
 
     /**
@@ -65,9 +65,9 @@ class CustomerLevelController extends AdminController
 
             DB::beginTransaction();
             try {
-                $CustomerLevel = new CustomerLevel;
-                $CustomerLevel->name = $name;
-                $CustomerLevel->save();
+                $AdminDepartment = new AdminDepartment;
+                $AdminDepartment->name = $name;
+                $AdminDepartment->save();
                 DB::commit();
                 $return['status'] = 1;
                 $return['title'] = __('messages.save');
@@ -94,11 +94,11 @@ class CustomerLevelController extends AdminController
      */
     public function show($id)
     {
-        $CustomerLevel = CustomerLevel::find($id);
-
+        $AdminDepartment = AdminDepartment::find($id);
+             
                 $return['status'] = 1;
-                $return['title'] = 'Get CustomerLevel';
-                $return['content'] = $CustomerLevel;
+                $return['title'] = 'Get AdminDepartment';
+                $return['content'] = $AdminDepartment;
                 return $return;
     }
 
@@ -112,7 +112,7 @@ class CustomerLevelController extends AdminController
     {
         $data['SidebarMenus'] = Menu::Active()->get();
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        return view('admin.CustomerLevel.customer_level_edit',$data);
+        return view('admin.AdminDepartment.admin_department_edit',$data);
     }
 
     /**
@@ -135,9 +135,9 @@ class CustomerLevelController extends AdminController
 
             DB::beginTransaction();
             try {
-                $CustomerLevel = CustomerLevel::find($id);
-                $CustomerLevel->name = $name;
-                $CustomerLevel->save();
+                $AdminDepartment = AdminDepartment::find($id);
+                $AdminDepartment->name = $name;
+                $AdminDepartment->save();
                 DB::commit();
                 $return['status'] = 1;
                 $return['title'] = __('messages.save');
@@ -166,9 +166,9 @@ class CustomerLevelController extends AdminController
     {
         DB::beginTransaction();
         try {
-            $CustomerLevel = CustomerLevel::find($id);
-
-            CustomerLevel::where('id' , $id)->delete();
+            $AdminDepartment = AdminDepartment::find($id);
+            
+            AdminDepartment::where('id' , $id)->delete();
 
             DB::commit();
             $return['status'] = 1;
@@ -190,48 +190,15 @@ class CustomerLevelController extends AdminController
      * @return  \Illuminate\Http\Response
      */
     public function report(){
-        $result = CustomerLevel::select()->orderByDesc('id');
+        $result = AdminDepartment::select()->orderByDesc('id');
         return $result;
     }
 
     public function lists(Request $request)
     {
-        $lang = config('app.locale');
         $result = $this->report($request);
 
         return DataTables::of($result)
-        ->addColumn('btn-product', function($rec) use ($lang){
-            $str = '<a href="'.url('admin/'.$lang.'CustomerLevel/Product?id='.$rec->id).'" class="btn btn-xs btn-info btn-edit" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="ดูเอกสาร">
-            <i class="fa fa-list"></i>
-            </a> ';
-            return $str;
-        })
-        ->addColumn('btn-edit', function($rec){
-            $btnEdit = '<button class="btn btn-xs btn-warning btn-edit" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="แก้ไข">
-            <i class="fa fa-edit"></i>
-            </button> ';
-            $update = Help::CheckPermissionMenu($this->current_menu , 'u');
-            $str = '';
-            if($update){
-                $str.=$btnEdit;
-            }
-            return $str;
-        })
-        ->addColumn('btn-delete', function($rec){
-
-            $btnDelete = '<button class="btn btn-xs btn-danger btn-delete" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="ลบ">
-            <i class="fa fa-trash"></i>
-            </button> ';
-
-            $str = '';
-
-            $delete = Help::CheckPermissionMenu($this->current_menu , 'd');
-            if($delete){
-                $str.=$btnDelete;
-            }
-
-            return $str;
-        })
         ->addColumn('action', function($rec){
             $btnEdit = '<button class="btn btn-xs btn-warning btn-edit" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="แก้ไข">
             <i class="fa fa-edit"></i>
@@ -251,7 +218,6 @@ class CustomerLevelController extends AdminController
 
             return $str;
         })
-        ->rawColumns(['action' , 'btn-edit' ,'btn-delete' , 'btn-product'])
         ->addIndexColumn()
         ->make(true);
     }
@@ -260,9 +226,9 @@ class CustomerLevelController extends AdminController
         $result = $this->report($request);
         $data['result'] = $result->get();
 
-        \Excel::create('รายงาน CustomerLevel ', function ($excel) use ($data) {
-            $excel->sheet('รายงาน CustomerLevel', function ($sheet) use ($data) {
-                $sheet->loadView('admin.CustomerLevel.customer_level_export_excel', $data);
+        \Excel::create('รายงาน AdminDepartment ', function ($excel) use ($data) {
+            $excel->sheet('รายงาน AdminDepartment', function ($sheet) use ($data) {
+                $sheet->loadView('admin.AdminDepartment.admin_department_export_excel', $data);
             });
         })->export('xlsx');
     }
@@ -272,25 +238,15 @@ class CustomerLevelController extends AdminController
         $data['result'] = $result->get();
 
 
-        $pdf = \PDF::loadView('admin.CustomerLevel.customer_level_export_print', $data);
-        return $pdf->stream('CustomerLevel.pdf');
+        $pdf = \PDF::loadView('admin.AdminDepartment.admin_department_export_print', $data);
+        return $pdf->stream('AdminDepartment.pdf');
     }
 
     public function export_pdf(Request $request){
         $result = $this->report($request);
         $data['result'] = $result->get();
 
-        return view('admin.CustomerLevel.customer_level_export_pdf', $data);
-    }
-
-    public function product(Request $request){
-        $permission = Help::CheckPermissionMenu($this->current_menu , 'r');
-        if(!$permission){
-            return redirect('/admin/PermissionDenined');
-        }
-        $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        $data['SidebarMenus'] = Menu::Active()->get();
-        return view('admin.CustomerLevel.customer_level_product',$data);
+        return view('admin.AdminDepartment.admin_department_export_pdf', $data);
     }
 
 }
