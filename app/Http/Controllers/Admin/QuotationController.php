@@ -466,8 +466,9 @@ class QuotationController extends AdminController
             , 'admin_users.lastname'
         )
         ->find($id);
+        $quotation = $data['Quotation'];
         $pdf = \PDF::loadView('admin.Quotation.quotation_pdf', $data);
-        return $pdf->stream('Quotation.pdf');
+        return $pdf->stream($quotation->doc_no.'_'.date('Ymd_Hi').'.pdf');
     }
 
 }

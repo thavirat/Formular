@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $Quotation->doc_no }}{{ date('_Ymd_hi') }}</title>
+    <title>{{ $Quotation->doc_no }}</title>
     <style>
         @page {
             margin-top: 1cm;
