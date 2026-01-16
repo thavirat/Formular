@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ $Quotation->doc_no }}{{ date('_Ymd_hi') }}</title>
     <style>
         @page {
             margin-top: 1cm;
@@ -130,7 +131,7 @@
                 <div class="text-bold" style="font-size: 14px;">FORMULA INTERTRADE CO., LTD.</div>
                 <div>119 Motorway Road, Thap Chang, Saphan Sung, Bangkok 10250, Thailand</div>
                 <div>Tel: +66 63 525 2242 | Email: sales@formula.co.th</div>
-                <div>Tax ID: 01055XXXXXXXXX</div>
+                <div>Tax ID: 0105538048542</div>
             </td>
         </tr>
     </table>
