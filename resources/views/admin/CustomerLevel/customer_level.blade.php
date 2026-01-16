@@ -59,9 +59,13 @@
                     <table id="tableCustomerLevel" class="table table-border-x brc-secondary-l4 border-0 mb-0 w-100">
                         <thead class="text-dark-tp3 bgc-grey-l4 text-90 border-b-1 brc-transparent">
                             <tr>
-                                <th class="text-center" width="5%">{{__('No.')}}</th>
-                                <th>{{__('Name')}}</th>
-                                <th class="text-center">#</th>
+                                <th class="text-center" width="5%" rowspan="2">{{__('No.')}}</th>
+                                <th rowspan="2">{{__('Name')}}</th>
+                                <th class="text-center" colspan="2">Action</th>
+                            </tr>
+                            <tr>
+                                <th>{{__('Edit')}}</th>
+                                <th>{{__('Delete')}}</th>
                             </tr>
                         </thead>
                         <tbody class="mt-1">
@@ -168,7 +172,14 @@
             {"data": "DT_RowIndex", 'searchable': false, 'orderable': false, "class": "text-center"},
             {"data": "name", "name": 'name'},
             {
-                "data": "action" ,
+                "data": "btn-edit" ,
+                "name": "action",
+                "searchable": false,
+                "sortable": false,
+                "class": "text-center"
+            },
+            {
+                "data": "btn-delete" ,
                 "name": "action",
                 "searchable": false,
                 "sortable": false,

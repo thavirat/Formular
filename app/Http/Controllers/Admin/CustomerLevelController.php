@@ -95,7 +95,7 @@ class CustomerLevelController extends AdminController
     public function show($id)
     {
         $CustomerLevel = CustomerLevel::find($id);
-             
+
                 $return['status'] = 1;
                 $return['title'] = 'Get CustomerLevel';
                 $return['content'] = $CustomerLevel;
@@ -167,7 +167,7 @@ class CustomerLevelController extends AdminController
         DB::beginTransaction();
         try {
             $CustomerLevel = CustomerLevel::find($id);
-            
+
             CustomerLevel::where('id' , $id)->delete();
 
             DB::commit();
@@ -199,6 +199,32 @@ class CustomerLevelController extends AdminController
         $result = $this->report($request);
 
         return DataTables::of($result)
+        ->addColumn('btn-edit', function($rec){
+            $btnEdit = '<button class="btn btn-xs btn-warning btn-edit" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="แก้ไข">
+            <i class="fa fa-edit"></i>
+            </button> ';
+            $update = Help::CheckPermissionMenu($this->current_menu , 'u');
+            $str = '';
+            if($update){
+                $str.=$btnEdit;
+            }
+            return $str;
+        })
+        ->addColumn('btn-delete', function($rec){
+
+            $btnDelete = '<button class="btn btn-xs btn-danger btn-delete" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="ลบ">
+            <i class="fa fa-trash"></i>
+            </button> ';
+
+            $str = '';
+
+            $delete = Help::CheckPermissionMenu($this->current_menu , 'd');
+            if($delete){
+                $str.=$btnDelete;
+            }
+
+            return $str;
+        })
         ->addColumn('action', function($rec){
             $btnEdit = '<button class="btn btn-xs btn-warning btn-edit" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="แก้ไข">
             <i class="fa fa-edit"></i>
@@ -218,6 +244,7 @@ class CustomerLevelController extends AdminController
 
             return $str;
         })
+        ->rawColumns(['action' , 'btn-edit' ,'btn-delete'])
         ->addIndexColumn()
         ->make(true);
     }

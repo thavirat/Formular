@@ -265,7 +265,7 @@ class QuotationController extends AdminController
             $description = $request->input('description');
             $qty = $request->input('qty');
             $unit_price = $request->input('unit_price');
-            $amount = $request->input('amount');
+            $amount = str_replace(',' , '' , $request->input('amount'));
             $doc_date = $request->input('doc_date');
 
             DB::beginTransaction();
@@ -372,7 +372,7 @@ class QuotationController extends AdminController
         $lang = config('app.locale');
         return DataTables::of($result)
         ->addColumn('total', function($rec) {
-            return number_format($rec->total , 2);
+            return $rec->total;
         })
         ->addColumn('created_by_name', function($rec) {
             return $rec->created_by_name.' '.$rec->created_by_lastname;
