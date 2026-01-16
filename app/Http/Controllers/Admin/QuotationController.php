@@ -109,7 +109,7 @@ class QuotationController extends AdminController
             $discount_amounts = $request->input('disc_amount');   // ชื่อเดียวกับที่ตั้งในหน้า Blade
 
             // --- จัดการเลขที่เอกสาร ---
-            $check = Quotation::where('doc_date' , '>=' , date("Y-m-01",str_totime($doc_date)))->where('doc_date' , '<=' , date("Y-m-t",str_totime($doc_date)))->orderBy('run_no' , 'desc')->first();
+            $check = Quotation::where('doc_date' , '>=' , date("Y-m-01",strtotime($doc_date)))->where('doc_date' , '<=' , date("Y-m-t",strtotime($doc_date)))->orderBy('run_no' , 'desc')->first();
             $run_no = $check ? $check->run_no + 1 : 1;
             $doc_no = 'QT-'.date('ym', strtotime($doc_date)).sprintf('%03d' , $run_no);
 
