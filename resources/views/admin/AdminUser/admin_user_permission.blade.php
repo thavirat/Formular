@@ -95,7 +95,7 @@
                                                 }
                                                 $str .= "<tr>";
                                                     $str .= "
-                                                    <td>{$tab_str}{$row_index_str}{$rowIndex}. {$Menu->title}</td>
+                                                    <td>{$tab_str}{$row_index_str}{$rowIndex}. {$Menu->title_th} {$Menu->title_en}</td>
                                                     <td class='text-center'> <input type='checkbox' class='select_all_menu bgc-blue' data-id='{$Menu->id}' id='select_all_menu_{$Menu->id}' name='menu[{$Menu->id}][readed]' value='T' > </td>
                                                     <td class='text-center'> <input type='checkbox' class='bgc-blue crud' data-id='{$Menu->id}' id='readed_{$Menu->id}' name='menu[{$Menu->id}][readed]' value='T' > </td>
                                                     <td class='text-center'> <input type='checkbox' class='bgc-blue crud' data-id='{$Menu->id}' id='created_{$Menu->id}' name='menu[{$Menu->id}][created]' value='T' > </td>

@@ -305,8 +305,13 @@
 
     @yield('js')
     <script>
+        // setInterval(function() {
+        //     fetch('/keep-alive'); // สร้าง Route เปล่าๆ ไว้รับค่านี้
+        // }, 1000); // ทุก 10 นาที
+
         $.fn.modal.Constructor.prototype._enforceFocus = function() {};
     </script>
+
     @stack('scripts')
 
 </body>

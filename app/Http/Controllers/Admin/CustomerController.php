@@ -109,7 +109,7 @@ class CustomerController extends AdminController
     public function show($id)
     {
         $Customer = Customer::find($id);
-                    
+
                 $return['status'] = 1;
                 $return['title'] = 'Get Customer';
                 $return['content'] = $Customer;
@@ -195,7 +195,7 @@ class CustomerController extends AdminController
         DB::beginTransaction();
         try {
             $Customer = Customer::find($id);
-            
+
             Customer::where('id' , $id)->delete();
 
             DB::commit();
