@@ -184,7 +184,7 @@
         </thead>
         <tbody>
             @php
-                $maxRows = 20;
+                $maxRows = 18;
                 $currentRows = count($Quotation->products);
                 $emptyRows = $maxRows - $currentRows;
                 $subTotalBeforeDiscount = 0;
