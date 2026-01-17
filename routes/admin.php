@@ -113,6 +113,12 @@ Route::middleware('authAdmin:admin')->group(function () {
     Route::get('/AdminDepartment/ExportPrint', 'Admin\AdminDepartmentController@export_print');
     Route::resource('/AdminDepartment', Admin\AdminDepartmentController::class);
 
+    Route::post('/Prefix/Lists', 'Admin\PrefixController@lists');
+    Route::get('/Prefix/ExportPDF', 'Admin\PrefixController@export_pdf');
+    Route::get('/Prefix/ExportExcel', 'Admin\PrefixController@export_excel');
+    Route::get('/Prefix/ExportPrint', 'Admin\PrefixController@export_print');
+    Route::resource('/Prefix', Admin\PrefixController::class);
+
     ##FOR##REPLACE##INSTALL##
         });
     }
