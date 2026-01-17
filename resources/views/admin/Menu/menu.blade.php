@@ -77,7 +77,7 @@
                                     <select class="form-control w-100" id="add_main_menu_id"  tabindex="0" name="main_menu_id"  >
                                         <option value="">เมนูหลัก</option>
                                         @foreach ($Menus as $Menu)
-                                            <option value="{{ $Menu->id }}">{{ $Menu->title }}</option>
+                                            <option value="{{ $Menu->id }}">{{ $Menu->title_th }} {{ $Menu->title_en }}</option>
                                         @endforeach
                                     </select>
                                 </div>
