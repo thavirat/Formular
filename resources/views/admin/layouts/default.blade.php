@@ -51,6 +51,13 @@
     <link rel="stylesheet" type="text/css" href="{{asset('assets/admin/css/custom.css')}}">
 
     @yield('css')
+    <style>
+        @media (min-width: 1200px) {
+            .main-content{
+                max-width: calc(100% - 256px) !important;
+            }
+        }
+    </style>
 </head>
 
 <body>

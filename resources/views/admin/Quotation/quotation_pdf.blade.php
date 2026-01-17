@@ -21,15 +21,12 @@
         .text-bold { font-weight: bold; }
         .text-uppercase { text-transform: uppercase; }
 
-        /* Header Section ปรับปรุงใหม่ */
+        /* Header Section */
         .header-table {
             width: 100%;
             border-bottom: 2px solid #333;
             padding-bottom: 15px;
             text-align: center;
-        }
-        .brand-section {
-            margin-bottom: 8px;
         }
         .logo-in-line {
             height: 50px;
@@ -193,8 +190,8 @@
             <tr>
                 <th width="30">ITM.</th>
                 <th width="100">Part No.</th>
+                <th width="70">Dwg.</th>
                 <th>Description</th>
-                <th width="70">Drw.</th>
                 <th width="40">Qty</th>
                 <th width="80">Unit Price</th>
                 <th width="90">Amount</th>
@@ -205,23 +202,17 @@
                 $maxRows = 18;
                 $currentRows = count($Quotation->products);
                 $emptyRows = $maxRows - $currentRows;
-                $subTotalBeforeDiscount = 0;
-                $totalDiscountAmount = 0;
             @endphp
 
             @foreach($Quotation->products as $product)
-            @php
-                $subTotalBeforeDiscount += ($product->qty * $product->price_per_item);
-                $totalDiscountAmount += $product->discount_amount;
-            @endphp
             <tr>
                 <td class="text-center">{{ $loop->iteration }}</td>
                 <td>
                     <div class="text-bold">{{ $product->part_no }}</div>
                     <div style="font-size: 8px; color: #666;">Cus: {{ $product->cus_code }}</div>
                 </td>
-                <td>{{ $product->detail_eng }}</td>
                 <td class="text-center">{{ $product->drawing ?: '-' }}</td>
+                <td>{{ $product->detail_eng }}</td>
                 <td class="text-right">{{ number_format($product->qty , 2) }}</td>
                 <td class="text-right">{{ number_format($product->price_per_item , 2) }}</td>
                 <td class="text-right">{{ number_format($product->total_price , 2) }}</td>
@@ -243,20 +234,12 @@
             @endif
         </tbody>
         <tfoot>
-            <tr>
-                <td colspan="4" rowspan="3" style="vertical-align: top; border: none; padding-top: 10px;">
-                    <span class="text-bold">Total in Words:</span> <br>
+            <tr style="background-color: #eee;">
+                <td colspan="4" style="vertical-align: middle; border: none; padding-top: 5px;">
+                    <span class="text-bold">Total in Words:</span>
                     <em>({{ Help::numberToWords($Quotation->total , $Quotation->currency_name) }})</em>
                 </td>
-                <td colspan="2" class="text-right text-bold">Sub Total</td>
-                <td class="text-right">{{ number_format($subTotalBeforeDiscount, 2) }}</td>
-            </tr>
-            <tr>
-                <td colspan="2" class="text-right text-bold" style="color: red;">Total Discount</td>
-                <td class="text-right" style="color: red;">- {{ number_format($totalDiscountAmount, 2) }}</td>
-            </tr>
-            <tr style="background-color: #eee;">
-                <td colspan="2" class="text-right text-bold" style="font-size: 12px;">Grand Total ({{$Quotation->symbol}})</td>
+                <td colspan="2" class="text-right text-bold" style="font-size: 12px;">Total ({{$Quotation->symbol}})</td>
                 <td class="text-right text-bold" style="font-size: 12px; border: 2px solid #333;">
                     {{ number_format($Quotation->total , 2) }}
                 </td>

@@ -56,25 +56,27 @@
                         </div>
                     </div>
 
-                    <table id="tableCustomer" class="table table-border-x brc-secondary-l4 border-0 mb-0 w-100">
-                        <thead class="text-dark-tp3 bgc-grey-l4 text-90 border-b-1 brc-transparent">
-                            <tr>
-                                <th class="text-center" width="5%">ลำดับ</th>
-                                <th>Contact Name</th>
-                                <th>Company Name</th>
-                                <th>Address</th>
-                                <th>Tax ID</th>
-                                <th>Phone</th>
-                                <th>Mobile</th>
-                                <th>Fax</th>
-                                <th>Remark</th>
-                                <th class="text-center">#</th>
-                            </tr>
-                        </thead>
+                    <div class="table-responsive">
+                        <table id="tableCustomer" class="table table-striped table-bordered dt-responsive nowrap w-100">
+                            <thead class="text-dark-tp3 bgc-grey-l4 text-90 border-b-1 brc-transparent">
+                                <tr>
+                                    <th class="text-center" width="5%">ลำดับ</th>
+                                    <th>Contact Name</th>
+                                    <th>Company Name</th>
+                                    <th>Address</th>
+                                    <th>Tax ID</th>
+                                    <th>Phone</th>
+                                    <th>Mobile</th>
+                                    <th>Fax</th>
+                                    <th>Remark</th>
+                                    <th class="text-center">#</th>
+                                </tr>
+                            </thead>
 
-                        <tbody class="mt-1">
-                        </tbody>
-                    </table>
+                            <tbody class="mt-1">
+                            </tbody>
+                        </table>
+                    </div>
 
 
                 </div><!-- /.card-body -->
