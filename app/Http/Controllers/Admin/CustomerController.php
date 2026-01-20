@@ -5,6 +5,8 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Menu;
 use App\Models\Customer;
+use App\Models\CustomerLevel;
+
 use DataTables;
 use Help;
 use DB;
@@ -31,6 +33,7 @@ class CustomerController extends AdminController
         }
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         $data['SidebarMenus'] = Menu::Active()->get();
+        $data['CustomerLevels'] = CustomerLevel::orderBy('name')->get();
         return view('admin.Customer.customer',$data);
     }
 
@@ -69,6 +72,7 @@ class CustomerController extends AdminController
             $mobile = $request->input('mobile');
             $fax = $request->input('fax');
             $remark = $request->input('remark');
+            $level_id = $request->input('level_id');
 
             DB::beginTransaction();
             try {
@@ -81,6 +85,7 @@ class CustomerController extends AdminController
                 $Customer->mobile = $mobile;
                 $Customer->fax = $fax;
                 $Customer->remark = $remark;
+                $Customer->level_id = $level_id;
                 $Customer->save();
                 DB::commit();
                 $return['status'] = 1;
@@ -153,6 +158,7 @@ class CustomerController extends AdminController
             $mobile = $request->input('mobile');
             $fax = $request->input('fax');
             $remark = $request->input('remark');
+            $level_id = $request->input('level_id');
 
             DB::beginTransaction();
             try {
@@ -165,6 +171,7 @@ class CustomerController extends AdminController
                 $Customer->mobile = $mobile;
                 $Customer->fax = $fax;
                 $Customer->remark = $remark;
+                $Customer->level_id = $level_id;
                 $Customer->save();
                 DB::commit();
                 $return['status'] = 1;

@@ -10,6 +10,9 @@ use Help;
 use DB;
 use Validator;
 use Storage;
+use App\Models\Product;
+use App\Models\Currency;
+use App\Models\CustomerLevelDiscout;
 class CustomerLevelController extends AdminController
 {
     public $current_menu;
@@ -201,13 +204,13 @@ class CustomerLevelController extends AdminController
 
         return DataTables::of($result)
         ->addColumn('btn-product', function($rec) use ($lang){
-            $str = '<a href="'.url('admin/'.$lang.'CustomerLevel/Product?id='.$rec->id).'" class="btn btn-xs btn-info btn-edit" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="ดูเอกสาร">
+            $str = '<a href="'.url('admin/'.$lang.'/CustomerLevel/Product?id='.$rec->id).'" class="btn btn-xs btn-info" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="'.__('Price Setting').'">
             <i class="fa fa-list"></i>
             </a> ';
             return $str;
         })
         ->addColumn('btn-edit', function($rec){
-            $btnEdit = '<button class="btn btn-xs btn-warning btn-edit" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="แก้ไข">
+            $btnEdit = '<button class="btn btn-xs btn-warning btn-edit" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="'.__('Edit').'">
             <i class="fa fa-edit"></i>
             </button> ';
             $update = Help::CheckPermissionMenu($this->current_menu , 'u');
@@ -219,7 +222,7 @@ class CustomerLevelController extends AdminController
         })
         ->addColumn('btn-delete', function($rec){
 
-            $btnDelete = '<button class="btn btn-xs btn-danger btn-delete" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="ลบ">
+            $btnDelete = '<button class="btn btn-xs btn-danger btn-delete" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="'.__('Delete').'">
             <i class="fa fa-trash"></i>
             </button> ';
 
@@ -290,7 +293,102 @@ class CustomerLevelController extends AdminController
         }
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         $data['SidebarMenus'] = Menu::Active()->get();
+        $data['Products'] = Product::get();
+        $data['Currencies'] = Currency::get();
+        $data['level_id'] = $request->input('id');
+        $data['level'] = CustomerLevel::find($request->input('id'));
         return view('admin.CustomerLevel.customer_level_product',$data);
+    }
+
+    public function product_list(Request $request) {
+        $level_id = $request->input('level_id');
+        $Currencies = Currency::get();
+
+        $result = Product::with(['CustomerLevelDiscouts' => function($q) use ($level_id) {
+            $q->where('level_id', $level_id);
+        }]);
+
+        $table = DataTables::of($result);
+
+        $table->editColumn('name_en', function($rec) {
+            return '<div><strong>'.$rec->name_en.'</strong></div>
+                    <small class="text-grey">'.$rec->name_th.'</small>';
+        });
+
+        $table->editColumn('action', function($rec) {
+            return '<div class="text-center">
+                        <span class="status-indicator" id="status-'.$rec->id.'">
+                            <i class="fa fa-check-circle text-grey-l3" style="font-size: 1.2rem;"></i>
+                        </span>
+                    </div>';
+        });
+
+        foreach($Currencies as $Currency) {
+            $table->addColumn('currency_'.$Currency->symbol, function($rec) use ($Currency , $level_id) {
+                $priceData = $rec->CustomerLevelDiscouts
+                    ->where('currency_id', $Currency->id)
+                    ->first();
+
+                $currentPrice = $priceData ? $priceData->price : 0;
+                $formattedPrice = number_format($currentPrice, 2);
+
+                return '
+                <div class="input-group" style="width:150px">
+                    <input type="text"
+                        class="form-control price-input auto-save-input"
+                        data-currency-id="'.$Currency->id.'"
+                        data-level-id="'.$level_id.'"
+                        value="'.$formattedPrice.'"
+                        placeholder="0.00">
+                    <div class="input-group-append">
+                        <span class="input-group-text" id="status-'.$rec->id.'-'.$Currency->id.'">
+                            '.$Currency->symbol.'
+                        </span>
+                    </div>
+                </div>';
+            });
+        }
+
+        $rawColumns = ['action', 'name_en'];
+        foreach($Currencies as $Currency) {
+            $rawColumns[] = 'currency_'.$Currency->symbol;
+        }
+
+        return $table->rawColumns($rawColumns)
+            ->setRowAttr([
+                'data-product-id' => function($rec) {
+                    return $rec->id;
+                },
+            ])
+            ->addIndexColumn()
+            ->make(true);
+    }
+
+    public function QuickSave(Request $request){
+        $product_id = $request->input('product_id');
+        $currency_id = $request->input('currency_id');
+        $price = $request->input('price');
+        $level_id = $request->input('level_id');
+
+        DB::beginTransaction();
+        try {
+            CustomerLevelDiscout::updateOrCreate([
+                'product_id'=>$product_id
+                ,'currency_id'=>$currency_id
+                ,'price'=>$price
+                ,'level_id'=>$level_id
+            ]);
+            DB::commit();
+            $return['status'] = 1;
+            $return['title'] = __('messages.save');
+            $return['content'] = __('messages.success');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $return['status'] = 0;
+            $return['title'] = __('messages.error');
+            $return['content'] = $e->getMessage();
+        }
+        return $return;
     }
 
 }

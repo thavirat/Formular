@@ -57,7 +57,7 @@
                     </div>
 
                     <div class="table-responsive">
-                        <table id="tableCustomer" class="table table-striped table-bordered dt-responsive nowrap w-100">
+                        <table id="tableCustomer" class="table table-striped table-bordered dt-responsive w-100">
                             <thead class="text-dark-tp3 bgc-grey-l4 text-90 border-b-1 brc-transparent">
                                 <tr>
                                     <th class="text-center" width="5%">ลำดับ</th>
@@ -115,6 +115,20 @@
                                     <input type="text" name="company_name" id="add_company_name" class="form-control " >
                                 </div>
                             </div>
+
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="add_level_id">{{__('Customer Level')}}</label>
+                                    <select name="level_id" id="add_level_id" class="form-control">
+                                        <option value="">{{__('Select Customer Level')}}</option>
+                                        @foreach($CustomerLevels as $level)
+                                        <option value="{{$level->id}}">{{$level->name}}</option>
+                                        @endforeach
+                                    </select>
+
+                                </div>
+                            </div>
+
 
                             <div class="col-md-6 col-sm-12">
                             <div class="form-group">
@@ -199,6 +213,19 @@
                             </div>
 
                             <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="edit_level_id">{{__('Customer Level')}}</label>
+                                    <select name="level_id" id="edit_level_id" class="form-control">
+                                        <option value="">{{__('Select Customer Level')}}</option>
+                                        @foreach($CustomerLevels as $level)
+                                        <option value="{{$level->id}}">{{$level->name}}</option>
+                                        @endforeach
+                                    </select>
+
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12">
                             <div class="form-group">
                                 <label for="edit_address">Address</label>
                                 <textarea name="address" id="edit_address" rows="5" class="form-control " ></textarea>
@@ -278,13 +305,7 @@
             {"data": "mobile", "name": 'mobile'},
             {"data": "fax", "name": 'fax'},
             {"data": "remark", "name": 'remark'},
-            {
-                "data": "action" ,
-                "name": "action",
-                "searchable": false,
-                "sortable": false,
-                "class": "text-center"
-            },
+
         ]
     });
 
@@ -394,6 +415,7 @@
             $("#edit_mobile").val(res.content.mobile);
             $("#edit_fax").val(res.content.fax);
             $("#edit_remark").val(res.content.remark);
+            $("#edit_level_id").val(res.content.level_id);
             $('#ModalEdit').modal('show');
         }).fail(function(res){
             ajaxFail(res , "");
