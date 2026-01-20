@@ -30,7 +30,7 @@ class DesignProductController extends AdminController
             return redirect('/admin/PermissionDenined');
         }
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         return view('admin.DesignProduct.design_product',$data);
     }
 
@@ -41,7 +41,7 @@ class DesignProductController extends AdminController
      */
     public function create()
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         return view('admin.DesignProduct.design_product_create',$data);
     }
@@ -62,7 +62,7 @@ class DesignProductController extends AdminController
         ]);
         if (!$validator->fails()) {
             $name = $request->input('name');
-            
+
             DB::beginTransaction();
             try {
                 $DesignProduct = new DesignProduct;
@@ -81,7 +81,7 @@ class DesignProductController extends AdminController
         }else{
             $failedRules = $validator->failed();
             $return['content'] = '';
- 
+
 
         }
         return $return;
@@ -96,7 +96,7 @@ class DesignProductController extends AdminController
     public function show($id)
     {
         $DesignProduct = DesignProduct::find($id);
-             
+
                 $return['status'] = 1;
                 $return['title'] = 'Get DesignProduct';
                 $return['content'] = $DesignProduct;
@@ -111,7 +111,7 @@ class DesignProductController extends AdminController
      */
     public function edit($id)
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         return view('admin.DesignProduct.design_product_edit',$data);
     }
@@ -133,7 +133,7 @@ class DesignProductController extends AdminController
         ]);
         if (!$validator->fails()) {
             $name = $request->input('name');
-            
+
             DB::beginTransaction();
             try {
                 $DesignProduct = DesignProduct::find($id);
@@ -152,8 +152,8 @@ class DesignProductController extends AdminController
         }else{
             $failedRules = $validator->failed();
             $return['content'] = '';
- 
-            
+
+
         }
         return $return;
     }
@@ -169,7 +169,7 @@ class DesignProductController extends AdminController
         DB::beginTransaction();
         try {
             $DesignProduct = DesignProduct::find($id);
-            
+
             DesignProduct::where('id' , $id)->delete();
 
             DB::commit();

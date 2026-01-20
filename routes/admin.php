@@ -70,6 +70,8 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::resource('/Currency', Admin\CurrencyController::class);
 
                 Route::post('/Customer/Lists', 'Admin\CustomerController@lists');
+                Route::get('/Customer/{id}/Contact', 'Admin\CustomerController@contact');
+                Route::get('/Customer/{id}/Product', 'Admin\CustomerController@product');
                 Route::get('/Customer/ExportPDF', 'Admin\CustomerController@export_pdf');
                 Route::get('/Customer/ExportExcel', 'Admin\CustomerController@export_excel');
                 Route::get('/Customer/ExportPrint', 'Admin\CustomerController@export_print');
@@ -120,6 +122,18 @@ Route::middleware('authAdmin:admin')->group(function () {
     Route::get('/Prefix/ExportExcel', 'Admin\PrefixController@export_excel');
     Route::get('/Prefix/ExportPrint', 'Admin\PrefixController@export_print');
     Route::resource('/Prefix', Admin\PrefixController::class);
+
+    Route::post('/CustomerContact/Lists', 'Admin\CustomerContactController@lists');
+    Route::get('/CustomerContact/ExportPDF', 'Admin\CustomerContactController@export_pdf');
+    Route::get('/CustomerContact/ExportExcel', 'Admin\CustomerContactController@export_excel');
+    Route::get('/CustomerContact/ExportPrint', 'Admin\CustomerContactController@export_print');
+    Route::resource('/CustomerContact', Admin\CustomerContactController::class);
+
+    Route::post('/CustomerCodeProduct/Lists', 'Admin\CustomerCodeProductController@lists');
+    Route::get('/CustomerCodeProduct/ExportPDF', 'Admin\CustomerCodeProductController@export_pdf');
+    Route::get('/CustomerCodeProduct/ExportExcel', 'Admin\CustomerCodeProductController@export_excel');
+    Route::get('/CustomerCodeProduct/ExportPrint', 'Admin\CustomerCodeProductController@export_print');
+    Route::resource('/CustomerCodeProduct', Admin\CustomerCodeProductController::class);
 
     ##FOR##REPLACE##INSTALL##
         });

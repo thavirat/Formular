@@ -32,7 +32,7 @@ class SettingSystemController extends Controller
         if(!$permission){
             return redirect('/admin/PermissionDenined');
         }
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         $Settings = Setting::all();
 

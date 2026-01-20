@@ -43,7 +43,7 @@ class AdminUserController extends Controller
          if(!$permission){
              return redirect('/admin/PermissionDenined');
          }
-         $data['SidebarMenus'] = Menu::Active()->get();
+
          $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
          $data['Prefixs'] = Prefix::get();
          $data['AdminDepartments'] = AdminDepartment::get();
@@ -177,7 +177,7 @@ class AdminUserController extends Controller
             return redirect('/admin/PermissionDenined');
         }
 
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         $db_menus = Menu::where('main_menu_id', null)->get();
         $data['Menus'] = Menu::get();

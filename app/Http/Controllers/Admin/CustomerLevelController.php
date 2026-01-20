@@ -33,7 +33,7 @@ class CustomerLevelController extends AdminController
             return redirect('/admin/PermissionDenined');
         }
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         return view('admin.CustomerLevel.customer_level',$data);
     }
 
@@ -44,7 +44,7 @@ class CustomerLevelController extends AdminController
      */
     public function create()
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         return view('admin.CustomerLevel.customer_level_create',$data);
     }
@@ -113,7 +113,7 @@ class CustomerLevelController extends AdminController
      */
     public function edit($id)
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         return view('admin.CustomerLevel.customer_level_edit',$data);
     }
@@ -292,7 +292,7 @@ class CustomerLevelController extends AdminController
             return redirect('/admin/PermissionDenined');
         }
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['Products'] = Product::get();
         $data['Currencies'] = Currency::get();
         $data['level_id'] = $request->input('id');

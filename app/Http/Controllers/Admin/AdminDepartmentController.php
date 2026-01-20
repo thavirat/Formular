@@ -30,7 +30,7 @@ class AdminDepartmentController extends AdminController
             return redirect('/admin/PermissionDenined');
         }
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         return view('admin.AdminDepartment.admin_department',$data);
     }
 
@@ -41,7 +41,7 @@ class AdminDepartmentController extends AdminController
      */
     public function create()
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         return view('admin.AdminDepartment.admin_department_create',$data);
     }
@@ -95,7 +95,7 @@ class AdminDepartmentController extends AdminController
     public function show($id)
     {
         $AdminDepartment = AdminDepartment::find($id);
-             
+
                 $return['status'] = 1;
                 $return['title'] = 'Get AdminDepartment';
                 $return['content'] = $AdminDepartment;
@@ -110,7 +110,7 @@ class AdminDepartmentController extends AdminController
      */
     public function edit($id)
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         return view('admin.AdminDepartment.admin_department_edit',$data);
     }
@@ -167,7 +167,7 @@ class AdminDepartmentController extends AdminController
         DB::beginTransaction();
         try {
             $AdminDepartment = AdminDepartment::find($id);
-            
+
             AdminDepartment::where('id' , $id)->delete();
 
             DB::commit();

@@ -34,7 +34,7 @@ class ProductController extends AdminController
             return redirect('/admin/PermissionDenined');
         }
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['ProductCategories'] = ProductCategory::orderBy('name')->get();
         $data['BrandProducts'] = BrandProduct::orderBy('name')->get();
         $data['DesignProducts'] = DesignProduct::orderBy('name')->get();
@@ -49,7 +49,7 @@ class ProductController extends AdminController
      */
     public function create()
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         $data['ProductCategories'] = ProductCategory::orderBy('name')->get();
         $data['BrandProducts'] = BrandProduct::orderBy('name')->get();
@@ -153,7 +153,7 @@ class ProductController extends AdminController
      */
     public function edit($id)
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         $data['ProductCategories'] = ProductCategory::orderBy('name')->get();
         $data['BrandProducts'] = BrandProduct::orderBy('name')->get();

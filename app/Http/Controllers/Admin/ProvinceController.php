@@ -30,7 +30,7 @@ class ProvinceController extends AdminController
             return redirect('/admin/PermissionDenined');
         }
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        $data['SidebarMenus'] = Menu::Active()->get();
+
     return view('admin.Province.province',$data);
     }
 
@@ -41,7 +41,7 @@ class ProvinceController extends AdminController
      */
     public function create()
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
     return view('admin.Province.province_create',$data);
     }
@@ -69,7 +69,7 @@ class ProvinceController extends AdminController
             $name = $request->input('name');
             $created_at = $request->input('created_at');
             $updated_at = $request->input('updated_at');
-            
+
             DB::beginTransaction();
             try {
                 $Province = new Province;
@@ -96,26 +96,26 @@ class ProvinceController extends AdminController
                 $return['title'] = __('messages.error');
                 $return['content'].= 'จำเป็นต้องระบุฟิลid<br>';
             }
- 
+
             if(isset($failedRules['name']['Required'])) {
                 $return['status'] = 2;
                 $return['title'] = __('messages.error');
                 $return['content'].= 'จำเป็นต้องระบุฟิลname<br>';
             }
- 
+
             if(isset($failedRules['created_at']['Required'])) {
                 $return['status'] = 2;
                 $return['title'] = __('messages.error');
                 $return['content'].= 'จำเป็นต้องระบุฟิลcreated_at<br>';
             }
- 
+
             if(isset($failedRules['updated_at']['Required'])) {
                 $return['status'] = 2;
                 $return['title'] = __('messages.error');
                 $return['content'].= 'จำเป็นต้องระบุฟิลupdated_at<br>';
             }
- 
-  
+
+
 
         }
         return $return;
@@ -144,7 +144,7 @@ class ProvinceController extends AdminController
      */
     public function edit($id)
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
     return view('admin.Province.province_edit',$data);
     }
@@ -173,7 +173,7 @@ class ProvinceController extends AdminController
             $name = $request->input('name');
             $created_at = $request->input('created_at');
             $updated_at = $request->input('updated_at');
-            
+
             DB::beginTransaction();
             try {
                 $Province = Province::find($id);
@@ -200,27 +200,27 @@ class ProvinceController extends AdminController
                 $return['title'] = __('messages.error');
                 $return['content'].= 'จำเป็นต้องระบุฟิลid<br>';
             }
- 
+
             if(isset($failedRules['name']['Required'])) {
                 $return['status'] = 2;
                 $return['title'] = __('messages.error');
                 $return['content'].= 'จำเป็นต้องระบุฟิลname<br>';
             }
- 
+
             if(isset($failedRules['created_at']['Required'])) {
                 $return['status'] = 2;
                 $return['title'] = __('messages.error');
                 $return['content'].= 'จำเป็นต้องระบุฟิลcreated_at<br>';
             }
- 
+
             if(isset($failedRules['updated_at']['Required'])) {
                 $return['status'] = 2;
                 $return['title'] = __('messages.error');
                 $return['content'].= 'จำเป็นต้องระบุฟิลupdated_at<br>';
             }
- 
-  
-            
+
+
+
         }
         return $return;
     }
@@ -236,7 +236,7 @@ class ProvinceController extends AdminController
         DB::beginTransaction();
         try {
             $Province = Province::find($id);
-            
+
             Province::where('id' , $id)->delete();
 
             DB::commit();

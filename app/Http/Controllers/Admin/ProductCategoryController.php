@@ -30,7 +30,7 @@ class ProductCategoryController extends AdminController
             return redirect('/admin/PermissionDenined');
         }
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         return view('admin.ProductCategory.product_category',$data);
     }
 
@@ -41,7 +41,7 @@ class ProductCategoryController extends AdminController
      */
     public function create()
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         return view('admin.ProductCategory.product_category_create',$data);
     }
@@ -62,7 +62,7 @@ class ProductCategoryController extends AdminController
         ]);
         if (!$validator->fails()) {
             $name = $request->input('name');
-            
+
             DB::beginTransaction();
             try {
                 $ProductCategory = new ProductCategory;
@@ -81,7 +81,7 @@ class ProductCategoryController extends AdminController
         }else{
             $failedRules = $validator->failed();
             $return['content'] = '';
- 
+
 
         }
         return $return;
@@ -96,7 +96,7 @@ class ProductCategoryController extends AdminController
     public function show($id)
     {
         $ProductCategory = ProductCategory::find($id);
-             
+
                 $return['status'] = 1;
                 $return['title'] = 'Get ProductCategory';
                 $return['content'] = $ProductCategory;
@@ -111,7 +111,7 @@ class ProductCategoryController extends AdminController
      */
     public function edit($id)
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         return view('admin.ProductCategory.product_category_edit',$data);
     }
@@ -133,7 +133,7 @@ class ProductCategoryController extends AdminController
         ]);
         if (!$validator->fails()) {
             $name = $request->input('name');
-            
+
             DB::beginTransaction();
             try {
                 $ProductCategory = ProductCategory::find($id);
@@ -152,8 +152,8 @@ class ProductCategoryController extends AdminController
         }else{
             $failedRules = $validator->failed();
             $return['content'] = '';
- 
-            
+
+
         }
         return $return;
     }
@@ -169,7 +169,7 @@ class ProductCategoryController extends AdminController
         DB::beginTransaction();
         try {
             $ProductCategory = ProductCategory::find($id);
-            
+
             ProductCategory::where('id' , $id)->delete();
 
             DB::commit();

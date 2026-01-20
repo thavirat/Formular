@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Menu;
 use App\Models\Customer;
 use App\Models\CustomerLevel;
+use App\Models\Product;
 
 use DataTables;
 use Help;
@@ -32,7 +33,7 @@ class CustomerController extends AdminController
             return redirect('/admin/PermissionDenined');
         }
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['CustomerLevels'] = CustomerLevel::orderBy('name')->get();
         return view('admin.Customer.customer',$data);
     }
@@ -44,7 +45,7 @@ class CustomerController extends AdminController
      */
     public function create()
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         return view('admin.Customer.customer_create',$data);
     }
@@ -129,7 +130,7 @@ class CustomerController extends AdminController
      */
     public function edit($id)
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         return view('admin.Customer.customer_edit',$data);
     }
@@ -232,10 +233,10 @@ class CustomerController extends AdminController
     public function lists(Request $request)
     {
         $result = $this->report($request);
-
+        $lang = config('app.locale');
         return DataTables::of($result)
-        ->addColumn('action', function($rec){
-            $btnEdit = '<button class="btn btn-xs btn-warning btn-edit" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="แก้ไข">
+        ->addColumn('action', function($rec) use ($lang){
+            $btnEdit = '<button class="btn btn-xs btn-warning btn-edit" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="">
             <i class="fa fa-edit"></i>
             </button> ';
             $btnDelete = '<button class="btn btn-xs btn-danger btn-delete" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="ลบ">
@@ -243,6 +244,9 @@ class CustomerController extends AdminController
             </button> ';
             $update = Help::CheckPermissionMenu($this->current_menu , 'u');
             $str = '';
+            $str.='<a href="'.url('admin/'.$lang.'/Customer/'.$rec->id.'/Contact').'" class="btn btn-xs btn-info " data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="แก้ไข">
+            <i class="fa fa-search"></i>
+            </a> ';
             if($update){
                 $str.=$btnEdit;
             }
@@ -282,6 +286,31 @@ class CustomerController extends AdminController
         $data['result'] = $result->get();
 
         return view('admin.Customer.customer_export_pdf', $data);
+    }
+
+    public function contact(Request $request , $id){
+        $result = $this->report($request);
+        $customer = $result->find($id);
+        $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
+
+        $data['customer'] = $customer;
+        $data['page'] = 'contact';
+
+        return view('admin.Customer.customer_contact',$data);
+
+    }
+
+    public function product(Request $request , $id){
+        $result = $this->report($request);
+        $customer = $result->find($id);
+        $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
+
+        $data['customer'] = $customer;
+        $data['page'] = 'product';
+        $data['Products'] = Product::get();
+
+        return view('admin.Customer.customer_product',$data);
+
     }
 
 }

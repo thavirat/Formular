@@ -15,7 +15,7 @@ class HomeController extends Controller
      */
     public function index()
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url','Dashboard')->first();
         return view('admin.home',$data);
     }
@@ -88,7 +88,7 @@ class HomeController extends Controller
 
     public function permissionDenined()
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url','Dashboard')->first();
         return view('admin.permission_denined',$data);
     }

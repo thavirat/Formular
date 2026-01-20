@@ -12,7 +12,7 @@
         <h1 class="page-title text-primary-d2 text-140">{{ $currentMenu->title }} </h1>
         <div class="page-tools mt-3 mt-sm-0 mb-sm-n1">
              @if( $my_menu_permission[$currentMenu->url]['p'] == 'T' )
-                 <a href="{{ url("admin/Customer/ExportPrint") }}" target="_blank" class="btn btn-light-warning btn-h-warning btn-a-warning border-0 radius-3 py-2 text-600 text-90">
+                 <a href="{{ url("admin/CustomerCodeProduct/ExportPrint") }}" target="_blank" class="btn btn-light-warning btn-h-warning btn-a-warning border-0 radius-3 py-2 text-600 text-90">
                     <span class="d-none d-sm-inline mr-1">
                         Print
                     </span>
@@ -20,7 +20,7 @@
                 </a>
             @endif
             @if( $my_menu_permission[$currentMenu->url]['ep'] == 'T' )
-                <a href="{{ url("admin/Customer/ExportPDF") }}" target="_blank" class="btn btn-light-danger btn-h-danger btn-a-danger border-0 radius-3 py-2 text-600 text-90">
+                <a href="{{ url("admin/CustomerCodeProduct/ExportPDF") }}" target="_blank" class="btn btn-light-danger btn-h-danger btn-a-danger border-0 radius-3 py-2 text-600 text-90">
                     <span class="d-none d-sm-inline mr-1">
                         PDF
                     </span>
@@ -28,7 +28,7 @@
                 </a>
             @endif
             @if( $my_menu_permission[$currentMenu->url]['ee'] == 'T' )
-                <a href="{{ url("admin/Customer/ExportExcel") }}" target="_blank" class="btn btn-light-primary btn-h-primary btn-a-primary border-0 radius-3 py-2 text-600 text-90">
+                <a href="{{ url("admin/CustomerCodeProduct/ExportExcel") }}" target="_blank" class="btn btn-light-primary btn-h-primary btn-a-primary border-0 radius-3 py-2 text-600 text-90">
                     <span class="d-none d-sm-inline mr-1">
                         Excel
                     </span>
@@ -56,23 +56,20 @@
                         </div>
                     </div>
 
-                    <div class="table-responsive">
-                        <table id="tableCustomer" class="table table-striped table-bordered dt-responsive w-100">
-                            <thead class="text-dark-tp3 bgc-grey-l4 text-90 border-b-1 brc-transparent">
-                                <tr>
-                                    <th class="text-center" width="5%">{{__('No')}}</th>
-                                    <th>{{__('Contact Name')}}</th>
-                                    <th>{{__('Company Name')}}</th>
-                                    <th>{{__('Tax ID')}}</th>
-                                    <th>{{__('Remark')}}</th>
-                                    <th class="text-center">#</th>
-                                </tr>
-                            </thead>
+                    <table id="tableCustomerCodeProduct" class="table table-border-x brc-secondary-l4 border-0 mb-0 w-100">
+                        <thead class="text-dark-tp3 bgc-grey-l4 text-90 border-b-1 brc-transparent">
+                            <tr>
+                                <th class="text-center" width="5%">ลำดับ</th>
+                                <th>ลูกค้า</th>
+                                <th>สินค้า</th>
+                                <th>รหัสสินค้า</th>
+                                <th class="text-center">#</th>
+                            </tr>
+                        </thead>
 
-                            <tbody class="mt-1">
-                            </tbody>
-                        </table>
-                    </div>
+                        <tbody class="mt-1">
+                        </tbody>
+                    </table>
 
 
                 </div><!-- /.card-body -->
@@ -99,70 +96,33 @@
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="add_contact_name">Contact Name</label>
-                                    <input type="text" name="contact_name" id="add_contact_name" class="form-control autofocus" >
-                                </div>
+                            <div class="form-group">
+
+                                <label for="add_customer_id">ลูกค้า</label>
+                                <select name="customer_id" id="add_customer_id" class="form-control  autofocus"  >
+                                    <option value="">เลือกกรุณาเลือก</option>
+                                    @foreach($Customers as $Customer)
+                                    <option value="{{ $Customer->id }}">{{ $Customer->company_name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
-
-                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="add_company_name">Company Name</label>
-                                    <input type="text" name="company_name" id="add_company_name" class="form-control " >
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="add_level_id">{{__('Customer Level')}}</label>
-                                    <select name="level_id" id="add_level_id" class="form-control">
-                                        <option value="">{{__('Select Customer Level')}}</option>
-                                        @foreach($CustomerLevels as $level)
-                                        <option value="{{$level->id}}">{{$level->name}}</option>
-                                        @endforeach
-                                    </select>
-
-                                </div>
-                            </div>
-
-
+                        </div>
                             <div class="col-md-6 col-sm-12">
                             <div class="form-group">
-                                <label for="add_address">Address</label>
-                                <textarea name="address" id="add_address" rows="5" class="form-control " ></textarea>
-                            </div>
-                        </div>                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="add_tax_id">Tax ID</label>
-                                    <input type="text" name="tax_id" id="add_tax_id" class="form-control " >
-                                </div>
-                            </div>
 
+                                <label for="add_product_id">สินค้า</label>
+                                <select name="product_id" id="add_product_id" class="form-control  "  >
+                                    <option value="">เลือกกรุณาเลือก</option>
+                                    @foreach($Products as $Product)
+                                    <option value="{{ $Product->id }}">{{ $Product->name_en }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
                             <div class="col-md-6 col-sm-12">
                                 <div class="form-group">
-                                    <label for="add_phone">Phone</label>
-                                    <input type="text" name="phone" id="add_phone" class="form-control " >
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="add_mobile">Mobile</label>
-                                    <input type="text" name="mobile" id="add_mobile" class="form-control " >
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="add_fax">Fax</label>
-                                    <input type="text" name="fax" id="add_fax" class="form-control " >
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="add_remark">Remark</label>
-                                    <input type="text" name="remark" id="add_remark" class="form-control " >
+                                    <label for="add_code">รหัสสินค้า</label>
+                                    <input type="text" name="code" id="add_code" class="form-control " >
                                 </div>
                             </div>
 
@@ -182,7 +142,7 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <form id="FormEdit" data-parsley-validate="true">
-                    <input type="hidden" id="Customer_edit_id">
+                    <input type="hidden" id="CustomerCodeProduct_edit_id">
                     <div class="modal-header">
                         <h5 class="modal-title text-primary-d3" id="ModalEditLabel">
                             แก้ไขข้อมูล{{ $currentMenu->title }}
@@ -195,69 +155,33 @@
                         <div class="row">
 
                             <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="edit_contact_name">Contact Name</label>
-                                    <input type="text" name="contact_name" id="edit_contact_name" class="form-control " >
-                                </div>
+                            <div class="form-group">
+
+                                <label for="edit_customer_id">ลูกค้า</label>
+                                <select name="customer_id" id="edit_customer_id" class="form-control  "  >
+                                    <option value="">เลือกกรุณาเลือก</option>
+                                    @foreach($Customers as $Customer)
+                                    <option value="{{ $Customer->id }}">{{ $Customer->company_name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
-
-                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="edit_company_name">Company Name</label>
-                                    <input type="text" name="company_name" id="edit_company_name" class="form-control " >
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="edit_level_id">{{__('Customer Level')}}</label>
-                                    <select name="level_id" id="edit_level_id" class="form-control">
-                                        <option value="">{{__('Select Customer Level')}}</option>
-                                        @foreach($CustomerLevels as $level)
-                                        <option value="{{$level->id}}">{{$level->name}}</option>
-                                        @endforeach
-                                    </select>
-
-                                </div>
-                            </div>
-
+                        </div>
                             <div class="col-md-6 col-sm-12">
                             <div class="form-group">
-                                <label for="edit_address">Address</label>
-                                <textarea name="address" id="edit_address" rows="5" class="form-control " ></textarea>
-                            </div>
-                        </div>                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="edit_tax_id">Tax ID</label>
-                                    <input type="text" name="tax_id" id="edit_tax_id" class="form-control " >
-                                </div>
-                            </div>
 
+                                <label for="edit_product_id">สินค้า</label>
+                                <select name="product_id" id="edit_product_id" class="form-control  "  >
+                                    <option value="">เลือกกรุณาเลือก</option>
+                                    @foreach($Products as $Product)
+                                    <option value="{{ $Product->id }}">{{ $Product->name_en }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
                             <div class="col-md-6 col-sm-12">
                                 <div class="form-group">
-                                    <label for="edit_phone">Phone</label>
-                                    <input type="text" name="phone" id="edit_phone" class="form-control " >
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="edit_mobile">Mobile</label>
-                                    <input type="text" name="mobile" id="edit_mobile" class="form-control " >
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="edit_fax">Fax</label>
-                                    <input type="text" name="fax" id="edit_fax" class="form-control " >
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="edit_remark">Remark</label>
-                                    <input type="text" name="remark" id="edit_remark" class="form-control " >
+                                    <label for="edit_code">รหัสสินค้า</label>
+                                    <input type="text" name="code" id="edit_code" class="form-control " >
                                 </div>
                             </div>
 
@@ -276,10 +200,10 @@
 @push('scripts')
 <script type="text/javascript">
 
-    var tableCustomer = $('#tableCustomer').dataTable({
+    var tableCustomerCodeProduct = $('#tableCustomerCodeProduct').dataTable({
 
         "ajax": {
-            "url": url_gb+"/admin/Customer/Lists",
+            "url": url_gb+"/admin/CustomerCodeProduct/Lists",
             "type": "POST",
             "data": function ( d ) {
                 // d.status = "A";
@@ -293,12 +217,16 @@
         "responsive": false,
         "columns": [
             {"data": "DT_RowIndex", 'searchable': false, 'orderable': false, "class": "text-center"},
-            {"data": "contact_name", "name": 'contact_name'},
-            {"data": "company_name", "name": 'company_name'},
-            {"data": "tax_id", "name": 'tax_id'},
-            {"data": "remark", "name": 'remark'},
-            {"data": "action", "name": 'action'},
-
+            {"data": "customer_display", "name": 'customers.company_name'},
+            {"data": "product_display", "name": 'product_id'},
+            {"data": "code", "name": 'code'},
+            {
+                "data": "action" ,
+                "name": "action",
+                "searchable": false,
+                "sortable": false,
+                "class": "text-center"
+            },
         ]
     });
 
@@ -312,7 +240,7 @@
         loadingButton(form.find('button[type=submit]'));
         $.ajax({
             method: "POST",
-            url: url_gb+"/admin/Customer",
+            url: url_gb+"/admin/CustomerCodeProduct",
             dataType : "json",
             data: form.serialize()
         }).done(function( res ) {
@@ -320,7 +248,7 @@
             if(res.status == 1){
                 Swal.fire(res.title, res.content,'success');
                 resetFormCustom(form);
-                tableCustomer.api().ajax.reload();
+                                                                                                                                                tableCustomerCodeProduct.api().ajax.reload();
                 $('#ModalAdd').modal('hide');
             }else{
                 Swal.fire(res.title, res.content,'error');
@@ -332,12 +260,12 @@
 
     $('body').on('submit', '#FormEdit', function(e){
         e.preventDefault();
-        var id = $("#Customer_edit_id").val();
+        var id = $("#CustomerCodeProduct_edit_id").val();
         var form = $(this);
         loadingButton(form.find('button[type=submit]'));
         $.ajax({
             method: "PUT",
-            url: url_gb+"/admin/Customer/"+id,
+            url: url_gb+"/admin/CustomerCodeProduct/"+id,
             dataType : 'json',
             data: form.serialize()
             }).done(function( res ) {
@@ -345,7 +273,7 @@
                 if(res.status == 1){
                     Swal.fire(res.title, res.content, 'success');
                     resetFormCustom(form);
-                    tableCustomer.api().ajax.reload();
+                    tableCustomerCodeProduct.api().ajax.reload();
                     $('#ModalEdit').modal('hide');
                 }else{
                     Swal.fire(res.title, res.content, 'error');
@@ -370,12 +298,12 @@
             if (say.isConfirmed) {
                 $.ajax({
                     method: "DELETE",
-                    url: url_gb+"/admin/Customer/"+id,
+                    url: url_gb+"/admin/CustomerCodeProduct/"+id,
                     dataType : 'json',
                 }).done(function( res ) {
                     if(res.status == 1){
                         Swal.fire(res.title, res.content,'success');
-                        tableCustomer.api().ajax.reload();
+                        tableCustomerCodeProduct.api().ajax.reload();
                     }else{
                         Swal.fire(res.title, res.content,'warning');
                     }
@@ -390,25 +318,18 @@
 
     $('body').on('click','.btn-edit',function(data){
         var id = $(this).data('id');
-        $("#Customer_edit_id").val(id);
+        $("#CustomerCodeProduct_edit_id").val(id);
         var btn = $(this);
         loadingButton(btn);
         $.ajax({
             method: "GET",
-            url: url_gb+"/admin/Customer/"+id,
+            url: url_gb+"/admin/CustomerCodeProduct/"+id,
             dataType: 'json',
         }).done(function( res ) {
             resetButton(btn);
-
-            $("#edit_contact_name").val(res.content.contact_name);
-            $("#edit_company_name").val(res.content.company_name);
-            $("#edit_address").val(res.content.address);
-            $("#edit_tax_id").val(res.content.tax_id);
-            $("#edit_phone").val(res.content.phone);
-            $("#edit_mobile").val(res.content.mobile);
-            $("#edit_fax").val(res.content.fax);
-            $("#edit_remark").val(res.content.remark);
-            $("#edit_level_id").val(res.content.level_id);
+                                    $("#edit_customer_id").val(res.content.customer_id).trigger('change.select2');
+                                                $("#edit_product_id").val(res.content.product_id).trigger('change.select2');
+                                                $("#edit_code").val(res.content.code);
             $('#ModalEdit').modal('show');
         }).fail(function(res){
             ajaxFail(res , "");
@@ -416,14 +337,22 @@
     });
 
 
-
-
-
-
-
-
-
-
+ $("#add_customer_id").select2({
+     placeholder: 'กรุณาเลือก',
+     allowClear: true
+ })
+ $("#edit_customer_id").select2({
+     placeholder: 'กรุณาเลือก',
+     allowClear: true
+ })
+ $("#add_product_id").select2({
+     placeholder: 'กรุณาเลือก',
+     allowClear: true
+ })
+ $("#edit_product_id").select2({
+     placeholder: 'กรุณาเลือก',
+     allowClear: true
+ })
 
 </script>
 @endpush

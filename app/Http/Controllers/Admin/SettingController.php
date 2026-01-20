@@ -15,7 +15,7 @@ class SettingController extends Controller
      */
      public function index()
      {
-         $data['SidebarMenus'] = Menu::Active()->get();
+
          $data['currentMenu'] = Menu::where('url','Setting')->first();
          return view('admin.Setting.setting',$data);
      }

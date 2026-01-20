@@ -4,18 +4,19 @@ namespace App\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Menu;
-use App\Models\Currency;
+use App\Models\CustomerContact;
 use DataTables;
 use Help;
 use DB;
 use Validator;
 use Storage;
-class CurrencyController extends AdminController
+use App\Models\Customer;
+class CustomerContactController extends AdminController
 {
     public $current_menu;
 
     public function __construct() {
-        $this->current_menu = 'Currency';
+        $this->current_menu = 'CustomerContact';
     }
 
     /**
@@ -31,7 +32,8 @@ class CurrencyController extends AdminController
         }
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
 
-        return view('admin.Currency.currency',$data);
+        $data['Customers'] = Customer::orderBy('company_name')->get();
+        return view('admin.CustomerContact.customer_contact',$data);
     }
 
     /**
@@ -43,7 +45,8 @@ class CurrencyController extends AdminController
     {
 
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        return view('admin.Currency.currency_create',$data);
+        $data['Customers'] = Customer::orderBy('company_name')->get();
+        return view('admin.CustomerContact.customer_contact_create',$data);
     }
 
     /**
@@ -62,22 +65,18 @@ class CurrencyController extends AdminController
         ]);
         if (!$validator->fails()) {
             $name = $request->input('name');
-            $symbol = $request->input('symbol');
-            $buying_sight = $request->input('buying_sight');
-            $buying_transfer = $request->input('buying_transfer');
-            $selling = $request->input('selling');
-            $mid_rate = $request->input('mid_rate');
+            $mobile = $request->input('mobile');
+            $email = $request->input('email');
+            $customer_id = $request->input('customer_id');
 
             DB::beginTransaction();
             try {
-                $Currency = new Currency;
-                $Currency->name = $name;
-                $Currency->symbol = $symbol;
-                $Currency->buying_sight = $buying_sight;
-                $Currency->buying_transfer = $buying_transfer;
-                $Currency->selling = $selling;
-                $Currency->mid_rate = $mid_rate;
-                $Currency->save();
+                $CustomerContact = new CustomerContact;
+                $CustomerContact->name = $name;
+                $CustomerContact->mobile = $mobile;
+                $CustomerContact->email = $email;
+                $CustomerContact->customer_id = $customer_id;
+                $CustomerContact->save();
                 DB::commit();
                 $return['status'] = 1;
                 $return['title'] = __('messages.save');
@@ -104,11 +103,11 @@ class CurrencyController extends AdminController
      */
     public function show($id)
     {
-        $Currency = Currency::find($id);
+        $CustomerContact = CustomerContact::find($id);
 
                 $return['status'] = 1;
-                $return['title'] = 'Get Currency';
-                $return['content'] = $Currency;
+                $return['title'] = 'Get CustomerContact';
+                $return['content'] = $CustomerContact;
                 return $return;
     }
 
@@ -122,7 +121,8 @@ class CurrencyController extends AdminController
     {
 
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        return view('admin.Currency.currency_edit',$data);
+        $data['Customers'] = Customer::orderBy('company_name')->get();
+        return view('admin.CustomerContact.customer_contact_edit',$data);
     }
 
     /**
@@ -142,22 +142,18 @@ class CurrencyController extends AdminController
         ]);
         if (!$validator->fails()) {
             $name = $request->input('name');
-            $symbol = $request->input('symbol');
-            $buying_sight = $request->input('buying_sight');
-            $buying_transfer = $request->input('buying_transfer');
-            $selling = $request->input('selling');
-            $mid_rate = $request->input('mid_rate');
+            $mobile = $request->input('mobile');
+            $email = $request->input('email');
+            $customer_id = $request->input('customer_id');
 
             DB::beginTransaction();
             try {
-                $Currency = Currency::find($id);
-                $Currency->name = $name;
-                $Currency->symbol = $symbol;
-                $Currency->buying_sight = $buying_sight;
-                $Currency->buying_transfer = $buying_transfer;
-                $Currency->selling = $selling;
-                $Currency->mid_rate = $mid_rate;
-                $Currency->save();
+                $CustomerContact = CustomerContact::find($id);
+                $CustomerContact->name = $name;
+                $CustomerContact->mobile = $mobile;
+                $CustomerContact->email = $email;
+                $CustomerContact->customer_id = $customer_id;
+                $CustomerContact->save();
                 DB::commit();
                 $return['status'] = 1;
                 $return['title'] = __('messages.save');
@@ -186,9 +182,9 @@ class CurrencyController extends AdminController
     {
         DB::beginTransaction();
         try {
-            $Currency = Currency::find($id);
+            $CustomerContact = CustomerContact::find($id);
 
-            Currency::where('id' , $id)->delete();
+            CustomerContact::where('id' , $id)->delete();
 
             DB::commit();
             $return['status'] = 1;
@@ -209,8 +205,16 @@ class CurrencyController extends AdminController
      * @param   \Illuminate\Http\Request  $request
      * @return  \Illuminate\Http\Response
      */
-    public function report(){
-        $result = Currency::select()->orderByDesc('id');
+    public function report(Request $request){
+        $customer_id = $request->input('customer_id');
+        $result = CustomerContact::leftJoin('customers' , 'customers.id' , 'customer_contacts.customer_id')
+        ->select(
+            'customer_contacts.*'
+            ,'customers.company_name'
+        );
+        if($customer_id){
+            $result->where('customer_contacts.customer_id' , $customer_id);
+        }
         return $result;
     }
 
@@ -218,37 +222,50 @@ class CurrencyController extends AdminController
     {
         $result = $this->report($request);
 
+        // ใน Controller ส่วน lists()
         return DataTables::of($result)
-        ->addColumn('action', function($rec){
-            $btnEdit = '<button class="btn btn-xs btn-warning btn-edit" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="แก้ไข">
-            <i class="fa fa-edit"></i>
-            </button> ';
-            $btnDelete = '<button class="btn btn-xs btn-danger btn-delete" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="ลบ">
-            <i class="fa fa-trash"></i>
-            </button> ';
-            $update = Help::CheckPermissionMenu($this->current_menu , 'u');
-            $str = '';
-            if($update){
-                $str.=$btnEdit;
-            }
-            $delete = Help::CheckPermissionMenu($this->current_menu , 'd');
-            if($delete){
-                $str.=$btnDelete;
-            }
+            ->editColumn('company_name', function($rec) {
+                return '<div class="text-primary-d1 font-bolder">' . $rec->company_name . '</div>';
+            })
+            ->editColumn('name', function($rec) {
+                return '<div><i class="far fa-user text-grey-m1 mr-1"></i> ' . $rec->name . '</div>';
+            })
+            ->addColumn('contact_info', function($rec) {
+                return '<div>
+                            <div class="text-90"><i class="fa fa-phone-alt text-success-m2 mr-1 w-2"></i>' . $rec->mobile . '</div>
+                            <div class="text-85 text-grey-m1"><i class="fa fa-envelope text-info-m2 mr-1 w-2"></i>' . $rec->email . '</div>
+                        </div>';
+            })
+            ->addColumn('action', function($rec){
+                $update = Help::CheckPermissionMenu($this->current_menu , 'u');
+                $delete = Help::CheckPermissionMenu($this->current_menu , 'd');
 
-            return $str;
-        })
-        ->addIndexColumn()
-        ->make(true);
+                $str = '<div class="btn-group">';
+                if($update){
+                    $str .= '<button class="btn btn-outline-warning btn-h-light-warning btn-a-light-warning btn-edit" data-id="'.$rec->id.'" title="แก้ไข">
+                                <i class="fa fa-pencil-alt"></i>
+                            </button>';
+                }
+                if($delete){
+                    $str .= '<button class="btn btn-outline-danger btn-h-light-danger btn-a-light-danger ml-1 btn-delete" data-id="'.$rec->id.'" title="ลบ">
+                                <i class="fa fa-trash-alt"></i>
+                            </button>';
+                }
+                $str .= '</div>';
+                return $str;
+            })
+            ->rawColumns(['company_name', 'name', 'contact_info', 'action'])
+            ->addIndexColumn()
+            ->make(true);
     }
 
     public function export_excel(Request $request){
         $result = $this->report($request);
         $data['result'] = $result->get();
 
-        \Excel::create('รายงาน Currency ', function ($excel) use ($data) {
-            $excel->sheet('รายงาน Currency', function ($sheet) use ($data) {
-                $sheet->loadView('admin.Currency.currency_export_excel', $data);
+        \Excel::create('รายงาน CustomerContact ', function ($excel) use ($data) {
+            $excel->sheet('รายงาน CustomerContact', function ($sheet) use ($data) {
+                $sheet->loadView('admin.CustomerContact.customer_contact_export_excel', $data);
             });
         })->export('xlsx');
     }
@@ -258,15 +275,15 @@ class CurrencyController extends AdminController
         $data['result'] = $result->get();
 
 
-        $pdf = \PDF::loadView('admin.Currency.currency_export_print', $data);
-        return $pdf->stream('Currency.pdf');
+        $pdf = \PDF::loadView('admin.CustomerContact.customer_contact_export_print', $data);
+        return $pdf->stream('CustomerContact.pdf');
     }
 
     public function export_pdf(Request $request){
         $result = $this->report($request);
         $data['result'] = $result->get();
 
-        return view('admin.Currency.currency_export_pdf', $data);
+        return view('admin.CustomerContact.customer_contact_export_pdf', $data);
     }
 
 }

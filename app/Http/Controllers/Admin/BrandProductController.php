@@ -30,7 +30,7 @@ class BrandProductController extends AdminController
             return redirect('/admin/PermissionDenined');
         }
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         return view('admin.BrandProduct.brand_product',$data);
     }
 
@@ -41,7 +41,7 @@ class BrandProductController extends AdminController
      */
     public function create()
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         return view('admin.BrandProduct.brand_product_create',$data);
     }
@@ -62,7 +62,7 @@ class BrandProductController extends AdminController
         ]);
         if (!$validator->fails()) {
             $name = $request->input('name');
-            
+
             DB::beginTransaction();
             try {
                 $BrandProduct = new BrandProduct;
@@ -81,7 +81,7 @@ class BrandProductController extends AdminController
         }else{
             $failedRules = $validator->failed();
             $return['content'] = '';
- 
+
 
         }
         return $return;
@@ -96,7 +96,7 @@ class BrandProductController extends AdminController
     public function show($id)
     {
         $BrandProduct = BrandProduct::find($id);
-             
+
                 $return['status'] = 1;
                 $return['title'] = 'Get BrandProduct';
                 $return['content'] = $BrandProduct;
@@ -111,7 +111,7 @@ class BrandProductController extends AdminController
      */
     public function edit($id)
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         return view('admin.BrandProduct.brand_product_edit',$data);
     }
@@ -133,7 +133,7 @@ class BrandProductController extends AdminController
         ]);
         if (!$validator->fails()) {
             $name = $request->input('name');
-            
+
             DB::beginTransaction();
             try {
                 $BrandProduct = BrandProduct::find($id);
@@ -152,8 +152,8 @@ class BrandProductController extends AdminController
         }else{
             $failedRules = $validator->failed();
             $return['content'] = '';
- 
-            
+
+
         }
         return $return;
     }
@@ -169,7 +169,7 @@ class BrandProductController extends AdminController
         DB::beginTransaction();
         try {
             $BrandProduct = BrandProduct::find($id);
-            
+
             BrandProduct::where('id' , $id)->delete();
 
             DB::commit();

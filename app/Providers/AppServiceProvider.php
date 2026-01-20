@@ -25,5 +25,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         Schema::defaultStringLength(191);
+        view()->composer('admin.layouts.default', function ($view) {
+            $view->with('SidebarMenus', \App\Models\Menu::Active()->get());
+        });
     }
 }

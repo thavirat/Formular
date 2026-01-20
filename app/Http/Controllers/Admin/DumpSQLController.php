@@ -29,7 +29,7 @@ class DumpSQLController extends Controller
      */
     public function index()
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         $data['Menus'] = Menu::all();
         return view('admin.DumpSQL.dump_sql',$data);

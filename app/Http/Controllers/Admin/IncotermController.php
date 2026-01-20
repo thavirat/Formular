@@ -30,7 +30,7 @@ class IncotermController extends AdminController
             return redirect('/admin/PermissionDenined');
         }
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         return view('admin.Incoterm.incoterm',$data);
     }
 
@@ -41,7 +41,7 @@ class IncotermController extends AdminController
      */
     public function create()
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         return view('admin.Incoterm.incoterm_create',$data);
     }
@@ -97,7 +97,7 @@ class IncotermController extends AdminController
     public function show($id)
     {
         $Incoterm = Incoterm::find($id);
-              
+
                 $return['status'] = 1;
                 $return['title'] = 'Get Incoterm';
                 $return['content'] = $Incoterm;
@@ -112,7 +112,7 @@ class IncotermController extends AdminController
      */
     public function edit($id)
     {
-        $data['SidebarMenus'] = Menu::Active()->get();
+
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         return view('admin.Incoterm.incoterm_edit',$data);
     }
@@ -171,7 +171,7 @@ class IncotermController extends AdminController
         DB::beginTransaction();
         try {
             $Incoterm = Incoterm::find($id);
-            
+
             Incoterm::where('id' , $id)->delete();
 
             DB::commit();
