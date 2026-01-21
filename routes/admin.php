@@ -102,6 +102,8 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::get('/Quotation/ExportPrint', 'Admin\QuotationController@export_print');
                 Route::resource('/Quotation', Admin\QuotationController::class);
 
+                Route::get('/CustomerLevel/ExportProduct', 'Admin\CustomerLevelController@export_product');
+                Route::post('/CustomerLevel/ImportProduct', 'Admin\CustomerLevelController@ImportProduct');
                 Route::post('/CustomerLevel/Product/Lists', 'Admin\CustomerLevelController@product_list');
                 Route::post('/CustomerLevel/Lists', 'Admin\CustomerLevelController@lists');
                 Route::get('/CustomerLevel/Product', 'Admin\CustomerLevelController@product');

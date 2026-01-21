@@ -32,9 +32,6 @@ class QuotationController extends AdminController
      */
     public function index()
     {
-
-
-
         $permission = Help::CheckPermissionMenu($this->current_menu , 'r');
         if(!$permission){
             return redirect('/admin/PermissionDenined');

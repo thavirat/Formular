@@ -13,6 +13,12 @@ use Storage;
 use App\Models\Product;
 use App\Models\Currency;
 use App\Models\CustomerLevelDiscout;
+use App\Exports\ExportCustomerLevelPrice;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\ProductPriceImport;
+
+
+
 class CustomerLevelController extends AdminController
 {
     public $current_menu;
@@ -389,6 +395,46 @@ class CustomerLevelController extends AdminController
             $return['content'] = $e->getMessage();
         }
         return $return;
+    }
+
+    public function export_product(Request $request){
+        $level_id = $request->input('id');
+        $currencies = Currency::get();
+        $customer_level = CustomerLevel::find($level_id);
+
+        // ดึงข้อมูลชุดเดียวกับที่ใช้ใน DataTable (Eager Loading)
+        $products = Product::with(['CustomerLevelDiscouts' => function($q) use ($level_id) {
+            $q->where('level_id', $level_id);
+        }])->get();
+
+        return Excel::download(
+            new ExportCustomerLevelPrice($products, $currencies , $customer_level),
+            'product_prices_level_'.$customer_level->name.'.xlsx'
+        );
+    }
+
+
+
+    public function ImportProduct(Request $request){
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        try {
+            Excel::import(new ProductPriceImport, $request->file('file'));
+
+            return response()->json([
+                'status' => 1,
+                'title' => 'สำเร็จ',
+                'content' => 'อัปเดตราคาเรียบร้อยแล้ว'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 0,
+                'title' => 'ผิดพลาด',
+                'content' => $e->getMessage()
+            ]);
+        }
     }
 
 }
