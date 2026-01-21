@@ -233,6 +233,7 @@ return [
         'PDF' => niklasravnsborg\LaravelPdf\Facades\Pdf::class,
         'View' => Illuminate\Support\Facades\View::class,
         'Help' => App\Help::class,
+        'UserPermission' => App\Helpers\UserPermission::class,
 
     ],
 

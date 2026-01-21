@@ -11,6 +11,7 @@ use DB;
 use Validator;
 use Storage;
 use Auth;
+use UserPermission;
 use App\Models\Customer;
 use App\Models\Incoterm;
 use App\Models\Currency;
@@ -31,6 +32,9 @@ class QuotationController extends AdminController
      */
     public function index()
     {
+
+
+
         $permission = Help::CheckPermissionMenu($this->current_menu , 'r');
         if(!$permission){
             return redirect('/admin/PermissionDenined');
@@ -370,6 +374,13 @@ class QuotationController extends AdminController
     {
         $result = $this->report($request);
         $lang = config('app.locale');
+        $all_permission = UserPermission::getMyPermissions();
+        $view_quotation_permission = isset($all_permission['view_all_quotation']) ?  $all_permission['view_all_quotation']:'F';
+        $user = Auth::guard('admin')->user();
+        if($view_quotation_permission=='F'){
+            $result->where('quotations.created_by' , $user->id);
+        }
+
         return DataTables::of($result)
         ->addColumn('total', function($rec) {
             return $rec->total;

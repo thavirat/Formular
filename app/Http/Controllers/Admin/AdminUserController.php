@@ -249,6 +249,7 @@ class AdminUserController extends Controller
             }
 
             DB::commit();
+            \Cache::forget("user_perms_{$id}");
             $return['status'] = 1;
             $return['title'] = 'เพิ่มข้อมูล';
             $return['content'] = 'สำเร็จ';
