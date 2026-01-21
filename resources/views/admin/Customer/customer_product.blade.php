@@ -88,7 +88,7 @@
                                     <select name="product_id" id="add_product_id" class="form-control  ">
                                         <option value="">เลือกกรุณาเลือก</option>
                                         @foreach ($Products as $Product)
-                                            <option value="{{ $Product->id }}">{{ $Product->name_en }}</option>
+                                            <option value="{{ $Product->id }}">{{ $Product->name_en }} {{ $Product->name_th }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -136,7 +136,7 @@
                                     <select name="product_id" id="edit_product_id" class="form-control  ">
                                         <option value="">เลือกกรุณาเลือก</option>
                                         @foreach ($Products as $Product)
-                                            <option value="{{ $Product->id }}">{{ $Product->name_en }}</option>
+                                            <option value="{{ $Product->id }}">{{ $Product->name_en }} {{ $Product->name_th }}</option>
                                         @endforeach
                                     </select>
                                 </div>

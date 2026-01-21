@@ -292,6 +292,7 @@ $( document ).ready(function() {
             row.find('input[name="drawing[]"]').val(data.drawing);
             row.find('input[name="description[]"]').val(data.description);
             row.find('input[name="unit_price[]"]').val(data.price);
+            row.find('input[name="customer_code[]"]').val(data.cus_code);
 
             calculateRow(row);
         });
