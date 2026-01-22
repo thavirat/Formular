@@ -113,16 +113,21 @@ $('.modal').on('shown.bs.modal', function() {
     $(this).find('.autofocus').trigger('focus');
   });
 
-function ajaxFail(res , form){
-    var res = $.parseJSON(res.responseText);
-    var str = "กรุณาถ่ายรูปหน้าจอนี้ให้กับเจ้าหน้าที่\n\r"+res.message+"\n\r"+res.exception+"\n\r"+res.file+" Line : "+res.line;
-
-    Swal.fire('Please photo send to programmer.', str,'error');
-    if(form){
-        resetButton(form.find('button[type=submit]'));
+function ajaxFail(res, form) {
+    try {
+        var response = $.parseJSON(res.responseText);
+        var str = "กรุณาถ่ายรูปหน้าจอนี้ให้กับเจ้าหน้าที่\n\r" + response.message + "\n\r" + response.exception + "\n\r" + response.file + " Line : " + response.line;
+        Swal.fire('Please photo send to programmer.', str, 'error');
+    } catch (e) {
+        // กรณีไม่ใช่ JSON (เช่น Error 500 แบบหน้าขาว)
+        Swal.fire('Error', 'Internal Server Error (500)', 'error');
     }
 
+    if (form) {
+        resetButton(form.find('button[type=submit]'));
+    }
 }
+
 function formatNumber(num) {
   return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
 }

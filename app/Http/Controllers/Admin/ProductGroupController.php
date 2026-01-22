@@ -4,18 +4,18 @@ namespace App\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Menu;
-use App\Models\ProductCategory;
+use App\Models\ProductGroup;
 use DataTables;
 use Help;
 use DB;
 use Validator;
 use Storage;
-class ProductCategoryController extends AdminController
+class ProductGroupController extends AdminController
 {
     public $current_menu;
 
     public function __construct() {
-        $this->current_menu = 'ProductCategory';
+        $this->current_menu = 'ProductGroup';
     }
 
     /**
@@ -31,7 +31,7 @@ class ProductCategoryController extends AdminController
         }
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
         $data['SidebarMenus'] = Menu::Active()->get();
-        return view('admin.ProductCategory.product_category',$data);
+        return view('admin.ProductGroup.product_group',$data);
     }
 
     /**
@@ -43,7 +43,7 @@ class ProductCategoryController extends AdminController
     {
         $data['SidebarMenus'] = Menu::Active()->get();
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        return view('admin.ProductCategory.product_category_create',$data);
+        return view('admin.ProductGroup.product_group_create',$data);
     }
 
     /**
@@ -61,17 +61,17 @@ class ProductCategoryController extends AdminController
         $validator = Validator::make($request->all(), [
         ]);
         if (!$validator->fails()) {
+            $code = $request->input('code');
             $name_th = $request->input('name_th');
             $name_en = $request->input('name_en');
-            $code = $request->input('code');
 
             DB::beginTransaction();
             try {
-                $ProductCategory = new ProductCategory;
-                $ProductCategory->name_th = $name_th;
-                $ProductCategory->name_en = $name_en;
-                $ProductCategory->code = $code;
-                $ProductCategory->save();
+                $ProductGroup = new ProductGroup;
+                $ProductGroup->code = $code;
+                $ProductGroup->name_th = $name_th;
+                $ProductGroup->name_en = $name_en;
+                $ProductGroup->save();
                 DB::commit();
                 $return['status'] = 1;
                 $return['title'] = __('messages.save');
@@ -98,11 +98,11 @@ class ProductCategoryController extends AdminController
      */
     public function show($id)
     {
-        $ProductCategory = ProductCategory::find($id);
+        $ProductGroup = ProductGroup::find($id);
                
                 $return['status'] = 1;
-                $return['title'] = 'Get ProductCategory';
-                $return['content'] = $ProductCategory;
+                $return['title'] = 'Get ProductGroup';
+                $return['content'] = $ProductGroup;
                 return $return;
     }
 
@@ -116,7 +116,7 @@ class ProductCategoryController extends AdminController
     {
         $data['SidebarMenus'] = Menu::Active()->get();
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        return view('admin.ProductCategory.product_category_edit',$data);
+        return view('admin.ProductGroup.product_group_edit',$data);
     }
 
     /**
@@ -135,17 +135,17 @@ class ProductCategoryController extends AdminController
         $validator = Validator::make($request->all(), [
         ]);
         if (!$validator->fails()) {
+            $code = $request->input('code');
             $name_th = $request->input('name_th');
             $name_en = $request->input('name_en');
-            $code = $request->input('code');
 
             DB::beginTransaction();
             try {
-                $ProductCategory = ProductCategory::find($id);
-                $ProductCategory->name_th = $name_th;
-                $ProductCategory->name_en = $name_en;
-                $ProductCategory->code = $code;
-                $ProductCategory->save();
+                $ProductGroup = ProductGroup::find($id);
+                $ProductGroup->code = $code;
+                $ProductGroup->name_th = $name_th;
+                $ProductGroup->name_en = $name_en;
+                $ProductGroup->save();
                 DB::commit();
                 $return['status'] = 1;
                 $return['title'] = __('messages.save');
@@ -174,9 +174,9 @@ class ProductCategoryController extends AdminController
     {
         DB::beginTransaction();
         try {
-            $ProductCategory = ProductCategory::find($id);
+            $ProductGroup = ProductGroup::find($id);
             
-            ProductCategory::where('id' , $id)->delete();
+            ProductGroup::where('id' , $id)->delete();
 
             DB::commit();
             $return['status'] = 1;
@@ -198,7 +198,7 @@ class ProductCategoryController extends AdminController
      * @return  \Illuminate\Http\Response
      */
     public function report(){
-        $result = ProductCategory::select()->orderByDesc('id');
+        $result = ProductGroup::select()->orderByDesc('id');
         return $result;
     }
 
@@ -234,9 +234,9 @@ class ProductCategoryController extends AdminController
         $result = $this->report($request);
         $data['result'] = $result->get();
 
-        \Excel::create('รายงาน ProductCategory ', function ($excel) use ($data) {
-            $excel->sheet('รายงาน ProductCategory', function ($sheet) use ($data) {
-                $sheet->loadView('admin.ProductCategory.product_category_export_excel', $data);
+        \Excel::create('รายงาน ProductGroup ', function ($excel) use ($data) {
+            $excel->sheet('รายงาน ProductGroup', function ($sheet) use ($data) {
+                $sheet->loadView('admin.ProductGroup.product_group_export_excel', $data);
             });
         })->export('xlsx');
     }
@@ -246,15 +246,15 @@ class ProductCategoryController extends AdminController
         $data['result'] = $result->get();
 
 
-        $pdf = \PDF::loadView('admin.ProductCategory.product_category_export_print', $data);
-        return $pdf->stream('ProductCategory.pdf');
+        $pdf = \PDF::loadView('admin.ProductGroup.product_group_export_print', $data);
+        return $pdf->stream('ProductGroup.pdf');
     }
 
     public function export_pdf(Request $request){
         $result = $this->report($request);
         $data['result'] = $result->get();
 
-        return view('admin.ProductCategory.product_category_export_pdf', $data);
+        return view('admin.ProductGroup.product_group_export_pdf', $data);
     }
 
 }

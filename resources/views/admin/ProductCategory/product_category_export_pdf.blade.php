@@ -24,14 +24,18 @@
         <thead>
             <tr>
                 <th style="text-align:center; width:5;">No.</th>
-                                 <th style="text-align:center; width:25;">ชื่อ</th>
-                                    </tr>
+                                 <th style="text-align:center; width:25;">Name TH</th>
+                                             <th style="text-align:center; width:25;">Name ENG</th>
+                             <th style="text-align:center; width:25;">Code</th>
+                    </tr>
         </thead>
         <tbody>
             @foreach($result as $i => $re)
             <tr>
                 <td style="text-align:center; width:5;">{{ $i+1 }}</td>
-                            <td>{{ $re->name }}</td>
+                            <td>{{ $re->name_th }}</td>
+                                <td>{{ $re->name_en }}</td>
+                                <td>{{ $re->code }}</td>
                     </tr>
             @endforeach
         </tbody>

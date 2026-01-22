@@ -57,6 +57,7 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::resource('/UnitProduct', Admin\UnitProductController::class);
 
                 Route::post('/Product/Lists', 'Admin\ProductController@lists');
+                Route::post('/Product/Import', 'Admin\ProductController@import_product');
                 Route::get('/Product/Search', 'Admin\ProductController@Search');
                 Route::get('/Product/ExportPDF', 'Admin\ProductController@export_pdf');
                 Route::get('/Product/ExportExcel', 'Admin\ProductController@export_excel');
@@ -136,6 +137,18 @@ Route::middleware('authAdmin:admin')->group(function () {
     Route::get('/CustomerCodeProduct/ExportExcel', 'Admin\CustomerCodeProductController@export_excel');
     Route::get('/CustomerCodeProduct/ExportPrint', 'Admin\CustomerCodeProductController@export_print');
     Route::resource('/CustomerCodeProduct', Admin\CustomerCodeProductController::class);
+
+    Route::post('/SubCategory/Lists', 'Admin\SubCategoryController@lists');
+    Route::get('/SubCategory/ExportPDF', 'Admin\SubCategoryController@export_pdf');
+    Route::get('/SubCategory/ExportExcel', 'Admin\SubCategoryController@export_excel');
+    Route::get('/SubCategory/ExportPrint', 'Admin\SubCategoryController@export_print');
+    Route::resource('/SubCategory', Admin\SubCategoryController::class);
+
+    Route::post('/ProductGroup/Lists', 'Admin\ProductGroupController@lists');
+    Route::get('/ProductGroup/ExportPDF', 'Admin\ProductGroupController@export_pdf');
+    Route::get('/ProductGroup/ExportExcel', 'Admin\ProductGroupController@export_excel');
+    Route::get('/ProductGroup/ExportPrint', 'Admin\ProductGroupController@export_print');
+    Route::resource('/ProductGroup', Admin\ProductGroupController::class);
 
     ##FOR##REPLACE##INSTALL##
         });

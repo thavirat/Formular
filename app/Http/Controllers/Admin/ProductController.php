@@ -11,10 +11,7 @@ use DB;
 use Validator;
 use Storage;
 use App\Models\ProductCategory;
-use App\Models\BrandProduct;
-use App\Models\DesignProduct;
-use App\Models\UnitProduct;
-use App\Models\Customer;
+use App\Models\SubCategory;
 class ProductController extends AdminController
 {
     public $current_menu;
@@ -35,11 +32,9 @@ class ProductController extends AdminController
             return redirect('/admin/PermissionDenined');
         }
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-
-        $data['ProductCategories'] = ProductCategory::orderBy('name')->get();
-        $data['BrandProducts'] = BrandProduct::orderBy('name')->get();
-        $data['DesignProducts'] = DesignProduct::orderBy('name')->get();
-        $data['UnitProducts'] = UnitProduct::orderBy('name')->get();
+        $data['SidebarMenus'] = Menu::Active()->get();
+        $data['ProductCategories'] = ProductCategory::orderBy('name_th')->get();
+        $data['SubCategories'] = SubCategory::orderBy('name_th')->get();
         return view('admin.Product.product',$data);
     }
 
@@ -50,12 +45,10 @@ class ProductController extends AdminController
      */
     public function create()
     {
-
+        $data['SidebarMenus'] = Menu::Active()->get();
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        $data['ProductCategories'] = ProductCategory::orderBy('name')->get();
-        $data['BrandProducts'] = BrandProduct::orderBy('name')->get();
-        $data['DesignProducts'] = DesignProduct::orderBy('name')->get();
-        $data['UnitProducts'] = UnitProduct::orderBy('name')->get();
+        $data['ProductCategories'] = ProductCategory::orderBy('name_th')->get();
+        $data['SubCategories'] = SubCategory::orderBy('name_th')->get();
         return view('admin.Product.product_create',$data);
     }
 
@@ -75,42 +68,29 @@ class ProductController extends AdminController
         ]);
         if (!$validator->fails()) {
             $category_id = $request->input('category_id');
-            $brand_id = $request->input('brand_id');
-            $design_id = $request->input('design_id');
-            $unit_id = $request->input('unit_id');
             $code = $request->input('code');
-            $part_no = $request->input('part_no');
             $name_th = $request->input('name_th');
             $name_en = $request->input('name_en');
-            $name_cn = $request->input('name_cn');
             $drawing = $request->input('drawing');
             $width = $request->input('width');
             $height = $request->input('height');
             $length = $request->input('length');
             $weight = $request->input('weight');
-            $cube = $request->input('cube');
-            $active = $request->input('active' , 'F');
-            $user = Auth::user();
+            $sub_category_id = $request->input('sub_category_id');
+
             DB::beginTransaction();
             try {
                 $Product = new Product;
                 $Product->category_id = $category_id;
-                $Product->brand_id = $brand_id;
-                $Product->design_id = $design_id;
-                $Product->unit_id = $unit_id;
                 $Product->code = $code;
-                $Product->part_no = $part_no;
                 $Product->name_th = $name_th;
                 $Product->name_en = $name_en;
-                $Product->name_cn = $name_cn;
                 $Product->drawing = $drawing;
                 $Product->width = $width;
                 $Product->height = $height;
                 $Product->length = $length;
                 $Product->weight = $weight;
-                $Product->cube = $cube;
-                $Product->active = $active;
-                $Product->status_id = 1;
+                $Product->sub_category_id = $sub_category_id;
                 $Product->save();
                 DB::commit();
                 $return['status'] = 1;
@@ -154,12 +134,10 @@ class ProductController extends AdminController
      */
     public function edit($id)
     {
-
+        $data['SidebarMenus'] = Menu::Active()->get();
         $data['currentMenu'] = Menu::where('url',$this->current_menu)->first();
-        $data['ProductCategories'] = ProductCategory::orderBy('name')->get();
-        $data['BrandProducts'] = BrandProduct::orderBy('name')->get();
-        $data['DesignProducts'] = DesignProduct::orderBy('name')->get();
-        $data['UnitProducts'] = UnitProduct::orderBy('name')->get();
+        $data['ProductCategories'] = ProductCategory::orderBy('name_th')->get();
+        $data['SubCategories'] = SubCategory::orderBy('name_th')->get();
         return view('admin.Product.product_edit',$data);
     }
 
@@ -180,41 +158,29 @@ class ProductController extends AdminController
         ]);
         if (!$validator->fails()) {
             $category_id = $request->input('category_id');
-            $brand_id = $request->input('brand_id');
-            $design_id = $request->input('design_id');
-            $unit_id = $request->input('unit_id');
             $code = $request->input('code');
-            $part_no = $request->input('part_no');
             $name_th = $request->input('name_th');
             $name_en = $request->input('name_en');
-            $name_cn = $request->input('name_cn');
             $drawing = $request->input('drawing');
             $width = $request->input('width');
             $height = $request->input('height');
             $length = $request->input('length');
             $weight = $request->input('weight');
-            $cube = $request->input('cube');
-            $active = $request->input('active' , 'F');
+            $sub_category_id = $request->input('sub_category_id');
 
             DB::beginTransaction();
             try {
                 $Product = Product::find($id);
                 $Product->category_id = $category_id;
-                $Product->brand_id = $brand_id;
-                $Product->design_id = $design_id;
-                $Product->unit_id = $unit_id;
                 $Product->code = $code;
-                $Product->part_no = $part_no;
                 $Product->name_th = $name_th;
                 $Product->name_en = $name_en;
-                $Product->name_cn = $name_cn;
                 $Product->drawing = $drawing;
                 $Product->width = $width;
                 $Product->height = $height;
                 $Product->length = $length;
                 $Product->weight = $weight;
-                $Product->cube = $cube;
-                $Product->active = $active;
+                $Product->sub_category_id = $sub_category_id;
                 $Product->save();
                 DB::commit();
                 $return['status'] = 1;
@@ -268,18 +234,7 @@ class ProductController extends AdminController
      * @return  \Illuminate\Http\Response
      */
     public function report(){
-        $result = Product::leftJoin('product_categories' , 'product_categories.id' , 'products.category_id')
-        ->leftJoin('design_products' , 'design_products.id' , 'products.design_id')
-        ->leftJoin('brand_products' , 'brand_products.id' , 'products.brand_id')
-        ->leftJoin('unit_products' , 'unit_products.id' , 'products.unit_id')
-        ->select(
-            'products.*'
-            ,'product_categories.name as category_name'
-            ,'design_products.name as design_name'
-            ,'brand_products.name as brand_name'
-            ,'unit_products.name as unit_name'
-        )
-        ;
+        $result = Product::select()->orderByDesc('id');
         return $result;
     }
 
@@ -288,13 +243,6 @@ class ProductController extends AdminController
         $result = $this->report($request);
 
         return DataTables::of($result)
-        ->addColumn('active', function($rec){
-            if($rec->active=='T'){
-                return 'เปิดใช้งาน';
-            }else{
-                return 'ปิดใช้งาน';
-            }
-        })
         ->addColumn('action', function($rec){
             $btnEdit = '<button class="btn btn-xs btn-warning btn-edit" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="แก้ไข">
             <i class="fa fa-edit"></i>
@@ -345,59 +293,31 @@ class ProductController extends AdminController
         return view('admin.Product.product_export_pdf', $data);
     }
 
-    public function Search(Request $request) {
-        $q = $request->input('q');
-        $customer_id = $request->input('customer_id');
-        $currency_id = $request->input('currency_id');
-        $customer = Customer::find($customer_id);
 
+    public function import_product(Request $request)
+    {
+        try {
+            if (!$request->hasFile('file')) {
+                return response()->json(['status' => 0, 'title' => 'Error', 'content' => 'กรุณาเลือกไฟล์']);
+            }
 
-        $products = Product::leftJoin('customer_level_discouts' , function($join) use($customer , $currency_id){
-            $join->on('customer_level_discouts.product_id' , 'products.id')
-                 ->where('customer_level_discouts.level_id' , $customer->level_id)
-                 ->where('customer_level_discouts.currency_id' , $currency_id);
-        })
-        ->leftJoin('currencies' , 'currencies.id' , 'customer_level_discouts.currency_id')
-        ->leftJoin('customer_code_products' , function($q) use($customer_id){
-            $q->on('customer_code_products.product_id' , 'products.id');
-            $q->where('customer_code_products.customer_id' , $customer_id);
-        })
-        ->where(function($query) use ($q) {
-            $query->where('products.code', 'LIKE', '%' . $q . '%')
-                  ->orWhere('products.name_th', 'LIKE', '%' . $q . '%')
-                  ->orWhere('products.name_en', 'LIKE', '%' . $q . '%')
-                  ->orWhere('products.name_cn', 'LIKE', '%' . $q . '%');
-        })
+            \Excel::import(new \App\Imports\ProductImport, $request->file('file'));
 
-        ->limit(20)
-        ->select(
-            'products.*',
-            'customer_level_discouts.price',
-            'currencies.symbol',
-            'customer_code_products.code as cus_code'
-        )
-        // ->groupBy('products.id')
-        ->get();
+            return response()->json([
+                'status' => 1,
+                'title' => 'สำเร็จ',
+                'content' => 'นำเข้าข้อมูลสินค้าเรียบร้อยแล้ว'
+            ]);
 
-
-
-        $items = [];
-        foreach ($products as $product) {
-            $items[] = [
-                'id' => $product->id,
-                'text' => $product->code . ' : ' . $product->name_en,
-                'drawing' => $product->code,
-                'description' => $product->name_en,
-                'symbol' => $product->symbol,
-                'cus_code' => $product->cus_code,
-                'price' => $product->price ?? 0
-            ];
+        } catch (\Exception $e) {
+            // ใช้ฟังก์ชัน ajaxFail ของเตี้ยมเพื่อ Debug
+            return response()->json([
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ], 500);
         }
-
-        // ส่งกลับตามรูปแบบที่ Select2 และสคริปต์หน้าบ้านต้องการ
-        return response()->json([
-            'items' => $items
-        ]);
     }
 
 }

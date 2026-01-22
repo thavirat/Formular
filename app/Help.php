@@ -43,35 +43,31 @@ class Help
 	}
 
     public static function CheckPermissionMenu($url, $value, $redirect = false) {
-        // ดึงสิทธิ์ผ่าน Helper (ซึ่งข้างในมีการเช็ค Auth และ Cache เรียบร้อยแล้ว)
         $permission = \App\Helpers\UserPermission::getMyPermissions();
 
-        // เช็คว่ามี $url นี้ และมี $value นี้ที่เป็น 'T' หรือไม่
         if (isset($permission[$url][$value]) && $permission[$url][$value] == 'T') {
             return true;
         }
 
-        // กรณีเป็นสิทธิ์แบบ Key-Value (ไม่มีระดับ CRUD)
         if (isset($permission[$url]) && $permission[$url] == 'T' && !is_array($permission[$url])) {
             return true;
         }
 
         // ถ้าไม่ผ่านสิทธิ์
         if ($redirect) {
-            // ใช้ abort(403) หรือ redirect ตามต้องการ
             return abort(403, 'Unauthorized action.');
         }
 
         return false;
     }
 
-    public static function CheckGeneralPermission($key , $value){
-        $permission = Session::get('all_permissions');
-        if($permission[$key] == $value){
+    public static function CheckGeneralPermission($key, $value) {
+        $permission = \App\Helpers\UserPermission::getMyPermissions();
+
+        if (isset($permission[$key]) && $permission[$key] == $value) {
             return true;
-        }else{
-            return redirect('/admin/PermissionDenined');
         }
+        abort(403, 'คุณไม่มีสิทธิ์เข้าถึงส่วนนี้');
     }
 
     public static function is_expired(){

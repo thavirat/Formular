@@ -12,7 +12,7 @@
         <h1 class="page-title text-primary-d2 text-140">{{ $currentMenu->title }} </h1>
         <div class="page-tools mt-3 mt-sm-0 mb-sm-n1">
              @if( $my_menu_permission[$currentMenu->url]['p'] == 'T' )
-                 <a href="{{ url("admin/ProductCategory/ExportPrint") }}" target="_blank" class="btn btn-light-warning btn-h-warning btn-a-warning border-0 radius-3 py-2 text-600 text-90">
+                 <a href="{{ url("admin/ProductGroup/ExportPrint") }}" target="_blank" class="btn btn-light-warning btn-h-warning btn-a-warning border-0 radius-3 py-2 text-600 text-90">
                     <span class="d-none d-sm-inline mr-1">
                         Print
                     </span>
@@ -20,7 +20,7 @@
                 </a>
             @endif
             @if( $my_menu_permission[$currentMenu->url]['ep'] == 'T' )
-                <a href="{{ url("admin/ProductCategory/ExportPDF") }}" target="_blank" class="btn btn-light-danger btn-h-danger btn-a-danger border-0 radius-3 py-2 text-600 text-90">
+                <a href="{{ url("admin/ProductGroup/ExportPDF") }}" target="_blank" class="btn btn-light-danger btn-h-danger btn-a-danger border-0 radius-3 py-2 text-600 text-90">
                     <span class="d-none d-sm-inline mr-1">
                         PDF
                     </span>
@@ -28,7 +28,7 @@
                 </a>
             @endif
             @if( $my_menu_permission[$currentMenu->url]['ee'] == 'T' )
-                <a href="{{ url("admin/ProductCategory/ExportExcel") }}" target="_blank" class="btn btn-light-primary btn-h-primary btn-a-primary border-0 radius-3 py-2 text-600 text-90">
+                <a href="{{ url("admin/ProductGroup/ExportExcel") }}" target="_blank" class="btn btn-light-primary btn-h-primary btn-a-primary border-0 radius-3 py-2 text-600 text-90">
                     <span class="d-none d-sm-inline mr-1">
                         Excel
                     </span>
@@ -56,13 +56,13 @@
                         </div>
                     </div>
 
-                    <table id="tableProductCategory" class="table table-border-x brc-secondary-l4 border-0 mb-0 w-100">
+                    <table id="tableProductGroup" class="table table-border-x brc-secondary-l4 border-0 mb-0 w-100">
                         <thead class="text-dark-tp3 bgc-grey-l4 text-90 border-b-1 brc-transparent">
                             <tr>
                                 <th class="text-center" width="5%">ลำดับ</th>
+                                <th>Code</th>
                                 <th>Name TH</th>
                                 <th>Name ENG</th>
-                                <th>Code</th>
                                 <th class="text-center">#</th>
                             </tr>
                         </thead>
@@ -97,8 +97,15 @@
                         <div class="row">
                             <div class="col-md-6 col-sm-12">
                                 <div class="form-group">
+                                    <label for="add_code">Code</label>
+                                    <input type="text" name="code" id="add_code" class="form-control autofocus" >
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
                                     <label for="add_name_th">Name TH</label>
-                                    <input type="text" name="name_th" id="add_name_th" class="form-control autofocus" >
+                                    <input type="text" name="name_th" id="add_name_th" class="form-control " >
                                 </div>
                             </div>
 
@@ -106,13 +113,6 @@
                                 <div class="form-group">
                                     <label for="add_name_en">Name ENG</label>
                                     <input type="text" name="name_en" id="add_name_en" class="form-control " >
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="add_code">Code</label>
-                                    <input type="text" name="code" id="add_code" class="form-control " >
                                 </div>
                             </div>
 
@@ -132,7 +132,7 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <form id="FormEdit" data-parsley-validate="true">
-                    <input type="hidden" id="ProductCategory_edit_id">
+                    <input type="hidden" id="ProductGroup_edit_id">
                     <div class="modal-header">
                         <h5 class="modal-title text-primary-d3" id="ModalEditLabel">
                             แก้ไขข้อมูล{{ $currentMenu->title }}
@@ -146,6 +146,13 @@
 
                             <div class="col-md-6 col-sm-12">
                                 <div class="form-group">
+                                    <label for="edit_code">Code</label>
+                                    <input type="text" name="code" id="edit_code" class="form-control " >
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
                                     <label for="edit_name_th">Name TH</label>
                                     <input type="text" name="name_th" id="edit_name_th" class="form-control " >
                                 </div>
@@ -155,13 +162,6 @@
                                 <div class="form-group">
                                     <label for="edit_name_en">Name ENG</label>
                                     <input type="text" name="name_en" id="edit_name_en" class="form-control " >
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="edit_code">Code</label>
-                                    <input type="text" name="code" id="edit_code" class="form-control " >
                                 </div>
                             </div>
 
@@ -180,10 +180,10 @@
 @push('scripts')
 <script type="text/javascript">
 
-    var tableProductCategory = $('#tableProductCategory').dataTable({
+    var tableProductGroup = $('#tableProductGroup').dataTable({
 
         "ajax": {
-            "url": url_gb+"/admin/ProductCategory/Lists",
+            "url": url_gb+"/admin/ProductGroup/Lists",
             "type": "POST",
             "data": function ( d ) {
                 // d.status = "A";
@@ -197,9 +197,9 @@
         "responsive": false,
         "columns": [
             {"data": "DT_RowIndex", 'searchable': false, 'orderable': false, "class": "text-center"},
+            {"data": "code", "name": 'code'},
             {"data": "name_th", "name": 'name_th'},
             {"data": "name_en", "name": 'name_en'},
-            {"data": "code", "name": 'code'},
             {
                 "data": "action" ,
                 "name": "action",
@@ -220,7 +220,7 @@
         loadingButton(form.find('button[type=submit]'));
         $.ajax({
             method: "POST",
-            url: url_gb+"/admin/ProductCategory",
+            url: url_gb+"/admin/ProductGroup",
             dataType : "json",
             data: form.serialize()
         }).done(function( res ) {
@@ -228,7 +228,7 @@
             if(res.status == 1){
                 Swal.fire(res.title, res.content,'success');
                 resetFormCustom(form);
-                tableProductCategory.api().ajax.reload();
+                tableProductGroup.api().ajax.reload();
                 $('#ModalAdd').modal('hide');
             }else{
                 Swal.fire(res.title, res.content,'error');
@@ -240,12 +240,12 @@
 
     $('body').on('submit', '#FormEdit', function(e){
         e.preventDefault();
-        var id = $("#ProductCategory_edit_id").val();
+        var id = $("#ProductGroup_edit_id").val();
         var form = $(this);
         loadingButton(form.find('button[type=submit]'));
         $.ajax({
             method: "PUT",
-            url: url_gb+"/admin/ProductCategory/"+id,
+            url: url_gb+"/admin/ProductGroup/"+id,
             dataType : 'json',
             data: form.serialize()
             }).done(function( res ) {
@@ -253,7 +253,7 @@
                 if(res.status == 1){
                     Swal.fire(res.title, res.content, 'success');
                     resetFormCustom(form);
-                    tableProductCategory.api().ajax.reload();
+                    tableProductGroup.api().ajax.reload();
                     $('#ModalEdit').modal('hide');
                 }else{
                     Swal.fire(res.title, res.content, 'error');
@@ -278,12 +278,12 @@
             if (say.isConfirmed) {
                 $.ajax({
                     method: "DELETE",
-                    url: url_gb+"/admin/ProductCategory/"+id,
+                    url: url_gb+"/admin/ProductGroup/"+id,
                     dataType : 'json',
                 }).done(function( res ) {
                     if(res.status == 1){
                         Swal.fire(res.title, res.content,'success');
-                        tableProductCategory.api().ajax.reload();
+                        tableProductGroup.api().ajax.reload();
                     }else{
                         Swal.fire(res.title, res.content,'warning');
                     }
@@ -298,16 +298,16 @@
 
     $('body').on('click','.btn-edit',function(data){
         var id = $(this).data('id');
-        $("#ProductCategory_edit_id").val(id);
+        $("#ProductGroup_edit_id").val(id);
         var btn = $(this);
         loadingButton(btn);
         $.ajax({
             method: "GET",
-            url: url_gb+"/admin/ProductCategory/"+id,
+            url: url_gb+"/admin/ProductGroup/"+id,
             dataType: 'json',
         }).done(function( res ) {
             resetButton(btn);
-                                    $("#edit_name_th").val(res.content.name_th);                                                $("#edit_name_en").val(res.content.name_en);                                                $("#edit_code").val(res.content.code);                        
+                                    $("#edit_code").val(res.content.code);                                                $("#edit_name_th").val(res.content.name_th);                                                $("#edit_name_en").val(res.content.name_en);                        
             $('#ModalEdit').modal('show');
         }).fail(function(res){
             ajaxFail(res , "");
