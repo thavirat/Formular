@@ -7,16 +7,22 @@ use App\Models\SubCategory;
 use App\Models\ProductGroup;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithBatchInserts; // เพิ่มตัวนี้
-use Maatwebsite\Excel\Concerns\WithChunkReading; // เพิ่มตัวนี้
+use Maatwebsite\Excel\Concerns\WithBatchInserts;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithEvents; // เพิ่มตัวนี้
+use Maatwebsite\Excel\Events\BeforeImport; // เพิ่มตัวนี้
+use Maatwebsite\Excel\Events\AfterChunk;   // เพิ่มตัวนี้
 
-class ProductImport implements ToModel, WithHeadingRow, WithBatchInserts, WithChunkReading
+class ProductImport implements ToModel, WithHeadingRow, WithBatchInserts, WithChunkReading, WithEvents
 {
+    private $rows = 0; // ตัวนับจำนวนแถวที่ทำไปแล้ว
+
     public function model(array $row)
     {
+        $this->rows++; // นับเพิ่มทุกครั้งที่เข้า Model
+
         if (empty($row['prodid'])) return null;
 
-        // ใช้ firstOrCreate แทนเพื่อความเร็ว (ถ้ามีอยู่แล้วจะไม่ Update เพื่อลด Query)
         $category = ProductCategory::firstOrCreate(
             ['code' => trim($row['cateid'])],
             ['name_th' => $row['catenamethai'], 'name_en' => $row['catenameeng']]
@@ -43,20 +49,23 @@ class ProductImport implements ToModel, WithHeadingRow, WithBatchInserts, WithCh
             'group_id'        => $group->id,
             'name_th'         => $row['prodnamethai'],
             'name_en'         => $row['prodnameeng1'],
+            'drawing'         => $row['proddrawing'],
             'active'          => 'T',
-            // ... ฟิลด์อื่นๆ ...
         ]);
     }
 
-    // กำหนดให้บันทึกเข้า DB ทีละ 100 แถว
-    public function batchSize(): int
-    {
-        return 100;
-    }
+    public function batchSize(): int { return 100; }
+    public function chunkSize(): int { return 100; }
 
-    // กำหนดให้อ่านไฟล์จาก Memory ทีละ 100 แถว (แก้ปัญหา Time Out)
-    public function chunkSize(): int
+    public function registerEvents(): array
     {
-        return 100;
+        return [
+            BeforeImport::class => function (BeforeImport $event) {
+                dump("--- Starting Import Process ---");
+            },
+            AfterChunk::class => function (AfterChunk $event) {
+                dump("Imported: {$this->rows} rows complete.");
+            },
+        ];
     }
 }
