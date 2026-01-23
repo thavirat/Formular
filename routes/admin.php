@@ -97,6 +97,7 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::resource('/CreditPayment', Admin\CreditPaymentController::class);
 
                 Route::post('/Quotation/Lists', 'Admin\QuotationController@lists');
+                Route::post('/Quotation/SaveComment', 'Admin\QuotationController@save_comment');
                 Route::get('/Quotation/ExportPDF', 'Admin\QuotationController@export_pdf');
                 Route::get('/Quotation/{id}/pdf', 'Admin\QuotationController@view_pdf');
                 Route::get('/Quotation/ExportExcel', 'Admin\QuotationController@export_excel');
@@ -149,6 +150,12 @@ Route::middleware('authAdmin:admin')->group(function () {
     Route::get('/ProductGroup/ExportExcel', 'Admin\ProductGroupController@export_excel');
     Route::get('/ProductGroup/ExportPrint', 'Admin\ProductGroupController@export_print');
     Route::resource('/ProductGroup', Admin\ProductGroupController::class);
+
+    Route::post('/ContactChannel/Lists', 'Admin\ContactChannelController@lists');
+    Route::get('/ContactChannel/ExportPDF', 'Admin\ContactChannelController@export_pdf');
+    Route::get('/ContactChannel/ExportExcel', 'Admin\ContactChannelController@export_excel');
+    Route::get('/ContactChannel/ExportPrint', 'Admin\ContactChannelController@export_print');
+    Route::resource('/ContactChannel', Admin\ContactChannelController::class);
 
     ##FOR##REPLACE##INSTALL##
         });

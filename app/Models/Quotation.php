@@ -10,4 +10,8 @@ class Quotation extends Model
     {
         return $this->hasMany(QuotationProduct::class, 'quotation_id');
     }
+
+    public function Comments(){
+        return $this->hasMany(Comment::class, 'quotation_id');
+    }
 }

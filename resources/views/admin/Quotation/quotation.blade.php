@@ -4,55 +4,60 @@
 
 @section('css')
 <style>
-    /* ปรับแต่งหัวตารางให้ดูโมเดิร์น */
     #tableQuotation thead th {
-        background-color: #f8fafc;
-        color: #475569;
-        font-weight: 600;
-        vertical-align: middle;
-        border-bottom: 2px solid #e2e8f0;
-        text-transform: none;
+        background-color: #f1f4f9 !important;
+        color: #5a6a85 !important;
+        text-transform: none !important;
+        font-size: 0.9rem;
+        padding: 15px 10px !important;
     }
 
-    /* ปรับแต่งเนื้อหาตาราง */
-    #tableQuotation tbody td {
-        vertical-align: middle;
-        padding: 12px 8px;
-        color: #1e293b;
+    .comment-list-wrapper {
+        max-height: 120px;
+        overflow-y: auto;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #eee;
     }
 
-    /* ตกแต่งเลขที่เอกสาร */
-    .doc-no {
-        font-family: 'Monaco', 'Consolas', monospace;
-        font-weight: bold;
-        color: #0284c7;
-        background: #f0f9ff;
-        padding: 4px 8px;
+    .comment-item {
+        font-size: 0.85rem;
+        color: #666;
+        padding-bottom: 4px;
+        list-style: none;
+    }
+
+    .table .form-control {
+        font-size: 0.85rem;
         border-radius: 4px;
     }
 
-    /* ตกแต่งยอดเงินรวม */
-    .total-amount {
-        font-weight: bold;
-        color: #0f172a;
+    .btn-group-action .btn {
+        margin: 0 1px;
+        padding: 4px 8px;
     }
 
-    /* แถวสลับสีและเอฟเฟกต์ Hover */
-    #tableQuotation tbody tr:hover {
-        background-color: #f1f5f9 !important;
-        transition: all 0.2s ease;
+    .text-doc-no {
+        font-family: 'Monaco', monospace;
+        letter-spacing: 0.5px;
     }
 
-    /* จัดการปุ่ม Action ให้ดูสะอาดตา */
-    .btn-action {
-        border-radius: 6px;
-        margin: 0 2px;
-        width: 32px;
-        height: 32px;
-        padding: 0;
-        line-height: 32px;
-        display: inline-block;
+    #tableQuotation tbody td {
+        vertical-align: top !important; /* ชิดขอบบน */
+        padding-top: 15px !important;   /* เพิ่มระยะห่างด้านบนให้ดูไม่ติดเส้นเกินไป */
+        padding-bottom: 15px !important;
     }
+
+    /* ส่วนของเลขที่เอกสารให้ดูเด่นและสะอาด */
+    .doc-info-wrapper {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* ส่วนของรายการคอมเมนต์ให้มีระยะห่างที่พอดี */
+    .comment-list-wrapper {
+        margin-top: 0; /* มั่นใจว่าชิดบน */
+    }
+
 </style>
 @endsection
 
@@ -82,27 +87,19 @@
                         </div>
                     </div>
 
-                    <table id="tableQuotation" class="table table-border-x brc-secondary-l4 border-0 mb-0 w-100">
-                        <thead class="text-dark-tp3 bgc-grey-l4 text-90 border-b-1 brc-transparent">
-                            <tr>
-                                <th class="text-center" width="5%" rowspan="2">{{__('No')}}</th>
-                                <th rowspan="2">{{__('Document No')}}</th>
-                                <th rowspan="2">{{__('Document Date')}}</th>
-                                <th rowspan="2">{{__('Company Name')}}</th>
-                                <th rowspan="2">{{__('Total')}}</th>
-                                <th rowspan="2">{{__('Created By')}}</th>
-                                <th class="text-center" colspan="3">{{__('Action')}}</th>
-                            </tr>
-                            <tr>
-                                <th>{{__('View')}}</th>
-                                <th>{{__('Edit')}}</th>
-                                <th>{{__('Delete')}}</th>
-                            </tr>
-                        </thead>
-
-                        <tbody class="mt-1">
-                        </tbody>
-                    </table>
+                    <table id="tableQuotation" class="table table-striped-primary table-borderless border-0 mb-0 w-100 table-hover">
+                    <thead>
+                        <tr class="bgc-primary-d1 text-white">
+                            <th class="text-center" width="5%">#</th>
+                            <th>เลขที่ / วันที่เอกสาร</th>
+                            <th>ลูกค้า / ผู้จัดทำ</th>
+                            <th class="text-right">ยอดรวม</th>
+                            <th width="300px">บันทึกติดตามงาน</th>
+                            <th class="text-center">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="align-middle"></tbody>
+                </table>
 
 
                 </div><!-- /.card-body -->
@@ -120,63 +117,49 @@
 
     var tableQuotation = $('#tableQuotation').dataTable({
         "ajax": {
-            "url": url_gb+"/admin/Quotation/Lists",
-            "type": "POST",
-            "data": function ( d ) {
-                // d.status = "A";
-                // d.custom = $('#myInput').val();
-                // etc
-            }
+            "url": url_gb + "/admin/Quotation/Lists",
+            "type": "POST"
         },
-        "drawCallback": function( settings ) {
+        "drawCallback": function(settings) {
             $('[data-toggle="tooltip"]').tooltip();
         },
-        "responsive": false,
         "columns": [
             {
                 "data": "DT_RowIndex",
+                "class": "text-center align-middle",
                 "searchable": false,
-                "orderable": false,
-                "class": "text-center text-secondary"
+                "orderable": false
             },
             {
-                "data": "doc_no",
-                "render": function(data) {
-                    return '<span class="doc-no">' + data + '</span>';
-                }
+                "data": "doc_info",
+                "name": "doc_no",
+                "class": "align-middle"
             },
             {
-                "data": "doc_date",
-                "render": function(data) {
-                    return '<span class="text-80 text-grey-d1"><i class="far fa-calendar-alt mr-1"></i>' + data + '</span>';
-                }
-            },
-            {
-                "data": "company_name",
-                "render": function(data) {
-                    return '<div class="text-bold text-dark-m2">' + data + '</div>';
-                }
+                "data": "customer_info",
+                "name": "company_name",
+                "class": "align-middle"
             },
             {
                 "data": "total",
-                "class": "text-right",
-                "render": function(data) {
-                    // ใส่คอมม่าและทศนิยม 2 ตำแหน่ง
-                    let val = parseFloat(data).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                    return '<span class="total-amount">' + val + '</span>';
-                }
+                "name": "total",
+                "class": "text-right align-middle text-600 text-success-d1",
+
             },
             {
-                "data": "created_by_name",
-                "name": 'admin_users.name',
-                "render": function(data) {
-                    return '<span class="text-85"><i class="far fa-user mr-1 text-grey-l1"></i>' + data + '</span>';
-                }
+                "data": "comment_box", // เปลี่ยนจาก comment_box เป็นชื่อที่ตรงกับ Controller
+                "searchable": false,
+                "sortable": false,
+                "class": "align-middle"
             },
-            { "data": "btn-view", "searchable": false, "sortable": false, "class": "text-center" },
-            { "data": "btn-edit", "searchable": false, "sortable": false, "class": "text-center" },
-            { "data": "btn-delete", "searchable": false, "sortable": false, "class": "text-center" },
-        ]
+            {
+                "data": "action_btns", // ใช้ปุ่มที่รวมกลุ่มแล้วจาก Controller
+                "searchable": false,
+                "sortable": false,
+                "class": "text-center align-middle"
+            }
+        ],
+        "order": [[1, "desc"]]
     });
 
     $('body').on('click','.btn-add',function(data){
@@ -342,6 +325,54 @@
      placeholder: 'กรุณาเลือก',
      allowClear: true
  })
+
+
+
+ $('body').on('click', '.btn-save-comment', function() {
+    var id = $(this).data('id'); // ID ของ Quotation
+    var customer_id = $(this).data('customer-id');
+    var btn = $(this);
+
+    // ดึงค่าจาก textarea และ select โดยอ้างอิงจาก ID ที่เราทำไว้ใน Controller
+    var detail = $('.comment-' + id).val();
+    var channel_id = $('.channel-' + id).val();
+
+    if (detail.trim() == "") {
+        Swal.fire('แจ้งเตือน', 'กรุณากรอกรายละเอียดคอมเมนต์', 'warning');
+        return false;
+    }
+
+    loadingButton(btn); // เปลี่ยนปุ่มเป็นสถานะกำลังโหลด
+
+    $.ajax({
+        method: "POST",
+        url: url_gb + "/admin/Quotation/SaveComment", // สร้าง Route นี้รอไว้เลยครับ
+        data: {
+            _token: $('meta[name="csrf-token"]').attr('content'),
+            quotation_id: id,
+            customer_id: customer_id,
+            detail: detail,
+            contact_channel_id: channel_id
+        }
+    }).done(function(res) {
+        resetButton(btn);
+        if (res.status == 1) {
+            tableQuotation.api().ajax.reload(null, false); // false คือให้ค้างอยู่ที่หน้าเดิม (Pagination ไม่เด้งไปหน้า 1)
+            Swal.fire({
+                icon: 'success',
+                title: 'บันทึกสำเร็จ',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        } else {
+            Swal.fire('ผิดพลาด', res.content, 'error');
+        }
+    }).fail(function(res) {
+        ajaxFail(res, "");
+    });
+});
 
 </script>
 @endpush
