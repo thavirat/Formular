@@ -3,6 +3,21 @@
 @section('title', $currentMenu->title)
 
 @push('css')
+    <style>
+        .table thead th {
+            background-color: #f8f9fa;
+            color: #448afc;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e0e6ed;
+        }
+
+        .btn-group .btn {
+            margin: 0 1px;
+        }
+    </style>
 @endpush
 
 @section('body')
@@ -66,26 +81,20 @@
                             </div>
                         </div>
 
-                        <table id="tableProduct" class="table table-border-x brc-secondary-l4 border-0 mb-0 w-100">
-                            <thead class="text-dark-tp3 bgc-grey-l4 text-90 border-b-1 brc-transparent">
+                        <table id="tableProduct" class="table table-striped-primary table-borderless border-0 mb-0 w-100">
+                            <thead>
                                 <tr>
-                                    <th class="text-center" width="5%">ลำดับ</th>
+                                    <th class="text-center">#</th>
                                     <th>Category</th>
                                     <th>Product ID</th>
-                                    <th>Name TH</th>
-                                    <th>Name ENG</th>
+                                    <th>Product Name</th>
                                     <th>Drawing</th>
-                                    <th>Width</th>
-                                    <th>Height</th>
-                                    <th>Length</th>
+                                    <th>Dimensions</th>
                                     <th>Weight</th>
-                                    <th>Sub Category</th>
-                                    <th class="text-center">#</th>
+                                    <th class="text-center">Action</th>
                                 </tr>
                             </thead>
-
-                            <tbody class="mt-1">
-                            </tbody>
+                            <tbody class="align-middle"></tbody>
                         </table>
 
 
@@ -147,7 +156,7 @@
                                     <select name="category_id" id="add_category_id" class="form-control  autofocus">
                                         <option value="">เลือกกรุณาเลือก</option>
                                         @foreach ($ProductCategories as $ProductCategory)
-                                            <option value="{{ $ProductCategory->id }}">{{ $ProductCategory->name }}</option>
+                                            <option value="{{ $ProductCategory->id }}">{{ $ProductCategory->name_th }}</option> {{$ProductCategory->name_en}}
                                         @endforeach
                                     </select>
                                 </div>
@@ -256,7 +265,7 @@
                                     <select name="category_id" id="edit_category_id" class="form-control  ">
                                         <option value="">เลือกกรุณาเลือก</option>
                                         @foreach ($ProductCategories as $ProductCategory)
-                                            <option value="{{ $ProductCategory->id }}">{{ $ProductCategory->name }}
+                                            <option value="{{ $ProductCategory->id }}">{{ $ProductCategory->name_th }} {{$ProductCategory->name_en}}
                                             </option>
                                         @endforeach
                                     </select>
@@ -362,57 +371,42 @@
             "responsive": false,
             "columns": [{
                     "data": "DT_RowIndex",
-                    'searchable': false,
-                    'orderable': false,
-                    "class": "text-center"
+                    "class": "text-center",
+                    "searchable": false,
+                    "orderable": false
                 },
                 {
-                    "data": "category_id",
-                    "name": 'category_id'
+                    "data": "category_name",
+                    "name": "product_categories.name_th"
                 },
                 {
                     "data": "code",
-                    "name": 'code'
-                },
-                {
-                    "data": "name_th",
-                    "name": 'name_th'
+                    "name": "code"
                 },
                 {
                     "data": "name_en",
-                    "name": 'name_en'
-                },
+                    "name": "name_en"
+                }, // ใช้ Custom Column ที่มีทั้ง EN/TH
                 {
                     "data": "drawing",
-                    "name": 'drawing'
+                    "name": "drawing"
                 },
                 {
-                    "data": "width",
-                    "name": 'width'
-                },
-                {
-                    "data": "height",
-                    "name": 'height'
-                },
-                {
-                    "data": "length",
-                    "name": 'length'
-                },
+                    "data": "dimensions",
+                    "searchable": false,
+                    "orderable": false
+                }, // คอลัมน์รวม W/H/L
                 {
                     "data": "weight",
-                    "name": 'weight'
-                },
-                {
-                    "data": "sub_category_id",
-                    "name": 'sub_category_id'
+                    "name": "weight",
+                    "class": "text-right"
                 },
                 {
                     "data": "action",
-                    "name": "action",
                     "searchable": false,
                     "sortable": false,
                     "class": "text-center"
-                },
+                }
             ]
         });
 
@@ -550,34 +544,34 @@
 
 
         $('#FormImportProduct').on('submit', function(e) {
-                e.preventDefault();
-                var form = $(this);
-                var btn = form.find('button[type=submit]');
-                var formData = new FormData(this);
+            e.preventDefault();
+            var form = $(this);
+            var btn = form.find('button[type=submit]');
+            var formData = new FormData(this);
 
-                loadingButton(btn);
+            loadingButton(btn);
 
-                $.ajax({
-                    url: url_gb + "/admin/Product/Import",
-                    method: "POST",
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                }).done(function(res) {
-                    resetButton(btn);
-                    if (res.status == 1) {
-                        Swal.fire(res.title, res.content, 'success');
-                        $('#ModalImportProduct').modal('hide');
-                        if(typeof tableProduct !== 'undefined'){
-                            tableProduct.api().ajax.reload();
-                        }
-                    } else {
-                        Swal.fire(res.title, res.content, 'error');
+            $.ajax({
+                url: url_gb + "/admin/Product/Import",
+                method: "POST",
+                data: formData,
+                contentType: false,
+                processData: false,
+            }).done(function(res) {
+                resetButton(btn);
+                if (res.status == 1) {
+                    Swal.fire(res.title, res.content, 'success');
+                    $('#ModalImportProduct').modal('hide');
+                    if (typeof tableProduct !== 'undefined') {
+                        tableProduct.api().ajax.reload();
                     }
-                }).fail(function(res) {
-                    // --- เปลี่ยนมาใช้ ajaxFail ตรงนี้ครับ ---
-                    ajaxFail(res, form);
-                });
+                } else {
+                    Swal.fire(res.title, res.content, 'error');
+                }
+            }).fail(function(res) {
+                // --- เปลี่ยนมาใช้ ajaxFail ตรงนี้ครับ ---
+                ajaxFail(res, form);
             });
+        });
     </script>
 @endpush

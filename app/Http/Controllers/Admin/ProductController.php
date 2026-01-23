@@ -234,36 +234,50 @@ class ProductController extends AdminController
      * @return  \Illuminate\Http\Response
      */
     public function report(){
-        $result = Product::select()->orderByDesc('id');
+        $result = Product::leftJoin('product_categories', 'product_categories.id', 'products.category_id')
+        ->leftJoin('sub_categories', 'sub_categories.id', 'products.sub_category_id')
+        ->leftJoin('product_groups', 'product_groups.id', 'products.group_id')
+        ->select([
+            'products.*',
+            'product_categories.name_th as category_name',
+            'sub_categories.name_th as sub_category_name',
+            'product_groups.name_th as group_name'
+        ]);
         return $result;
     }
 
     public function lists(Request $request)
-    {
-        $result = $this->report($request);
+{
+    $result = $this->report();
 
-        return DataTables::of($result)
-        ->addColumn('action', function($rec){
-            $btnEdit = '<button class="btn btn-xs btn-warning btn-edit" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="แก้ไข">
-            <i class="fa fa-edit"></i>
-            </button> ';
-            $btnDelete = '<button class="btn btn-xs btn-danger btn-delete" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="ลบ">
-            <i class="fa fa-trash"></i>
-            </button> ';
-            $update = Help::CheckPermissionMenu($this->current_menu , 'u');
-            $str = '';
-            if($update){
-                $str.=$btnEdit;
-            }
-            $delete = Help::CheckPermissionMenu($this->current_menu , 'd');
-            if($delete){
-                $str.=$btnDelete;
-            }
+    return DataTables::of($result)
+            ->editColumn('name_en', function($rec) {
+                return '<div class="text-95 text-primary-d2 font-bolder">' . ($rec->name_en ?: '-') . '</div>
+                        <small class="text-grey-m1">' . ($rec->name_th ?: '-') . '</small>';
+            })
+            ->editColumn('code', function($rec) {
+                return '<span class="badge badge-lg bgc-light-blue-l2 text-blue-d2 border-1 brc-blue-m4 px-2">' . $rec->code . '</span>';
+            })
+            ->addColumn('dimensions', function($rec) {
+                return '<small class="text-80 text-grey">W:' . (float)$rec->width . ' H:' . (float)$rec->height . ' L:' . (float)$rec->length . '</small>';
+            })
+            ->addColumn('action', function($rec) {
+                $update = Help::CheckPermissionMenu($this->current_menu, 'u');
+                $delete = Help::CheckPermissionMenu($this->current_menu, 'd');
 
-            return $str;
-        })
-        ->addIndexColumn()
-        ->make(true);
+                $str = '<div class="btn-group">';
+                if($update) {
+                    $str .= '<button class="btn btn-sm btn-outline-warning btn-h-light-warning btn-a-light-warning btn-edit" data-id="'.$rec->id.'" title="แก้ไข"><i class="fa fa-pencil-alt"></i></button>';
+                }
+                if($delete) {
+                    $str .= '<button class="btn btn-sm btn-outline-danger btn-h-light-danger btn-a-light-danger btn-delete" data-id="'.$rec->id.'" title="ลบ"><i class="fa fa-trash-alt"></i></button>';
+                }
+                $str .= '</div>';
+                return $str;
+            })
+            ->rawColumns(['action', 'name_en', 'code', 'dimensions'])
+            ->addIndexColumn()
+            ->make(true);
     }
 
     public function export_excel(Request $request){
