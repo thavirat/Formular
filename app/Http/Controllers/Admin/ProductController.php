@@ -334,4 +334,59 @@ class ProductController extends AdminController
         }
     }
 
+    public function Search(Request $request) {
+        $q = $request->input('q');
+        $customer_id = $request->input('customer_id');
+        $currency_id = $request->input('currency_id');
+        $customer = Customer::find($customer_id);
+
+
+        $products = Product::leftJoin('customer_level_discouts' , function($join) use($customer , $currency_id){
+            $join->on('customer_level_discouts.product_id' , 'products.id')
+                 ->where('customer_level_discouts.level_id' , $customer->level_id)
+                 ->where('customer_level_discouts.currency_id' , $currency_id);
+        })
+        ->leftJoin('currencies' , 'currencies.id' , 'customer_level_discouts.currency_id')
+        ->leftJoin('customer_code_products' , function($q) use($customer_id){
+            $q->on('customer_code_products.product_id' , 'products.id');
+            $q->where('customer_code_products.customer_id' , $customer_id);
+        })
+        ->where(function($query) use ($q) {
+            $query->where('products.code', 'LIKE', '%' . $q . '%')
+                  ->orWhere('products.name_th', 'LIKE', '%' . $q . '%')
+                  ->orWhere('products.name_en', 'LIKE', '%' . $q . '%')
+                  ->orWhere('products.name_cn', 'LIKE', '%' . $q . '%');
+        })
+
+        ->limit(20)
+        ->select(
+            'products.*',
+            'customer_level_discouts.price',
+            'currencies.symbol',
+            'customer_code_products.code as cus_code'
+        )
+        // ->groupBy('products.id')
+        ->get();
+
+
+
+        $items = [];
+        foreach ($products as $product) {
+            $items[] = [
+                'id' => $product->id,
+                'text' => $product->code . ' : ' . $product->name_en,
+                'drawing' => $product->code,
+                'description' => $product->name_en,
+                'symbol' => $product->symbol,
+                'cus_code' => $product->cus_code,
+                'price' => $product->price ?? 0
+            ];
+        }
+
+        // ส่งกลับตามรูปแบบที่ Select2 และสคริปต์หน้าบ้านต้องการ
+        return response()->json([
+            'items' => $items
+        ]);
+    }
+
 }
