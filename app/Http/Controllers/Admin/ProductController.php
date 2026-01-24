@@ -12,6 +12,7 @@ use Validator;
 use Storage;
 use App\Models\ProductCategory;
 use App\Models\SubCategory;
+use App\Models\Customer;
 class ProductController extends AdminController
 {
     public $current_menu;
