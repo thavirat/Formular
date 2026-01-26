@@ -142,17 +142,18 @@
                 "class": "align-middle"
             },
             {
-                "data": "status_name",
-                "name": "quotation_statuses.name",
-                "class": "text-right align-middle text-600 text-success-d1",
-
-            },
-            {
                 "data": "total",
                 "name": "total",
                 "class": "text-right align-middle text-600 text-success-d1",
 
             },
+            {
+                "data": "status_name",
+                "name": "quotation_statuses.name",
+                "class": "text-right align-middle text-600 text-success-d1",
+
+            },
+
 
             {
                 "data": "comment_box", // เปลี่ยนจาก comment_box เป็นชื่อที่ตรงกับ Controller
