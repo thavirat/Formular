@@ -96,6 +96,8 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::get('/CreditPayment/ExportPrint', 'Admin\CreditPaymentController@export_print');
                 Route::resource('/CreditPayment', Admin\CreditPaymentController::class);
 
+                Route::post('/Quotation/RequestApproval', 'Admin\QuotationController@RequestApproval');
+                Route::post('/Quotation/Approve', 'Admin\QuotationController@Approve');
                 Route::post('/Quotation/Lists', 'Admin\QuotationController@lists');
                 Route::post('/Quotation/SaveComment', 'Admin\QuotationController@save_comment');
                 Route::get('/Quotation/ExportPDF', 'Admin\QuotationController@export_pdf');
@@ -156,6 +158,13 @@ Route::middleware('authAdmin:admin')->group(function () {
     Route::get('/ContactChannel/ExportExcel', 'Admin\ContactChannelController@export_excel');
     Route::get('/ContactChannel/ExportPrint', 'Admin\ContactChannelController@export_print');
     Route::resource('/ContactChannel', Admin\ContactChannelController::class);
+
+    Route::get('/ProformaInvoice/pdfFactory', 'Admin\ProformaInvoiceController@pdfFactory');
+    Route::post('/ProformaInvoice/Lists', 'Admin\ProformaInvoiceController@lists');
+    Route::get('/ProformaInvoice/ExportPDF', 'Admin\ProformaInvoiceController@export_pdf');
+    Route::get('/ProformaInvoice/ExportExcel', 'Admin\ProformaInvoiceController@export_excel');
+    Route::get('/ProformaInvoice/ExportPrint', 'Admin\ProformaInvoiceController@export_print');
+    Route::resource('/ProformaInvoice', Admin\ProformaInvoiceController::class);
 
     ##FOR##REPLACE##INSTALL##
         });

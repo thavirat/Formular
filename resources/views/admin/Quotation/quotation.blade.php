@@ -94,6 +94,7 @@
                             <th>เลขที่ / วันที่เอกสาร</th>
                             <th>ลูกค้า / ผู้จัดทำ</th>
                             <th class="text-right">ยอดรวม</th>
+                            <th>สถานะ</th>
                             <th width="300px">บันทึกติดตามงาน</th>
                             <th class="text-center">จัดการ</th>
                         </tr>
@@ -141,11 +142,18 @@
                 "class": "align-middle"
             },
             {
+                "data": "status_name",
+                "name": "quotation_statuses.name",
+                "class": "text-right align-middle text-600 text-success-d1",
+
+            },
+            {
                 "data": "total",
                 "name": "total",
                 "class": "text-right align-middle text-600 text-success-d1",
 
             },
+
             {
                 "data": "comment_box", // เปลี่ยนจาก comment_box เป็นชื่อที่ตรงกับ Controller
                 "searchable": false,
@@ -371,6 +379,86 @@
         }
     }).fail(function(res) {
         ajaxFail(res, "");
+    });
+
+
+
+});
+
+
+$('body').on('click', '.btn-request-approval', function() {
+    var id = $(this).data('id');
+    var btn = $(this);
+
+    Swal.fire({
+        title: 'ยืนยันการส่งขออนุมัติ?',
+        text: "เมื่อส่งแล้ว จะไม่สามารถแก้ไขข้อมูลได้ชั่วคราวจนกว่าจะได้รับการพิจารณา",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#8914cc', // สีม่วงให้เข้ากับปุ่ม
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'ยืนยันส่งข้อมูล',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            loadingButton(btn);
+            $.ajax({
+                method: "POST",
+                url: url_gb + "/admin/Quotation/RequestApproval",
+                data: {
+                    id: id
+                }
+            }).done(function(res) {
+                resetButton(btn);
+                if (res.status == 1) {
+                    Swal.fire('สำเร็จ', res.content, 'success');
+                    tableQuotation.api().ajax.reload(null, false);
+                } else {
+                    Swal.fire('ผิดพลาด', res.content, 'error');
+                }
+            }).fail(function(res) {
+                ajaxFail(res, "");
+            });
+        }
+    });
+});
+
+
+$('body').on('click', '.btn-approve', function() {
+    var id = $(this).data('id');
+    var btn = $(this);
+
+    Swal.fire({
+        title: 'ยืนยันการอนุมัติ?',
+        text: "เมื่ออนุมัติแล้ว เอกสารนี้จะถือเป็นอันสิ้นสุด",
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745', // สีเขียว Success
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'ยืนยันการอนุมัติ',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            loadingButton(btn);
+            $.ajax({
+                method: "POST",
+                url: url_gb + "/admin/Quotation/Approve",
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    id: id
+                }
+            }).done(function(res) {
+                resetButton(btn);
+                if (res.status == 1) {
+                    Swal.fire('อนุมัติแล้ว', res.content, 'success');
+                    tableQuotation.api().ajax.reload(null, false);
+                } else {
+                    Swal.fire('ผิดพลาด', res.content, 'error');
+                }
+            }).fail(function(res) {
+                ajaxFail(res, "");
+            });
+        }
     });
 });
 

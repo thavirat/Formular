@@ -369,10 +369,18 @@ class QuotationController extends AdminController
             );
 
         }])->leftJoin('admin_users' , 'quotations.created_by', '=', 'admin_users.id')
+        ->leftJoin('admin_users as send_approve' , 'quotations.send_approve_by', '=', 'send_approve.id')
+        ->leftJoin('admin_users as approve' , 'quotations.approve_by', '=', 'approve.id')
+        ->leftJoin('quotation_statuses' , 'quotations.status_id', '=', 'quotation_statuses.id')
         ->select(
             'quotations.*'
             , 'admin_users.firstname as created_by_name'
             , 'admin_users.lastname as created_by_lastname'
+            , 'send_approve.firstname as send_approve_name'
+            , 'send_approve.lastname as send_approve_lastname'
+            , 'approve.firstname as approve_name'
+            , 'approve.lastname as approve_lastname'
+            , 'quotation_statuses.name as status_name'
         );
         return $result;
     }
@@ -390,6 +398,36 @@ class QuotationController extends AdminController
         }
 
         return DataTables::of($result)
+        ->addColumn('status_name', function($rec) use($lang) {
+            $status_color = 'secondary';
+            if ($rec->status_id == 1) $status_color = 'light-grey'; // Draft
+            if ($rec->status_id == 2) $status_color = 'warning';    // Pending
+            if ($rec->status_id == 3) $status_color = 'success';    // Approved
+
+
+            $str = '<div class="text-center">';
+            $str .= '<span class="badge badge-lg bgc-'.$status_color.'-l3 text-'.$status_color.'-d2 border-1 brc-'.$status_color.'-m3 mb-1">' . $rec->status_name . '</span>';
+
+            if ($rec->status_id >= 2 && $rec->send_approve_date) {
+                $str .= '<div class="text-75 text-grey-m1 mt-1" title="วันที่ส่งขออนุมัติ">
+                            <i class="fa fa-paper-plane mr-1 text-purple-m2"></i>' . $rec->send_approve_name.' '.$rec->send_approve_lastname.'
+                            <br>' . date('d/m/Y H:i', strtotime($rec->send_approve_date)) . '
+                        </div>';
+            }
+
+            if ($rec->status_id == 3 && $rec->approve_date) {
+                $str .= '<div class="text-75 text-success-m1 mt-1 border-t-1 brc-grey-l4 pt-1" title="วันที่อนุมัติ">
+                            <i class="fa fa-check-circle mr-1"></i>' . $rec->approve_name.' '.$rec->approve_lastname.'
+                            <br>' . date('d/m/Y H:i', strtotime($rec->approve_date)) . '
+                        </div>';
+            }
+
+
+
+            $str .= '</div>';
+            return $str;
+        })
+
         ->addColumn('doc_info', function($rec) {
             return '<div class="text-primary-d2 font-bolder text-95">'.$rec->doc_no.'</div>
                     <div class="text-80 text-grey-m2"><i class="far fa-calendar-alt mr-1"></i>'.$rec->doc_date.'</div>';
@@ -423,7 +461,7 @@ class QuotationController extends AdminController
                         </div>
                     </div>';
         })
-        ->addColumn('action_btns', function($rec) use ($lang){
+        ->addColumn('action_btns', function($rec) use ($lang , $all_permission){
             $update = Help::CheckPermissionMenu($this->current_menu , 'u');
             $delete = Help::CheckPermissionMenu($this->current_menu , 'd');
 
@@ -435,11 +473,30 @@ class QuotationController extends AdminController
             if($delete){
                 $str .= '<button class="btn btn-outline-danger btn-h-light-danger btn-a-light-danger border-b-2 btn-delete" data-id="'.$rec->id.'" title="ลบ"><i class="fa fa-trash-alt"></i></button>';
             }
+
+            if($rec->status_id==1){
+                $str .= '<button class="btn btn-outline-purple btn-h-light-purple btn-a-light-purple border-b-2 btn-request-approval" data-id="'.$rec->id.'" title="ส่งขออนุมัติ"><i class="fa fa-paper-plane"></i></button>';
+            }
+
+            $approve_quotation_permission = isset($all_permission['approve_quotation']) ?  $all_permission['approve_quotation']:'F';
+            if($rec->status_id==2 && $approve_quotation_permission=='T'){
+                $str .= '<button class="btn btn-outline-success btn-h-light-success btn-a-light-success border-b-2 btn-approve" data-id="'.$rec->id.'" title="อนุมัติ"><i class="fa fa-check-circle"></i></button>';
+            }
+
+            if($rec->status_id == 3){
+                $str .= '<a href="'.url('admin/'.$lang.'/ProformaInvoice/create?quotation_id='.$rec->id).'"
+                            class="btn btn-outline-indigo btn-h-light-indigo btn-a-light-indigo border-b-2"
+                            title="สร้างใบ PI">
+                            <i class="fa fa-file-invoice-dollar"></i>
+                        </a>';
+            }
+
+
             $str .= '</div>';
             return $str;
         })
         ->addIndexColumn()
-        ->rawColumns(['doc_info', 'customer_info', 'total', 'comment_box', 'action_btns'])
+        ->rawColumns(['doc_info', 'customer_info', 'total', 'comment_box', 'action_btns' , 'status_name'])
         ->make(true);
     }
 
@@ -519,6 +576,67 @@ class QuotationController extends AdminController
                 'status' => 1,
                 'title' => 'สำเร็จ',
                 'content' => 'บันทึกคอมเมนต์เรียบร้อยแล้ว'
+            ]);
+        } catch (\Exception $e) {
+            // ใช้ข้อมูลจาก Exception ส่งกลับไปให้ ajaxFail ช่วยจัดการ
+            return response()->json([
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ], 500);
+        }
+    }
+
+    public function RequestApproval(Request $request){
+        try {
+            // Validation เบื้องต้น
+            if (empty($request->id)) {
+                return response()->json(['status' => 0, 'title' => 'ผิดพลาด', 'content' => 'กรุณากรอกรายละเอียด']);
+            }
+
+            Quotation::where('id' , $request->id)->update([
+                'status_id'=>2
+                ,'send_approve_by'=>Auth::guard('admin')->user()->id
+                ,'send_approve_date'=>date('Y-m-d H:i:s')
+            ]);
+
+
+
+            return response()->json([
+                'status' => 1,
+                'title' => 'สำเร็จ',
+                'content' => 'ส่งอนุมัติเรียบร้อย'
+            ]);
+        } catch (\Exception $e) {
+            // ใช้ข้อมูลจาก Exception ส่งกลับไปให้ ajaxFail ช่วยจัดการ
+            return response()->json([
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ], 500);
+        }
+    }
+
+    public function Approve(Request $request){
+        try {
+            if (empty($request->id)) {
+                return response()->json(['status' => 0, 'title' => 'ผิดพลาด', 'content' => 'กรุณากรอกรายละเอียด']);
+            }
+
+            Quotation::where('id' , $request->id)->update([
+                'status_id'=>3
+                ,'approve_by'=>Auth::guard('admin')->user()->id
+                ,'approve_date'=>date('Y-m-d H:i:s')
+            ]);
+
+
+
+            return response()->json([
+                'status' => 1,
+                'title' => 'สำเร็จ',
+                'content' => 'ส่งอนุมัติเรียบร้อย'
             ]);
         } catch (\Exception $e) {
             // ใช้ข้อมูลจาก Exception ส่งกลับไปให้ ajaxFail ช่วยจัดการ
