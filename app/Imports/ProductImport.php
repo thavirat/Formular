@@ -46,7 +46,7 @@ class ProductImport implements ToModel, WithHeadingRow, WithBatchInserts, WithCh
 
         // 4. ใช้ updateOrCreate สำหรับ Product โดยเช็คจาก 'code'
         // ตัวแปรแรกคือเงื่อนไขที่ใช้เช็ค (Unique Key) ตัวแปรที่สองคือข้อมูลที่จะอัปเดต
-        return Product::updateOrCreate(
+        Product::updateOrCreate(
             [
                 'code' => trim($row['prodid'])
             ],
