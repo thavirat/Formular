@@ -171,7 +171,7 @@
 <script type="text/javascript">
 $(document).ready(function() {
 
-    // --- 1. จัดการข้อมูลลูกค้าและสกุลเงิน ---
+    // --- 1. จัดการข้อมูลลูกค้า ---
     $('#customer_id').on('change', function(){
         var customer_id = $(this).val();
         if(customer_id){
@@ -195,8 +195,9 @@ $(document).ready(function() {
     $('#currency_id').on('change', function(){
         $('.show_currency').text($(this).find('option:selected').text());
     });
+    $('#currency_id').trigger('change');
 
-    // --- 2. ระบบตารางและการเพิ่มแถว ---
+    // --- 2. ฟังก์ชันเพิ่มแถว (ปรับปรุงให้ชิดขวา) ---
     $('#addRow').click(function() {
         var rowCount = $('#productTable tbody tr').length + 1;
         var newRow = `
@@ -209,9 +210,11 @@ $(document).ready(function() {
                 <td><input type="text" class="form-control drawing" name="drawing[]"></td>
                 <td><input type="text" class="form-control customer_code" name="customer_code[]"></td>
                 <td><input type="text" class="form-control description" name="description[]"></td>
-                <td><input type="number" class="form-control qty" name="qty[]" value="1" step="any"></td>
-                <td><input type="number" class="form-control unit_price" name="unit_price[]" value="0" step="any"></td>
+
+                <td><input type="number" class="form-control qty text-right" name="qty[]" value="1" step="any"></td>
+                <td><input type="number" class="form-control unit_price text-right" name="unit_price[]" value="0.00" step="any"></td>
                 <td><input type="text" class="form-control amount text-right" name="amount[]" readonly tabindex="-1"></td>
+
                 <td class="text-center align-middle">
                     <button type="button" class="btn btn-outline-danger btn-sm removeRow" tabindex="-1"><i class="fa fa-trash"></i></button>
                 </td>
@@ -222,10 +225,20 @@ $(document).ready(function() {
 
     $('body').on('click', '.removeRow', function(){
         $(this).closest('tr').remove();
+        $('#productTable tbody tr').each(function(index){
+            $(this).find('td:first').text(index + 1);
+        });
         calculateGrandTotal();
     });
 
-    // --- 3. ระบบ Smart Focus & Keyboard Navigation ---
+    // --- 3. จัดรูปแบบทศนิยมเมื่อพิมพ์เสร็จ (Auto Format) ---
+    $('body').on('blur', '.unit_price', function() {
+        var val = parseFloat($(this).val()) || 0;
+        // บังคับให้เป็นทศนิยม 2 ตำแหน่งเมื่อเอาเมาส์ออก หรือกด Tab ผ่าน
+        $(this).val(val.toFixed(2));
+    });
+
+    // --- 4. Logic: Enter & Tab Navigation ---
     function focusNextInput(currentRow, currentClass) {
         var focusOrder = ['part-no-input', 'drawing', 'customer_code', 'description', 'qty', 'unit_price'];
         var currentIndex = focusOrder.indexOf(currentClass);
@@ -242,11 +255,17 @@ $(document).ready(function() {
         }
     }
 
-    $('body').on('keypress', '.part-no-input, .drawing, .customer_code, .description, .qty, .unit_price', function(e) {
-        if (e.which == 13) { // Enter key
+    $('body').on('keydown', '.part-no-input, .drawing, .customer_code, .description, .qty, .unit_price', function(e) {
+        if (e.which == 13 || e.which == 9) {
             e.preventDefault();
             var input = $(this);
             var row = input.closest('tr');
+
+            // ถ้าออกจากช่อง Unit Price ด้วย Enter/Tab ให้ Format ตัวเลขก่อนไปต่อ
+            if (input.hasClass('unit_price')) {
+                var val = parseFloat(input.val()) || 0;
+                input.val(val.toFixed(2));
+            }
 
             if (input.hasClass('part-no-input')) {
                 checkDuplicatePartNo(input);
@@ -260,7 +279,7 @@ $(document).ready(function() {
         }
     });
 
-    // --- 4. ฟังก์ชันตรวจสอบรายการซ้ำ ---
+    // --- 5. เช็คซ้ำ ---
     function checkDuplicatePartNo(input) {
         var currentVal = input.val().trim();
         var duplicateCount = 0;
@@ -272,7 +291,7 @@ $(document).ready(function() {
             Swal.fire({
                 icon: 'warning',
                 title: 'รายการซ้ำ',
-                text: 'รหัส ' + currentVal + ' มีอยู่ในใบเสนอราคานี้แล้ว',
+                text: 'รหัส ' + currentVal + ' มีอยู่ในรายการแล้ว',
                 toast: true,
                 position: 'top-end',
                 showConfirmButton: false,
@@ -281,19 +300,19 @@ $(document).ready(function() {
         }
     }
 
-    // --- 5. ค้นหาสินค้า (AJAX) ---
+    // --- 6. ค้นหาสินค้า (AJAX) ---
     function searchProduct(input, row) {
         var partNo = input.val().trim();
         if (partNo.length < 8) {
-            Swal.fire({ icon: 'warning', title: 'แจ้งเตือน', text: 'กรุณาระบุรหัสสินค้าอย่างน้อย 8 หลัก' });
-            return false;
+            focusNextInput(row, 'part-no-input');
+            return;
         }
 
         var customer_id = $('#customer_id').val();
         var currency_id = $('#currency_id').val();
 
         if (!customer_id || !currency_id) {
-            Swal.fire({ icon: 'error', title: 'ข้อมูลไม่ครบ', text: 'กรุณาเลือกคู่ค้าและสกุลเงินก่อน' });
+            Swal.fire({ icon: 'error', title: 'ข้อมูลไม่ครบ', text: 'กรุณาเลือก "ลูกค้า" และ "สกุลเงิน" ก่อน' });
             return false;
         }
 
@@ -310,23 +329,33 @@ $(document).ready(function() {
 
             if (items && items.length > 0) {
                 var data = items[0];
+                row.find('.part-no-input').val(data.code);
                 row.find('.product-id').val(data.id);
                 row.find('.drawing').val(data.drawing);
                 row.find('.customer_code').val(data.cus_code);
                 row.find('.description').val(data.description);
-                row.find('.unit_price').val(data.price);
+
+                // ใส่ราคาและ Format ทศนิยมทันที
+                var price = parseFloat(data.price) || 0;
+                row.find('.unit_price').val(price.toFixed(2));
 
                 $('#customer_id, #currency_id').attr('readonly', true).css('pointer-events', 'none');
+
                 calculateRow(row);
                 focusNextInput(row, 'part-no-input');
+
             } else {
                 Swal.fire({ icon: 'warning', title: 'ไม่พบข้อมูล', text: 'ไม่พบรหัสสินค้า: ' + partNo });
-                input.val('').focus();
+                input.focus().select();
             }
+
+        }).fail(function(res) {
+            input.removeClass('bg-light text-primary');
+            ajaxFail(res, "");
         });
     }
 
-    // --- 6. การคำนวณเงิน ---
+    // --- 7. คำนวณเงิน ---
     function calculateRow(row) {
         var qty = parseFloat(row.find('.qty').val()) || 0;
         var price = parseFloat(row.find('.unit_price').val()) || 0;
@@ -348,25 +377,41 @@ $(document).ready(function() {
         calculateRow($(this).closest('tr'));
     });
 
-    // --- 7. บันทึกข้อมูล ---
-    $('body').on('submit', '#form-quotation-create', function(e){
+    // --- 8. Submit Form ---
+    $('body').on('submit', '#form-quotation-create, #form-quotation-edit', function(e){
         e.preventDefault();
         var form = $(this);
+        var url = form.attr('action') ? form.attr('action') : (form.attr('id') == 'form-quotation-create' ? url_gb+"/admin/Quotation" : url_gb+"/admin/Quotation/{{$Quotation->id ?? ''}}");
+        var method = form.attr('id') == 'form-quotation-create' ? "POST" : "PUT";
+
+        loadingButton(form.find('button[type=submit]'));
+
         $.ajax({
-            method: "POST",
-            url: url_gb+"/admin/Quotation",
+            method: method,
+            url: url,
             dataType : "json",
             data: form.serialize()
         }).done(function( res ) {
+            resetButton(form.find('button[type=submit]'));
             if(res.status == 1){
                 Swal.fire(res.title, res.content,'success').then(() => {
                     window.location.href = url_gb+"/admin/{{$lang}}/Quotation";
                 });
+            }else{
+                Swal.fire(res.title, res.content,'error');
             }
+        }).fail(function(res){
+            ajaxFail(res , form);
         });
     });
 
-    $('#addRow').click();
+    if($('#customer_id').val()){
+        $('#customer_id, #currency_id').attr('readonly', true).css('pointer-events', 'none');
+    }
+    if($('#productTable tbody tr').length == 0){
+        $('#addRow').click();
+    }
+    calculateGrandTotal();
 });
 </script>
 @endpush

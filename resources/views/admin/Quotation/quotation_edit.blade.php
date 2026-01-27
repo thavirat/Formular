@@ -150,9 +150,11 @@
                                             <td><input type="text" class="form-control drawing" name="drawing[]" value="{{ $item->drawing }}"></td>
                                             <td><input type="text" class="form-control customer_code" name="customer_code[]" value="{{ $item->cus_code }}"></td>
                                             <td><input type="text" class="form-control description" name="description[]" value="{{ $item->detail_eng }}"></td>
-                                            <td><input type="number" class="form-control qty" name="qty[]" value="{{ $item->qty }}" step="any" min="0"></td>
-                                            <td><input type="number" class="form-control unit_price" name="unit_price[]" value="{{ $item->price_per_item }}" step="any" min="0"></td>
+
+                                            <td><input type="number" class="form-control qty text-right" name="qty[]" value="{{ $item->qty }}" step="any" min="0"></td>
+                                            <td><input type="number" class="form-control unit_price text-right" name="unit_price[]" value="{{ number_format($item->price_per_item, 2, '.', '') }}" step="any" min="0"></td>
                                             <td><input type="text" class="form-control amount text-right" name="amount[]" value="{{ number_format($item->total_price, 2) }}" readonly tabindex="-1"></td>
+
                                             <td class="text-center align-middle">
                                                 <button type="button" class="btn btn-outline-danger btn-sm removeRow" tabindex="-1"><i class="fa fa-trash"></i></button>
                                             </td>
@@ -195,7 +197,7 @@
 <script type="text/javascript">
 $(document).ready(function() {
 
-    // --- 1. จัดการข้อมูลลูกค้า ---
+    // --- 1. Customer Management ---
     $('#customer_id').on('change', function(){
         var customer_id = $(this).val();
         if(customer_id){
@@ -220,8 +222,7 @@ $(document).ready(function() {
         $('.show_currency').text($(this).find('option:selected').text());
     });
 
-    // --- 2. ฟังก์ชันหลักสำหรับตารางสินค้า ---
-
+    // --- 2. Table Rows Management ---
     $('#addRow').click(function() {
         var rowCount = $('#productTable tbody tr').length + 1;
         var newRow = `
@@ -234,8 +235,8 @@ $(document).ready(function() {
                 <td><input type="text" class="form-control drawing" name="drawing[]"></td>
                 <td><input type="text" class="form-control customer_code" name="customer_code[]"></td>
                 <td><input type="text" class="form-control description" name="description[]"></td>
-                <td><input type="number" class="form-control qty" name="qty[]" value="1" step="any" min="0"></td>
-                <td><input type="number" class="form-control unit_price" name="unit_price[]" value="0" step="any" min="0"></td>
+                <td><input type="number" class="form-control qty text-right" name="qty[]" value="1" step="any" min="0"></td>
+                <td><input type="number" class="form-control unit_price text-right" name="unit_price[]" value="0.00" step="any" min="0"></td>
                 <td><input type="text" class="form-control amount text-right" name="amount[]" readonly tabindex="-1"></td>
                 <td class="text-center align-middle">
                     <button type="button" class="btn btn-outline-danger btn-sm removeRow" tabindex="-1"><i class="fa fa-trash"></i></button>
@@ -254,7 +255,13 @@ $(document).ready(function() {
         calculateGrandTotal();
     });
 
-    // --- 3. Logic Focus & Navigation ---
+    // --- 3. Auto-Format Decimal on Blur ---
+    $('body').on('blur', '.unit_price', function() {
+        var val = parseFloat($(this).val()) || 0;
+        $(this).val(val.toFixed(2));
+    });
+
+    // --- 4. Logic: Enter & Tab Navigation ---
     function focusNextInput(currentRow, currentClass) {
         var focusOrder = ['part-no-input', 'drawing', 'customer_code', 'description', 'qty', 'unit_price'];
         var currentIndex = focusOrder.indexOf(currentClass);
@@ -271,11 +278,18 @@ $(document).ready(function() {
         }
     }
 
-    $('body').on('keypress', '.part-no-input, .drawing, .customer_code, .description, .qty, .unit_price', function(e) {
-        if (e.which == 13) {
+    $('body').on('keydown', '.part-no-input, .drawing, .customer_code, .description, .qty, .unit_price', function(e) {
+        // 13 = Enter, 9 = Tab
+        if (e.which == 13 || e.which == 9) {
             e.preventDefault();
             var input = $(this);
             var row = input.closest('tr');
+
+            // Format decimal if leaving Unit Price via key
+            if (input.hasClass('unit_price')) {
+                var val = parseFloat(input.val()) || 0;
+                input.val(val.toFixed(2));
+            }
 
             if (input.hasClass('part-no-input')) {
                 checkDuplicatePartNo(input);
@@ -287,7 +301,7 @@ $(document).ready(function() {
         }
     });
 
-    // --- 4. Check Duplicate ---
+    // --- 5. Check Duplicate ---
     function checkDuplicatePartNo(input) {
         var currentVal = input.val().trim();
         var duplicateCount = 0;
@@ -311,13 +325,14 @@ $(document).ready(function() {
         }
     }
 
-    // --- 5. ค้นหาสินค้า (AJAX) ---
+    // --- 6. Search Product (AJAX) ---
     function searchProduct(input, row) {
         var partNo = input.val().trim();
 
         if (partNo.length < 8) {
-            Swal.fire({ icon: 'warning', title: 'แจ้งเตือน', text: 'กรุณาระบุรหัสสินค้าอย่างน้อย 8 หลัก' });
-            return false;
+            // Allow skipping if length is short, but focus next
+            focusNextInput(row, 'part-no-input');
+            return;
         }
 
         var customer_id = $('#customer_id').val();
@@ -346,11 +361,17 @@ $(document).ready(function() {
             if (items && items.length > 0) {
                 var data = items[0];
 
+                // Auto-fill full Part No
+                row.find('.part-no-input').val(data.code);
+
                 row.find('.product-id').val(data.id);
                 row.find('.drawing').val(data.drawing);
                 row.find('.customer_code').val(data.cus_code);
                 row.find('.description').val(data.description);
-                row.find('.unit_price').val(data.price);
+
+                // Set price with decimal format
+                var price = parseFloat(data.price) || 0;
+                row.find('.unit_price').val(price.toFixed(2));
 
                 $('#customer_id, #currency_id').attr('readonly', true).css('pointer-events', 'none');
 
@@ -359,7 +380,7 @@ $(document).ready(function() {
 
             } else {
                 Swal.fire({ icon: 'warning', title: 'ไม่พบข้อมูล', text: 'ไม่พบรหัสสินค้า: ' + partNo });
-                input.val('').focus();
+                input.focus().select();
             }
 
         }).fail(function(res) {
@@ -368,7 +389,7 @@ $(document).ready(function() {
         });
     }
 
-    // --- 6. คำนวณเงิน ---
+    // --- 7. Calculations ---
     function calculateRow(row) {
         var qty = parseFloat(row.find('.qty').val()) || 0;
         var price = parseFloat(row.find('.unit_price').val()) || 0;
@@ -393,7 +414,7 @@ $(document).ready(function() {
     });
 
 
-    // --- 7. Submit (PUT) ---
+    // --- 8. Submit (PUT) ---
     $('body').on('submit', '#form-quotation-edit', function(e){
         e.preventDefault();
         var form = $(this);
@@ -418,12 +439,12 @@ $(document).ready(function() {
         });
     });
 
-    // เริ่มต้น: ถ้ามีข้อมูลลูกค้าอยู่แล้วให้ล็อคไว้เลย (เพื่อความชัวร์ในการแก้ไข)
+    // Lock header if editing existing data
     if($('#customer_id').val()){
         $('#customer_id, #currency_id').attr('readonly', true).css('pointer-events', 'none');
     }
 
-    // คำนวณยอดเงินรวมอีกครั้งตอนโหลดหน้า
+    // Initial Calculation
     calculateGrandTotal();
 });
 </script>
