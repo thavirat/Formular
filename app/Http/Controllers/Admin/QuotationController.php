@@ -149,12 +149,11 @@ class QuotationController extends AdminController
                             'drawing' => $drawing[$key] ?? null,
                             'cus_code' => $customer_code[$key] ?? null,
                             'detail_eng' => $description[$key] ?? null,
-                            'qty' => $qty[$key] ?? 0,
-                            'price_per_item' => $unit_price[$key] ?? 0,
-                            // บันทึกส่วนลดลงในแต่ละบรรทัด
+                            'qty' => str_replace("," , "" , $qty[$key]) ?? 0,
+                            'price_per_item' => str_replace("," , "" , $unit_price[$key]) ?? 0,
                             'discount_percents' => $discount_percents[$key] ?? 0,
                             'discount_amount' => $discount_amounts[$key] ?? 0,
-                            'total_price' => $amount[$key] ?? 0,
+                            'total_price' => str_replace("," , "" , $amount[$key]) ?? 0,
                         ];
                     }
                 }
