@@ -233,7 +233,7 @@ $(document).ready(function() {
                 processResults: function (data) {
                     return { results: data.items };
                 },
-                cache: true
+                cache: false
             }
         });
 
