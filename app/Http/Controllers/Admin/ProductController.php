@@ -376,7 +376,7 @@ class ProductController extends AdminController
             $items[] = [
                 'id' => $product->id,
                 'text' => $product->code . ' : ' . $product->name_en,
-                'drawing' => $product->code,
+                'drawing' => $product->drawing,
                 'description' => $product->name_en,
                 'symbol' => $product->symbol,
                 'cus_code' => $product->cus_code,
