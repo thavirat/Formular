@@ -297,9 +297,9 @@ class QuotationController extends AdminController
                             'drawing' => $drawing[$key],
                             'cus_code' => $customer_code[$key],
                             'detail_eng' => $description[$key],
-                            'qty' => $qty[$key],
-                            'price_per_item' => $unit_price[$key],
-                            'total_price' => $amount[$key],
+                            'qty' => str_replace("," , "" , $qty[$key]),
+                            'price_per_item' => str_replace("," , "" , $unit_price[$key]),
+                            'total_price' => str_replace("," , "" , $amount[$key]),
                         ];
                     }
                 }
