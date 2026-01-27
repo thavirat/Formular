@@ -19,15 +19,17 @@ class ProductImport implements ToModel, WithHeadingRow, WithBatchInserts, WithCh
 
     public function model(array $row)
     {
-        $this->rows++; // นับเพิ่มทุกครั้งที่เข้า Model
+        $this->rows++;
 
         if (empty($row['prodid'])) return null;
 
+        // 1. จัดการ Category
         $category = ProductCategory::firstOrCreate(
             ['code' => trim($row['cateid'])],
             ['name_th' => $row['catenamethai'], 'name_en' => $row['catenameeng']]
         );
 
+        // 2. จัดการ SubCategory
         $sub_category = SubCategory::firstOrCreate(
             ['code' => trim($row['subcateid'])],
             [
@@ -37,21 +39,27 @@ class ProductImport implements ToModel, WithHeadingRow, WithBatchInserts, WithCh
             ]
         );
 
+        // 3. จัดการ Product Group
         $group = ProductGroup::firstOrCreate(
-            ['code' => trim($row['prodgroupid'])],
-            ['name_en' => $row['prodgroupnameeng'], 'name_th' => $row['prodgroupnamethai']]
+            ['code' => trim($row['prodgroupid'])]
         );
 
-        return new Product([
-            'code'            => trim($row['prodid']),
-            'category_id'     => $category->id,
-            'sub_category_id' => $sub_category->id,
-            'group_id'        => $group->id,
-            'name_th'         => $row['prodnamethai'],
-            'name_en'         => $row['prodnameeng1'],
-            'drawing'         => $row['proddrawing'],
-            'active'          => 'T',
-        ]);
+        // 4. ใช้ updateOrCreate สำหรับ Product โดยเช็คจาก 'code'
+        // ตัวแปรแรกคือเงื่อนไขที่ใช้เช็ค (Unique Key) ตัวแปรที่สองคือข้อมูลที่จะอัปเดต
+        return Product::updateOrCreate(
+            [
+                'code' => trim($row['prodid'])
+            ],
+            [
+                'category_id'     => $category->id,
+                'sub_category_id' => $sub_category->id,
+                'group_id'        => $group->id,
+                'name_th'         => $row['prodnamethai'],
+                'name_en'         => $row['prodnameeng1'],
+                'drawing'         => $row['proddrawing'],
+                'active'          => 'T',
+            ]
+        );
     }
 
     public function batchSize(): int { return 100; }
