@@ -354,9 +354,7 @@ class ProductController extends AdminController
         })
         ->where(function($query) use ($q) {
             $query->where('products.code', 'LIKE', '%' . $q . '%')
-                  ->orWhere('products.name_th', 'LIKE', '%' . $q . '%')
-                  ->orWhere('products.name_en', 'LIKE', '%' . $q . '%')
-                  ->orWhere('products.name_cn', 'LIKE', '%' . $q . '%');
+                  ->orWhere('products.drawing', 'LIKE', '%' . $q . '%');
         })
 
         ->limit(20)

@@ -291,7 +291,7 @@ $(document).ready(function() {
                 input.val(val.toFixed(2));
             }
 
-            if (input.hasClass('part-no-input')) {
+            if (input.hasClass('part-no-input') || input.hasClass('drawing')) {
                 checkDuplicatePartNo(input);
                 searchProduct(input, row);
             } else {
@@ -327,12 +327,15 @@ $(document).ready(function() {
 
     // --- 6. Search Product (AJAX) ---
     function searchProduct(input, row) {
-        var partNo = input.val().trim();
+        var query = input.val().trim();
+        var isPartNo = input.hasClass('part-no-input');
+        var currentClass = isPartNo ? 'part-no-input' : 'drawing';
 
-        if (partNo.length < 8) {
-            // Allow skipping if length is short, but focus next
-            focusNextInput(row, 'part-no-input');
-            return;
+        if (isPartNo && query.length < 8) {
+            focusNextInput(row, currentClass); return;
+        }
+        if (!isPartNo && query.length < 3) {
+            focusNextInput(row, currentClass); return;
         }
 
         var customer_id = $('#customer_id').val();
@@ -343,48 +346,46 @@ $(document).ready(function() {
             return false;
         }
 
-        input.addClass('input-loading');
+        input.addClass('bg-light text-primary');
 
         $.ajax({
             method: "GET",
             url: url_gb + "/admin/{{$lang}}/Product/Search",
             dataType: 'json',
             data: {
-                q: partNo,
+                q: query, // ส่งค่าที่พิมพ์ไปค้นหา (Backend ควรค้นทั้ง Part No และ Drawing จากตัวแปร q)
                 customer_id: customer_id,
                 currency_id: currency_id
             }
         }).done(function(res) {
-            input.removeClass('input-loading');
+            input.removeClass('bg-light text-primary');
             var items = res.items ? res.items : res;
 
             if (items && items.length > 0) {
                 var data = items[0];
 
-                // Auto-fill full Part No
-                row.find('.part-no-input').val(data.code);
-
+                row.find('.part-no-input').val(data.code); // ใส่ Part No เต็ม
                 row.find('.product-id').val(data.id);
-                row.find('.drawing').val(data.drawing);
+                row.find('.drawing').val(data.drawing); // ใส่ Drawing เต็ม
                 row.find('.customer_code').val(data.cus_code);
                 row.find('.description').val(data.description);
 
-                // Set price with decimal format
                 var price = parseFloat(data.price) || 0;
                 row.find('.unit_price').val(price.toFixed(2));
 
                 $('#customer_id, #currency_id').attr('readonly', true).css('pointer-events', 'none');
 
                 calculateRow(row);
-                focusNextInput(row, 'part-no-input');
+
+                focusNextInput(row, currentClass);
 
             } else {
-                Swal.fire({ icon: 'warning', title: 'ไม่พบข้อมูล', text: 'ไม่พบรหัสสินค้า: ' + partNo });
+                Swal.fire({ icon: 'warning', title: 'ไม่พบข้อมูล', text: 'ไม่พบข้อมูล: ' + query });
                 input.focus().select();
             }
 
         }).fail(function(res) {
-            input.removeClass('input-loading');
+            input.removeClass('bg-light text-primary');
             ajaxFail(res, "");
         });
     }
