@@ -242,6 +242,7 @@ $( document ).ready(function() {
             width: 'resolve',
             dropdownAutoWidth: false,
             containerCssClass: 'fixed-select2',
+            minimumInputLength: 8,
             ajax: {
                 url: url_gb + "/admin/{{$lang}}/Product/Search",
                 dataType: 'json',
