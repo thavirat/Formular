@@ -381,7 +381,7 @@ $(document).ready(function() {
         calculateRow($(this).closest('tr'));
     });
 
-    $('body').on('submit', '#form-quotation-edit', function(e){
+    $('body').on('submit', '#form-quotation-create', function(e){
         e.preventDefault();
         var form = $(this);
         var url = form.attr('action') ? form.attr('action') : (form.attr('id') == 'form-quotation-create' ? url_gb+"/admin/Quotation" : url_gb+"/admin/Quotation/{{$Quotation->id ?? ''}}");
