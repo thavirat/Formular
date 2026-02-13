@@ -441,7 +441,17 @@ class QuotationController extends AdminController
         ->addColumn('comment_box', function($rec) use($channels){
             $items = '';
             foreach($rec->Comments as $Comment){
-                $items .= '<li class="text-80 text-grey-d1 border-b-1 brc-grey-l4 pb-1 mb-1">'.$Comment->detail.' '.$Comment->channel_name.' '.date('Ymd H:i' , strtotime($Comment->created_at)).' '.$Comment->created_by_name.'</li>';
+                $items .= '
+                <div class="mb-2 p-1 border-l-3 brc-success-m2 bgc-grey-l5 radius-1 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-600 text-blue-d1 text-80">'.$Comment->created_by_name.'</span>
+                        <span class="text-70 text-grey-m1"><i class="far fa-clock mr-1 text-75"></i>'.date('d/m/Y H:i' , strtotime($Comment->created_at)).'</span>
+                    </div>
+                    <div class="text-85 text-dark-m3 line-height-125 px-1">'.$Comment->detail.'</div>
+                    <div class="text-70 text-right mt-1">
+                        <span class="badge badge-sm bgc-grey-l3 text-grey-d2 border-0">'.$Comment->channel_name.'</span>
+                    </div>
+                </div>';
             }
 
             $options = '';
@@ -449,16 +459,29 @@ class QuotationController extends AdminController
                 $options .= '<option value="'.$channel->id.'">'.$channel->name.'</option>';
             }
 
-            return '<ul class="list-unstyled mb-2 max-h-100 overflow-auto">'.$items.'</ul>
-                    <div class="input-group">
-                        <textarea class="form-control text-85 brc-on-focus brc-success-m2 comment-'.$rec->id.'" placeholder="บันทึกเพิ่มเติม..."></textarea>
-                        <div class="input-group-append flex-column">
-                            <select class="custom-select custom-select-sm border-0 bgc-grey-l4 text-80 channel-'.$rec->id.'">'.$options.'</select>
-                            <button class="btn btn-xs btn-success btn-block btn-save-comment" data-id="'.$rec->id.'" data-customer-id="'.$rec->customer_id.'">
-                                <i class="fa fa-save"></i>
-                            </button>
-                        </div>
-                    </div>';
+            // ห่อหุ้มรายการด้วย Container ที่จำกัดความสูงและมี Scrollbar สวยๆ
+            $history = '<div class="comment-history mb-3 pr-1" style="max-height: 180px; overflow-y: auto; scrollbar-width: thin;">'.$items.'</div>';
+
+            // ส่วนกล่องกรอกข้อมูล ปรับให้ดู Clean ขึ้น
+            $input_section = '
+            <div class="comment-input-group bgc-white p-2 radius-1 border-1 brc-grey-l2 shadow-sm">
+                <textarea class="form-control text-85 border-0 bgc-transparent no-resize comment-'.$rec->id.'"
+                        rows="2" placeholder="พิมพ์บันทึกติดตามงาน..."></textarea>
+
+                <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-t-1 brc-grey-l4">
+                    <div class="flex-grow-1 mr-2">
+                        <select class="custom-select custom-select-sm border-0 bgc-grey-l4 text-80 text-600 channel-'.$rec->id.'">
+                            '.$options.'
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-success px-3 btn-save-comment shadow-sm radius-2px"
+                            data-id="'.$rec->id.'" data-customer-id="'.$rec->customer_id.'">
+                        <i class="fa fa-paper-plane mr-1 text-90"></i> บันทึก
+                    </button>
+                </div>
+            </div>';
+
+            return '<div class="quotation-comment-container p-1" style="min-width: 250px;">'.$history.$input_section.'</div>';
         })
         ->addColumn('action_btns', function($rec) use ($lang , $all_permission){
             $update = Help::CheckPermissionMenu($this->current_menu , 'u');
@@ -564,7 +587,7 @@ class QuotationController extends AdminController
             }
 
             $comment = new \App\Models\Comment(); // ตรวจสอบชื่อ Model ของคุณด้วยครับ
-            $comment->channel_id   = $request->channel_id;
+            $comment->channel_id   = $request->contact_channel_id;
             $comment->customer_id  = $request->customer_id;
             $comment->quotation_id = $request->quotation_id;
             $comment->detail       = $request->detail;
