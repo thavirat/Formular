@@ -7,6 +7,9 @@ use App\Models\Menu;
 use App\Models\Customer;
 use App\Models\CustomerLevel;
 use App\Models\Product;
+use App\Imports\CustomerImport;
+use Illuminate\Support\Facades\File;
+use Maatwebsite\Excel\Facades\Excel;
 
 use DataTables;
 use Help;
@@ -311,6 +314,20 @@ class CustomerController extends AdminController
 
         return view('admin.Customer.customer_product',$data);
 
+    }
+
+    public function import(Request $request)
+    {
+        $fileName = 'customers.xlsx';
+        $filePath = public_path('uploads/file/' . $fileName);
+
+        // เช็คก่อนว่าไฟล์มีอยู่จริงไหม จะได้ไม่ระเบิด
+        if (File::exists($filePath)) {
+            Excel::import(new CustomerImport, $filePath);
+            return "Import ข้อมูลเรียบร้อยแล้ว!";
+        }
+
+        return "ไม่พบไฟล์ที่: " . $filePath;
     }
 
 }

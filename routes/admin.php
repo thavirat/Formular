@@ -71,6 +71,7 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::resource('/Currency', Admin\CurrencyController::class);
 
                 Route::post('/Customer/Lists', 'Admin\CustomerController@lists');
+                Route::get('/Customer/import', 'Admin\CustomerController@import');
                 Route::get('/Customer/{id}/Contact', 'Admin\CustomerController@contact');
                 Route::get('/Customer/{id}/Product', 'Admin\CustomerController@product');
                 Route::get('/Customer/ExportPDF', 'Admin\CustomerController@export_pdf');
