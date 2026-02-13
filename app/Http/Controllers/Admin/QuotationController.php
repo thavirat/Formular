@@ -18,6 +18,8 @@ use App\Models\Currency;
 use App\Models\CreditPayment;
 use App\Models\QuotationProduct;
 use App\Models\ContactChannel;
+use App\Models\QuotationStatus;
+use App\Models\AdminUser;
 class QuotationController extends AdminController
 {
     public $current_menu;
@@ -43,6 +45,8 @@ class QuotationController extends AdminController
         $data['Incoterms'] = Incoterm::orderBy('code')->get();
         $data['Currencies'] = Currency::orderBy('name')->get();
         $data['CreditPayments'] = CreditPayment::orderBy('name')->get();
+        $data['quotation_statuses'] = QuotationStatus::orderBy('name')->get();
+        $data['admins'] = AdminUser::orderBy('nickname')->get();
         return view('admin.Quotation.quotation',$data);
     }
 
@@ -357,7 +361,7 @@ class QuotationController extends AdminController
      * @param   \Illuminate\Http\Request  $request
      * @return  \Illuminate\Http\Response
      */
-    public function report(){
+    public function report(Request $request){
         $result = Quotation::with(['Comments'=>function($q){
             $q->leftJoin('admin_users' , 'admin_users.id' , 'comments.created_by');
             $q->leftJoin('contact_channels' , 'contact_channels.id' , 'comments.channel_id');
@@ -381,6 +385,18 @@ class QuotationController extends AdminController
             , 'approve.lastname as approve_lastname'
             , 'quotation_statuses.name as status_name'
         );
+        if($request->has('start_date') && $request->start_date != ''){
+            $result = $result->where('quotations.doc_date' , '>=' , date('Y-m-d', strtotime($request->start_date)));
+        }
+        if($request->has('end_date') && $request->end_date != ''){
+            $result = $result->where('quotations.doc_date' , '<=' , date('Y-m-d', strtotime($request->end_date)));
+        }
+        if($request->has('status_id') && $request->status_id != 'all'){
+            $result = $result->where('quotations.status_id' , '=' , $request->status_id);
+        }
+        if($request->has('admin_id') && $request->admin_id != 'all'){
+            $result = $result->where('quotations.created_by' , '=' , $request->admin_id);
+        }
         return $result;
     }
 

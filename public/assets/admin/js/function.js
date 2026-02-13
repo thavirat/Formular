@@ -86,7 +86,7 @@ if($('.init-date').length>0){
         minView : 2,
         startView : 0,
         autoclose : true,
-        thaiyear: true,
+        thaiyear: false,
         todayBtn: "linked",
         todayHighlight: true
     });
@@ -159,4 +159,10 @@ function showIntegerOrFloat(number, is_number_format = false)
 
 $('body').on('click','.remove_date_time',function(){
     $(this).prev().val('');
+});
+
+
+$('body').on('click', '.btn-clear-date', function() {
+    var targetInput = $(this).data('target');
+    $(targetInput).val('').trigger('change');
 });

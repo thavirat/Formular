@@ -295,12 +295,10 @@
 
     {{-- Datepicker --}}
     <script src="{{asset('assets/global/plugin/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js') }}"> </script>
-    <script src="{{asset('assets/global/plugin/bootstrap-datepicker/dist/locales/bootstrap-datepicker.th.min.js') }}"> </script>
-    <script src="{{asset('assets/global/plugin/bootstrap-datepicker-BE/bootstrap-datepicker-BE.js') }}"> </script>
 
 
     <script src="{{asset('assets/global/js/modal.js')}}"></script>
-    <script src="{{asset('assets/admin/js/function.js')}}"></script>
+    <script src="{{asset('assets/admin/js/function.js')}}?v=3"></script>
 
     {{-- Jquery Validate --}}
     <script src="{{asset('assets/admin/node_modules/jquery-validation/dist/jquery.validate.js')}}"></script>
