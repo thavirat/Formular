@@ -213,7 +213,7 @@
                 </td>
                 <td class="text-center">{{ $product->drawing ?: '-' }}</td>
                 <td>{{ $product->detail_eng }}</td>
-                <td class="text-right">{{ number_format($product->qty , 2) }}</td>
+                <td class="text-right">{{ number_format($product->qty , 0) }}</td>
                 <td class="text-right">{{ number_format($product->price_per_item , 2) }}</td>
                 <td class="text-right">{{ number_format($product->total_price , 2) }}</td>
             </tr>
