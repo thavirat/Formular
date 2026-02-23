@@ -16,7 +16,6 @@
         text-overflow: ellipsis;
     }
 
-    /* เพิ่ม CSS สำหรับไอคอนจับลาก */
     .cursor-move {
         cursor: grab;
     }
@@ -29,15 +28,17 @@
 @section('body')
 <div class="page-content container container-plus">
     <div class="page-header mb-2 pb-2 flex-column flex-sm-row align-items-start align-items-sm-center py-25 px-1">
-        <h1 class="page-title text-primary-d2 text-140">{{__('Create Proforma Invoice')}} {{__('From Quotation')}} #{{ $Quotation->doc_no }}</h1>
+        <h1 class="page-title text-primary-d2 text-140">{{__('Edit Proforma Invoice')}} #{{ $ProformaInvoice->doc_no }}</h1>
     </div>
 
     <div class="row mt-3">
         <div class="col-12">
             <div class="card dcard">
                 <div class="card-body p-3">
-                    <form action="" id="form-pi" method="POST">
-                        <input type="hidden" name="quotation_id" value="{{$Quotation->id}}">
+                    <form action="" id="form-edit-pi" method="POST">
+                        <input type="hidden" name="_method" value="PUT">
+                        <input type="hidden" id="pi_id" value="{{ $ProformaInvoice->id }}">
+
                         <div class="row">
                             <div class="col-3">
                                 <div class="form-group">
@@ -45,7 +46,9 @@
                                     <select name="customer_id" id="customer_id" class="form-control select2" required>
                                         <option value="">{{__('Select Customer')}}</option>
                                         @foreach($Customers as $customer)
-                                            <option value="{{$customer->id}}" {{ $Quotation->customer_id == $customer->id ? 'selected' : '' }}>{{$customer->company_name}} - {{$customer->contact_name}}</option>
+                                            <option value="{{$customer->id}}" {{ $ProformaInvoice->customer_id == $customer->id ? 'selected' : '' }}>
+                                                {{$customer->company_name}} - {{$customer->contact_name}}
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -55,7 +58,7 @@
                                 <div class="form-group">
                                     <label for="doc_date">{{__('Document Date')}} <span class="text-danger">*</span></label>
                                     <div class="input-group">
-                                        <input type="text" name="doc_date" class="form-control init-date" id="doc_date" value="{{ date('Y-m-d', strtotime($Quotation->doc_date)) }}" readonly>
+                                        <input type="text" name="doc_date" class="form-control init-date" id="doc_date" value="{{ date('Y-m-d', strtotime($ProformaInvoice->doc_date)) }}" readonly>
                                         <div class="input-group-append remove_date_time">
                                             <div class="input-group-text"><i class="fa fa-times"></i></div>
                                         </div>
@@ -71,25 +74,25 @@
                             <div class="col-3">
                                 <div class="form-group">
                                     <label for="contact_name">{{__('Contact Name')}}</label>
-                                    <input type="text" name="contact_name" id="contact_name" class="form-control" value="{{$Quotation->contact_name}}">
+                                    <input type="text" name="contact_name" id="contact_name" class="form-control" value="{{$ProformaInvoice->contact_name}}">
                                 </div>
                                 <div class="form-group">
                                     <label for="company_name">{{__('Company Name')}}</label>
-                                    <input type="text" name="company_name" id="company_name" class="form-control" value="{{$Quotation->company_name}}" required>
+                                    <input type="text" name="company_name" id="company_name" class="form-control" value="{{$ProformaInvoice->company_name}}" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="tax_id">{{__('Tax ID')}}</label>
-                                    <input type="text" name="tax_id" id="tax_id" class="form-control" value="{{$Quotation->tax_id}}">
+                                    <input type="text" name="tax_id" id="tax_id" class="form-control" value="{{$ProformaInvoice->tax_id}}">
                                 </div>
                             </div>
                             <div class="col-3">
                                 <div class="form-group">
                                     <label for="address">{{__('Address')}}</label>
-                                    <textarea name="address" id="address" class="form-control" rows="5" style="height: 124px;">{{$Quotation->address}}</textarea>
+                                    <textarea name="address" id="address" class="form-control" rows="5" style="height: 124px;">{{$ProformaInvoice->address}}</textarea>
                                 </div>
                                 <div class="form-group">
                                     <label for="fax_no">{{__('Fax No')}}</label>
-                                    <input type="text" name="fax_no" id="fax_no" class="form-control" value="{{$Quotation->fax_no}}">
+                                    <input type="text" name="fax_no" id="fax_no" class="form-control" value="{{$ProformaInvoice->fax_no}}">
                                 </div>
                             </div>
                             <div class="col-3">
@@ -97,7 +100,7 @@
                                     <label for="incoterm_id">{{__('Incoterm')}} <span class="text-danger">*</span></label>
                                     <select name="incoterm_id" id="incoterm_id" class="form-control select2" required>
                                         @foreach($Incoterms as $incoterm)
-                                            <option value="{{$incoterm->id}}" {{ $Quotation->incoterm_id == $incoterm->id ? 'selected' : '' }}>{{$incoterm->code}}</option>
+                                            <option value="{{$incoterm->id}}" {{ $ProformaInvoice->incoterm_id == $incoterm->id ? 'selected' : '' }}>{{$incoterm->code}}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -105,7 +108,7 @@
                                     <label for="currency_id">{{__('Currency')}} <span class="text-danger">*</span></label>
                                     <select name="currency_id" id="currency_id" class="form-control select2" required>
                                         @foreach($Currencies as $currency)
-                                            <option value="{{$currency->id}}" {{ $Quotation->currency_id == $currency->id ? 'selected' : '' }}>{{$currency->symbol}}</option>
+                                            <option value="{{$currency->id}}" {{ $ProformaInvoice->currency_id == $currency->id ? 'selected' : '' }}>{{$currency->symbol}}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -113,7 +116,7 @@
                                     <label for="credit_payment_id">{{__('Credit Payment')}} <span class="text-danger">*</span></label>
                                     <select name="credit_payment_id" id="credit_payment_id" class="form-control select2" required>
                                         @foreach($CreditPayments as $CreditPayment)
-                                            <option value="{{$CreditPayment->id}}" {{ $Quotation->credit_payment_id == $CreditPayment->id ? 'selected' : '' }}>{{$CreditPayment->name}}</option>
+                                            <option value="{{$CreditPayment->id}}" {{ $ProformaInvoice->credit_payment_id == $CreditPayment->id ? 'selected' : '' }}>{{$CreditPayment->name}}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -130,19 +133,19 @@
                                             <th width="10%">{{__('Drawing')}}</th>
                                             <th width="10%">{{__('Cus.Code')}}</th>
                                             <th>{{__('Descript')}}</th>
-                                            <th width="8%">{{__('Qty (Order)')}}</th> <th width="8%">{{__('Qty (to PI)')}}</th>
+                                            <th width="8%">{{__('Qty (to PI)')}}</th>
                                             <th width="10%">{{__('Unit Price')}}</th>
-                                            <th width="12%">{{__('Amount')}} (<span class="show_currency">{{ $Quotation->symbol }}</span>)</th>
+                                            <th width="12%">{{__('Amount')}}</th>
                                             <th width="5%"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($Quotation->products as $item)
+                                        @foreach($ProformaInvoice->products as $item)
                                         <tr>
                                             <td class="text-center align-middle">
                                                 <div class="d-flex align-items-center justify-content-center">
                                                     <i class="fas fa-grip-vertical cursor-move text-muted mr-2" title="Drag to reorder"></i>
-                                                    <input type="number" class="form-control text-center item-seq p-1" name="seq[]" value="{{ $loop->iteration }}" readonly style="width: 50px;">
+                                                    <input type="number" class="form-control text-center item-seq p-1" name="seq[]" value="{{ $item->seq }}" readonly style="width: 50px;">
                                                 </div>
                                             </td>
                                             <td class="product-select-container">
@@ -153,7 +156,6 @@
                                             <td><input type="text" class="form-control text-80" name="drawing[]" value="{{ $item->drawing }}"></td>
                                             <td><input type="text" class="form-control text-80" name="customer_code[]" value="{{ $item->cus_code }}"></td>
                                             <td><input type="text" class="form-control text-80" name="description[]" value="{{ $item->detail_eng }}"></td>
-                                            <td><input type="number" class="form-control qty_order" name="qty_order[]" value="{{ $item->qty }}" step="any" readonly></td>
                                             <td><input type="number" class="form-control qty" name="qty[]" value="{{ $item->qty }}" step="any"></td>
                                             <td><input type="number" class="form-control unit_price" name="unit_price[]" value="{{ $item->price_per_item }}" step="any"></td>
                                             <td><input type="number" class="form-control amount" name="amount[]" value="{{ $item->total_price }}" readonly></td>
@@ -166,13 +168,13 @@
                                             <th colspan="2">
                                                 <button type="button" class="btn btn-primary btn-sm mb-2" id="addRow"><i class="fa fa-plus"></i> เพิ่มแถว</button>
                                             </th>
-                                            <th colspan="6" class="text-right">Total Amount (<span class="show_currency">{{ $Quotation->symbol }}</span>)</th>
-                                            <th><input type="text" id="grand_total" name="grand_total" class="form-control text-bold text-primary" readonly></th>
+                                            <th colspan="5" class="text-right">Total Amount</th>
+                                            <th><input type="text" id="grand_total" name="grand_total" class="form-control text-bold text-primary" value="{{ number_format($ProformaInvoice->total, 2) }}" readonly></th>
                                             <th></th>
                                         </tr>
                                         <tr>
-                                            <th colspan="11" class="text-center">
-                                                <button type="submit" class="btn btn-success"><i class="fa fa-save"></i> Create PI</button>
+                                            <th colspan="10" class="text-center">
+                                                <button type="submit" class="btn btn-warning"><i class="fa fa-save"></i> Update PI</button>
                                             </th>
                                         </tr>
                                     </tfoot>
@@ -193,25 +195,21 @@
 <script type="text/javascript">
 $(document).ready(function() {
 
-    // --- ฟังก์ชันอัปเดตเลขลำดับ ---
     function updateSequence() {
         $('#productTable tbody tr').each(function(index) {
             $(this).find('.item-seq').val(index + 1);
         });
     }
 
-    // --- เปิดใช้งาน Drag & Drop สำหรับตาราง ---
+    // Drag & Drop
     $('#productTable tbody').sortable({
-        handle: '.cursor-move', // จับลากได้เฉพาะตรงไอคอน
-        placeholder: "ui-state-highlight", // (ใส่ CSS Class เพิ่มให้เห็นช่องว่างตอนลากได้ถ้าต้องการ)
+        handle: '.cursor-move',
+        placeholder: "ui-state-highlight",
         start: function(e, ui) {
-            // ทำลาย Select2 ชั่วคราวตอนลากเพื่อป้องกัน UI พัง
             ui.item.find('.product').select2('destroy');
         },
         stop: function(e, ui) {
-            // สร้าง Select2 ใหม่หลังจากวางเสร็จ
             initSelect2(ui.item.find('.product'));
-            // อัปเดตเลขลำดับ
             updateSequence();
         }
     });
@@ -275,7 +273,6 @@ $(document).ready(function() {
         element.on('select2:select', function (e) {
             var data = e.params.data;
             var row = $(this).closest('tr');
-            $('#customer_id, #currency_id').attr('readonly', true).css('pointer-events', 'none');
             row.find('input[name="drawing[]"]').val(data.drawing);
             row.find('input[name="description[]"]').val(data.description);
             row.find('input[name="unit_price[]"]').val(data.price);
@@ -297,7 +294,6 @@ $(document).ready(function() {
                 <td><input type="text" class="form-control" name="drawing[]"></td>
                 <td><input type="text" class="form-control" name="customer_code[]"></td>
                 <td><input type="text" class="form-control" name="description[]"></td>
-                <td><input type="number" class="form-control qty_order" name="qty_order[]" value="1" step="any"></td>
                 <td><input type="number" class="form-control qty" name="qty[]" value="1" step="any"></td>
                 <td><input type="number" class="form-control unit_price" name="unit_price[]" value="0" step="any"></td>
                 <td><input type="number" class="form-control amount" name="amount[]" readonly></td>
@@ -306,8 +302,6 @@ $(document).ready(function() {
         var $newRow = $(newRow);
         $('#productTable tbody').append($newRow);
         initSelect2($newRow.find('.product'));
-
-        // อัปเดตเลขลำดับเมื่อเพิ่มแถวใหม่
         updateSequence();
     });
 
@@ -336,26 +330,27 @@ $(document).ready(function() {
     $('body').on('click', '.removeRow', function() {
         $(this).closest('tr').remove();
         calculateGrandTotal();
-        // อัปเดตเลขลำดับเมื่อลบแถว
         updateSequence();
     });
 
-    // Initialize existing rows
+    // Initialize existing elements
     $('.product').each(function() {
         initSelect2($(this));
     });
 
-    // Initial Calculation & Sequence
+    // คำนวณยอดรวมตอนโหลดหน้า
     calculateGrandTotal();
-    updateSequence();
 
-    $('body').on('submit', '#form-pi', function(e) {
+    // Submit Form
+    $('body').on('submit', '#form-edit-pi', function(e) {
         e.preventDefault();
         var form = $(this);
+        var pi_id = $('#pi_id').val();
         loadingButton(form.find('button[type=submit]'));
+
         $.ajax({
-            method: "POST",
-            url: url_gb + "/admin/ProformaInvoice",
+            method: "POST", // ส่งแบบ POST แต่มี _method=PUT ไปด้วยตามมาตรฐาน Laravel
+            url: url_gb + "/admin/ProformaInvoice/" + pi_id,
             dataType: "json",
             data: form.serialize()
         }).done(function(res) {

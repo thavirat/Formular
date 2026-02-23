@@ -73,16 +73,24 @@
                     <table id="tableProformaInvoice" class="table table-border-x brc-secondary-l4 border-0 mb-0 w-100">
                         <thead class="text-dark-tp3 bgc-grey-l4 text-90 border-b-1 brc-transparent">
                             <tr>
-                                <th class="text-center" width="5%">ลำดับ</th>
-                                <th>เลขที่เอกสาร</th>
-                                <th>วันที่เอกสาร</th>
-                                <th>บริษัท</th>
-                                <th>ยอดรวม</th>
-                                <th>ผู้บันทึก</th>
-                                <th class="text-center">#</th>
+                                <th class="text-center" width="5%" rowspan="2">{{__('No')}}</th>
+                                <th rowspan="2">{{__('Doc No')}}</th>
+                                <th rowspan="2">{{__('Doc Date')}}</th>
+                                <th rowspan="2">{{__('Company')}}</th>
+                                <th rowspan="2">{{__('Total')}}</th>
+                                <th rowspan="2">{{__('Created By')}}</th>
+                                <th class="text-center" colspan="7">{{__('Tools')}}</th>
+                            </tr>
+                            <tr>
+                                <th>{{__('Edit')}}</th>
+                                <th>{{__('Delete')}}</th>
+                                <th>{{__('FA')}}</th>
+                                {{-- <th>{{__('PO FA')}}</th>
+                                <th>{{__('PO')}}</th>
+                                <th></th>
+                                <th></th> --}}
                             </tr>
                         </thead>
-
                         <tbody class="mt-1">
                         </tbody>
                     </table>
@@ -191,12 +199,27 @@
             {"data": "total", "name": 'total'},
             {"data": "created_by", "name": 'created_by'},
             {
-                "data": "action" ,
-                "name": "action",
+                "data": "btn_edit" ,
+                "name": "btn_edit",
                 "searchable": false,
                 "sortable": false,
                 "class": "text-center"
             },
+            {
+                "data": "btn_delete" ,
+                "name": "btn_delete",
+                "searchable": false,
+                "sortable": false,
+                "class": "text-center"
+            },
+            {
+                "data": "btn_fa" ,
+                "name": "btn_fa",
+                "searchable": false,
+                "sortable": false,
+                "class": "text-center"
+            },
+
         ]
     });
 

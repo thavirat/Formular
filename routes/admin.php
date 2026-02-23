@@ -165,6 +165,7 @@ Route::middleware('authAdmin:admin')->group(function () {
     Route::get('/ProformaInvoice/ExportPDF', 'Admin\ProformaInvoiceController@export_pdf');
     Route::get('/ProformaInvoice/ExportExcel', 'Admin\ProformaInvoiceController@export_excel');
     Route::get('/ProformaInvoice/ExportPrint', 'Admin\ProformaInvoiceController@export_print');
+    Route::get('/ProformaInvoice/{id}/FA', 'Admin\ProformaInvoiceController@factory_accept');
     Route::resource('/ProformaInvoice', Admin\ProformaInvoiceController::class);
 
     ##FOR##REPLACE##INSTALL##
