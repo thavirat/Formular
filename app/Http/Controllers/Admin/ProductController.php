@@ -13,6 +13,7 @@ use Storage;
 use App\Models\ProductCategory;
 use App\Models\SubCategory;
 use App\Models\Customer;
+use App\Models\Factory;
 class ProductController extends AdminController
 {
     public $current_menu;
@@ -36,6 +37,7 @@ class ProductController extends AdminController
         $data['SidebarMenus'] = Menu::Active()->get();
         $data['ProductCategories'] = ProductCategory::orderBy('name_th')->get();
         $data['SubCategories'] = SubCategory::orderBy('name_th')->get();
+        $data['Factories'] = Factory::orderBy('name')->get();
         return view('admin.Product.product',$data);
     }
 
@@ -77,6 +79,7 @@ class ProductController extends AdminController
             $height = $request->input('height');
             $length = $request->input('length');
             $weight = $request->input('weight');
+            $factory_id = $request->input('factory_id');
             $sub_category_id = $request->input('sub_category_id');
 
             DB::beginTransaction();
@@ -91,6 +94,7 @@ class ProductController extends AdminController
                 $Product->height = $height;
                 $Product->length = $length;
                 $Product->weight = $weight;
+                $Product->factory_id = $factory_id;
                 $Product->sub_category_id = $sub_category_id;
                 $Product->save();
                 DB::commit();
@@ -167,6 +171,7 @@ class ProductController extends AdminController
             $height = $request->input('height');
             $length = $request->input('length');
             $weight = $request->input('weight');
+            $factory_id = $request->input('factory_id');
             $sub_category_id = $request->input('sub_category_id');
 
             DB::beginTransaction();
@@ -181,6 +186,7 @@ class ProductController extends AdminController
                 $Product->height = $height;
                 $Product->length = $length;
                 $Product->weight = $weight;
+                $Product->factory_id = $factory_id;
                 $Product->sub_category_id = $sub_category_id;
                 $Product->save();
                 DB::commit();

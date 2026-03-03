@@ -27,6 +27,7 @@ class Product extends Model
         'price',
         'sub_category_id',
         'group_id',
+        'factory_id',
     ];
     public function CustomerLevelDiscout(){
         return $this->hasOne('\App\Models\CustomerLevelDiscout' , 'product_id' , 'id');
@@ -34,5 +35,9 @@ class Product extends Model
 
     public function CustomerLevelDiscouts() {
         return $this->hasMany('\App\Models\CustomerLevelDiscout' , 'product_id' , 'id');
+    }
+
+    public function Factory(){
+        return $this->belongsTo('\App\Models\Factory' , 'factory_id' , 'id');
     }
 }

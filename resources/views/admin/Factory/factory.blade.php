@@ -2,23 +2,9 @@
 
 @section('title', $currentMenu->title)
 
-@section('css')
-<style>
-    .btn-outline-orange {
-        color: #fd7e14;
-        border-color: #fd7e14;
-        background-color: transparent;
-    }
-    .btn-h-light-orange:hover {
-        background-color: #fff5eb !important;
-        color: #e8590c !important;
-        border-color: #fd7e14 !important;
-    }
-    .btn-a-light-orange:active {
-        background-color: #ffe8cc !important;
-    }
-</style>
-@endsection
+@push('css')
+
+@endpush
 
 @section('body')
 <div class="page-content container container-plus">
@@ -26,7 +12,7 @@
         <h1 class="page-title text-primary-d2 text-140">{{ $currentMenu->title }} </h1>
         <div class="page-tools mt-3 mt-sm-0 mb-sm-n1">
              @if( $my_menu_permission[$currentMenu->url]['p'] == 'T' )
-                 <a href="{{ url("admin/ProformaInvoice/ExportPrint") }}" target="_blank" class="btn btn-light-warning btn-h-warning btn-a-warning border-0 radius-3 py-2 text-600 text-90">
+                 <a href="{{ url("admin/Factory/ExportPrint") }}" target="_blank" class="btn btn-light-warning btn-h-warning btn-a-warning border-0 radius-3 py-2 text-600 text-90">
                     <span class="d-none d-sm-inline mr-1">
                         Print
                     </span>
@@ -34,7 +20,7 @@
                 </a>
             @endif
             @if( $my_menu_permission[$currentMenu->url]['ep'] == 'T' )
-                <a href="{{ url("admin/ProformaInvoice/ExportPDF") }}" target="_blank" class="btn btn-light-danger btn-h-danger btn-a-danger border-0 radius-3 py-2 text-600 text-90">
+                <a href="{{ url("admin/Factory/ExportPDF") }}" target="_blank" class="btn btn-light-danger btn-h-danger btn-a-danger border-0 radius-3 py-2 text-600 text-90">
                     <span class="d-none d-sm-inline mr-1">
                         PDF
                     </span>
@@ -42,7 +28,7 @@
                 </a>
             @endif
             @if( $my_menu_permission[$currentMenu->url]['ee'] == 'T' )
-                <a href="{{ url("admin/ProformaInvoice/ExportExcel") }}" target="_blank" class="btn btn-light-primary btn-h-primary btn-a-primary border-0 radius-3 py-2 text-600 text-90">
+                <a href="{{ url("admin/Factory/ExportExcel") }}" target="_blank" class="btn btn-light-primary btn-h-primary btn-a-primary border-0 radius-3 py-2 text-600 text-90">
                     <span class="d-none d-sm-inline mr-1">
                         Excel
                     </span>
@@ -70,28 +56,16 @@
                         </div>
                     </div>
 
-                    <table id="tableProformaInvoice" class="table table-border-x brc-secondary-l4 border-0 mb-0 w-100">
+                    <table id="tableFactory" class="table table-border-x brc-secondary-l4 border-0 mb-0 w-100">
                         <thead class="text-dark-tp3 bgc-grey-l4 text-90 border-b-1 brc-transparent">
                             <tr>
-                                <th class="text-center" width="5%" rowspan="2">{{__('No')}}</th>
-                                <th rowspan="2">{{__('Doc No')}}</th>
-                                <th rowspan="2">{{__('Doc Date')}}</th>
-                                <th rowspan="2">{{__('Company')}}</th>
-                                <th rowspan="2">{{__('Total')}}</th>
-                                <th rowspan="2">{{__('Created By')}}</th>
-                                <th class="text-center" colspan="7">{{__('Tools')}}</th>
-                            </tr>
-                            <tr>
-                                <th>{{__('Edit')}}</th>
-                                <th>{{__('Delete')}}</th>
-                                <th>{{__('FA')}}</th>
-                                <th>{{__('EX PO')}}</th>
-                                 <th>{{__('PO Product')}}</th>
-                                {{--<th>{{__('PO')}}</th>
-                                <th></th>
-                                <th></th> --}}
+                                <th class="text-center" width="5%">ลำดับ</th>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th class="text-center">#</th>
                             </tr>
                         </thead>
+
                         <tbody class="mt-1">
                         </tbody>
                     </table>
@@ -122,8 +96,15 @@
                         <div class="row">
                             <div class="col-md-6 col-sm-12">
                                 <div class="form-group">
-                                    <label for="add_doc_no">เลขที่เอกสาร</label>
-                                    <input type="text" name="doc_no" id="add_doc_no" class="form-control autofocus" >
+                                    <label for="add_code">Code</label>
+                                    <input type="text" name="code" id="add_code" class="form-control autofocus" >
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="add_name">Name</label>
+                                    <input type="text" name="name" id="add_name" class="form-control " >
                                 </div>
                             </div>
 
@@ -143,7 +124,7 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <form id="FormEdit" data-parsley-validate="true">
-                    <input type="hidden" id="ProformaInvoice_edit_id">
+                    <input type="hidden" id="Factory_edit_id">
                     <div class="modal-header">
                         <h5 class="modal-title text-primary-d3" id="ModalEditLabel">
                             แก้ไขข้อมูล{{ $currentMenu->title }}
@@ -157,8 +138,15 @@
 
                             <div class="col-md-6 col-sm-12">
                                 <div class="form-group">
-                                    <label for="edit_doc_no">เลขที่เอกสาร</label>
-                                    <input type="text" name="doc_no" id="edit_doc_no" class="form-control " >
+                                    <label for="edit_code">Code</label>
+                                    <input type="text" name="code" id="edit_code" class="form-control " >
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="edit_name">Name</label>
+                                    <input type="text" name="name" id="edit_name" class="form-control " >
                                 </div>
                             </div>
 
@@ -177,10 +165,10 @@
 @push('scripts')
 <script type="text/javascript">
 
-    var tableProformaInvoice = $('#tableProformaInvoice').dataTable({
+    var tableFactory = $('#tableFactory').dataTable({
 
         "ajax": {
-            "url": url_gb+"/admin/ProformaInvoice/Lists",
+            "url": url_gb+"/admin/Factory/Lists",
             "type": "POST",
             "data": function ( d ) {
                 // d.status = "A";
@@ -194,47 +182,15 @@
         "responsive": false,
         "columns": [
             {"data": "DT_RowIndex", 'searchable': false, 'orderable': false, "class": "text-center"},
-            {"data": "doc_no", "name": 'doc_no'},
-            {"data": "doc_date", "name": 'doc_date'},
-            {"data": "company_name", "name": 'company_name'},
-            {"data": "total", "name": 'total'},
-            {"data": "created_by", "name": 'created_by'},
+            {"data": "code", "name": 'code'},
+            {"data": "name", "name": 'name'},
             {
-                "data": "btn_edit" ,
-                "name": "btn_edit",
+                "data": "action" ,
+                "name": "action",
                 "searchable": false,
                 "sortable": false,
                 "class": "text-center"
             },
-            {
-                "data": "btn_delete" ,
-                "name": "btn_delete",
-                "searchable": false,
-                "sortable": false,
-                "class": "text-center"
-            },
-            {
-                "data": "btn_fa" ,
-                "name": "btn_fa",
-                "searchable": false,
-                "sortable": false,
-                "class": "text-center"
-            },
-            {
-                "data": "btn_export_po" ,
-                "name": "btn_export_po",
-                "searchable": false,
-                "sortable": false,
-                "class": "text-center"
-            },
-            {
-                "data": "btn_export_product" ,
-                "name": "btn_export_product",
-                "searchable": false,
-                "sortable": false,
-                "class": "text-center"
-            },
-
         ]
     });
 
@@ -248,7 +204,7 @@
         loadingButton(form.find('button[type=submit]'));
         $.ajax({
             method: "POST",
-            url: url_gb+"/admin/ProformaInvoice",
+            url: url_gb+"/admin/Factory",
             dataType : "json",
             data: form.serialize()
         }).done(function( res ) {
@@ -256,7 +212,7 @@
             if(res.status == 1){
                 Swal.fire(res.title, res.content,'success');
                 resetFormCustom(form);
-                tableProformaInvoice.api().ajax.reload();
+                tableFactory.api().ajax.reload();
                 $('#ModalAdd').modal('hide');
             }else{
                 Swal.fire(res.title, res.content,'error');
@@ -268,12 +224,12 @@
 
     $('body').on('submit', '#FormEdit', function(e){
         e.preventDefault();
-        var id = $("#ProformaInvoice_edit_id").val();
+        var id = $("#Factory_edit_id").val();
         var form = $(this);
         loadingButton(form.find('button[type=submit]'));
         $.ajax({
             method: "PUT",
-            url: url_gb+"/admin/ProformaInvoice/"+id,
+            url: url_gb+"/admin/Factory/"+id,
             dataType : 'json',
             data: form.serialize()
             }).done(function( res ) {
@@ -281,7 +237,7 @@
                 if(res.status == 1){
                     Swal.fire(res.title, res.content, 'success');
                     resetFormCustom(form);
-                    tableProformaInvoice.api().ajax.reload();
+                    tableFactory.api().ajax.reload();
                     $('#ModalEdit').modal('hide');
                 }else{
                     Swal.fire(res.title, res.content, 'error');
@@ -306,12 +262,12 @@
             if (say.isConfirmed) {
                 $.ajax({
                     method: "DELETE",
-                    url: url_gb+"/admin/ProformaInvoice/"+id,
+                    url: url_gb+"/admin/Factory/"+id,
                     dataType : 'json',
                 }).done(function( res ) {
                     if(res.status == 1){
                         Swal.fire(res.title, res.content,'success');
-                        tableProformaInvoice.api().ajax.reload();
+                        tableFactory.api().ajax.reload();
                     }else{
                         Swal.fire(res.title, res.content,'warning');
                     }
@@ -326,16 +282,16 @@
 
     $('body').on('click','.btn-edit',function(data){
         var id = $(this).data('id');
-        $("#ProformaInvoice_edit_id").val(id);
+        $("#Factory_edit_id").val(id);
         var btn = $(this);
         loadingButton(btn);
         $.ajax({
             method: "GET",
-            url: url_gb+"/admin/ProformaInvoice/"+id,
+            url: url_gb+"/admin/Factory/"+id,
             dataType: 'json',
         }).done(function( res ) {
             resetButton(btn);
-                                    $("#edit_doc_no").val(res.content.doc_no);
+                                    $("#edit_code").val(res.content.code);                                                $("#edit_name").val(res.content.name);                        
             $('#ModalEdit').modal('show');
         }).fail(function(res){
             ajaxFail(res , "");

@@ -103,8 +103,20 @@
     </style>
 </head>
 <body>
+    @php
+        $logo = null;
+        if ( isset($settings['logo']) ) {
+            $logo = json_decode($settings['logo']);
+            $logo = ( sizeof( $logo ) > 0 ? $logo[0] : null );
+        }
+    @endphp
+
     <table with="100%" class="header-table">
+
         <tr>
+            <th rowspan="2">
+                <img src="{{ asset('uploads/SettingSystem/'.$logo) }}" height="50">
+            </th>
             <th width="80%" align="left" style="font-size: 150%;">
                 FORMULA INTERTRADE CO.,LTD.
             </th>
@@ -125,25 +137,25 @@
         <tr>
             <th width="67%" style="font-size: 150%;" align="right">EXPORT ORDER FORM</th>
             <td align="right">
-                PAGE 1 / 4
+                PAGE {PAGENO} / {nbpg}
             </td>
         </tr>
     </table>
     <table width="100%">
         <tr>
             <th width="50%" align="left">
-                <b>DOCUMENT NO. :</b>
+                <b>DOCUMENT NO. :</b> {{$ProformaInvoice->doc_no}}
             </th>
             <td width="50%" align="left">
-                <b>DATE :</b>
+                <b>DATE :</b> {{$ProformaInvoice->doc_date}}
             </td>
         </tr>
         <tr>
             <th width="50%" align="left">
-                <b>CUSTOMER :</b>
+                <b>CUSTOMER :</b> {{$ProformaInvoice->customer_name ?? '-'}}
             </th>
             <td width="50%" align="left">
-                <b>EXPECTED SHIPMENT DATE :</b>
+                <b>EXPECTED SHIPMENT DATE :</b> {{$ProformaInvoice->doc_no}}
             </td>
         </tr>
         <tr>

@@ -112,6 +112,10 @@ class ProformaInvoiceController extends AdminController
             $pi->tax_id            = $request->tax_id;
             $pi->address           = $request->address;
             $pi->fax_no            = $request->fax_no;
+            $pi->ship_date            = $request->ship_date;
+            $pi->ship_to_code            = $request->ship_to_code;
+            $pi->customer_po            = $request->customer_po;
+            $pi->ship_remark            = $request->ship_remark;
             $pi->subtotal          = str_replace(',', '', $request->grand_total);
             $pi->total             = str_replace(',', '', $request->grand_total);
             $pi->created_by        = Auth::guard('admin')->user()->id;
@@ -253,6 +257,10 @@ class ProformaInvoiceController extends AdminController
             $pi->tax_id            = $request->tax_id;
             $pi->address           = $request->address;
             $pi->fax_no            = $request->fax_no;
+            $pi->ship_date            = $request->ship_date;
+            $pi->ship_to_code            = $request->ship_to_code;
+            $pi->customer_po            = $request->customer_po;
+            $pi->ship_remark            = $request->ship_remark;
             $pi->subtotal          = str_replace(',', '', $request->grand_total);
             $pi->total             = str_replace(',', '', $request->grand_total);
             $pi->save();
@@ -372,7 +380,21 @@ class ProformaInvoiceController extends AdminController
             return '<a href="'.url('admin/'.$lang.'/ProformaInvoice/'.$rec->id.'/FA').'"
                 class="btn btn-outline-orange btn-h-light-orange btn-a-light-orange border-b-2"
                 title="ออกใบ PI ส่งโรงงาน">
-                <i class="fa fa-factory"></i>
+                <i class="fa fa-file"></i>
+             </a>';
+        })
+        ->addColumn('btn_export_po', function ($rec) use ($lang) {
+            return '<a href="'.url('admin/'.$lang.'/ProformaInvoice/'.$rec->id.'/ExportPo').'"
+                class="btn btn-outline-blue btn-h-light-blue btn-a-light-blue border-b-2"
+                title="ออกใบ PI ส่งโรงงาน">
+                <i class="fa fa-file"></i>
+             </a>';
+        })
+        ->addColumn('btn_export_product', function ($rec) use ($lang) {
+            return '<a href="'.url('admin/'.$lang.'/ProformaInvoice/'.$rec->id.'/ExportProduct').'"
+                class="btn btn-outline-blue btn-h-light-blue btn-a-light-blue border-b-2"
+                title="ออกใบ Export Product">
+                <i class="fa fa-file"></i>
              </a>';
         })
         ->addColumn('action', function ($rec) use ($lang) {
@@ -395,13 +417,13 @@ class ProformaInvoiceController extends AdminController
             $str .= '<a href="'.url('admin/'.$lang.'/ProformaInvoice/pdfFactory?pi_id='.$rec->id).'"
                 class="btn btn-outline-orange btn-h-light-orange btn-a-light-orange border-b-2"
                 title="ออกใบ PI ส่งโรงงาน">
-                <i class="fa fa-factory"></i>
+                <i class="fa fa-file-pdf-o"></i>
              </a>';
 
             return $str;
         })
         ->addIndexColumn()
-        ->rawColumns(['btn_edit', 'btn_delete', 'btn_fa', 'action'])
+        ->rawColumns(['btn_edit', 'btn_delete', 'btn_fa', 'action' , 'btn_export_po' , 'btn_export_product'])
         ->make(true);
     }
 
@@ -471,21 +493,104 @@ class ProformaInvoiceController extends AdminController
         // ดึงข้อมูล PI แบบเดียวกับหน้า Show
         $data['ProformaInvoice'] = ProformaInvoice::with(['products' => function ($q) {
             $q->leftJoin('products', 'proforma_invoice_products.product_id', '=', 'products.id')
+            ->leftJoin('factories', 'products.factory_id', '=', 'factories.id')
+            ->leftJoin('unit_products', 'products.unit_id', '=', 'unit_products.id')
               ->select(
                   'proforma_invoice_products.*',
-                  'products.code as part_no'
+                  'products.code as part_no',
+                  'products.name_en',
+                  'products.drawing',
+                  'factories.code as fac_no',
+                  'unit_products.name as unit_name'
               )
               ->orderBy('proforma_invoice_products.seq', 'asc');
-        }])
+        } , 'customer'])
         ->leftJoin('customers', 'proforma_invoices.customer_id', '=', 'customers.id')
         ->select('proforma_invoices.*', 'customers.company_name as customer_name')
         ->findOrFail($id);
+
+
 
         // โหลด View สำหรับ PDF พร้อมส่งตัวแปรไป
         $pdf = \PDF::loadView('admin.ProformaInvoice.proforma_invoice_pdf', $data);
 
         // สั่งให้เปิด PDF ใน Browser (ถ้าอยากให้โหลดลงเครื่องเลย เปลี่ยน stream เป็น download)
         return $pdf->stream('EXPORT_FA_' . $data['ProformaInvoice']->doc_no . '.pdf');
+    }
+
+    public function export_po($id)
+    {
+        // ดึงข้อมูล PI แบบเดียวกับหน้า Show
+        $data['ProformaInvoice'] = ProformaInvoice::with(['products' => function ($q) {
+            $q->leftJoin('products', 'proforma_invoice_products.product_id', '=', 'products.id')
+            ->leftJoin('factories', 'products.factory_id', '=', 'factories.id')
+            ->leftJoin('unit_products', 'products.unit_id', '=', 'unit_products.id')
+              ->select(
+                  'proforma_invoice_products.*',
+                  'products.code as part_no',
+                  'products.name_en',
+                  'products.drawing',
+                  'factories.code as fac_no',
+                  'unit_products.name as unit_name'
+              )
+              ->orderBy('proforma_invoice_products.seq', 'asc');
+        } , 'customer'])
+        ->leftJoin('customers', 'proforma_invoices.customer_id', '=', 'customers.id')
+        ->leftJoin('admin_users', 'proforma_invoices.created_by', '=', 'admin_users.id')
+        ->leftJoin('prefixes', 'admin_users.prefix_id', '=', 'prefixes.id')
+        ->select(
+            'proforma_invoices.*'
+            , 'customers.company_name as customer_name'
+            , 'admin_users.firstname as sale_firstname'
+            , 'admin_users.lastname as sale_lastname'
+            , 'prefixes.name as sale_prefix')
+        ->findOrFail($id);
+
+
+
+        // โหลด View สำหรับ PDF พร้อมส่งตัวแปรไป
+        $pdf = \PDF::loadView('admin.ProformaInvoice.proforma_invoice_export_po', $data);
+
+        // สั่งให้เปิด PDF ใน Browser (ถ้าอยากให้โหลดลงเครื่องเลย เปลี่ยน stream เป็น download)
+        return $pdf->stream('EXPORT_PO_' . $data['ProformaInvoice']->doc_no . '.pdf');
+    }
+
+
+    public function export_product($id)
+    {
+        // ดึงข้อมูล PI แบบเดียวกับหน้า Show
+        $data['ProformaInvoice'] = ProformaInvoice::with(['products' => function ($q) {
+            $q->leftJoin('products', 'proforma_invoice_products.product_id', '=', 'products.id')
+            ->leftJoin('factories', 'products.factory_id', '=', 'factories.id')
+            ->leftJoin('unit_products', 'products.unit_id', '=', 'unit_products.id')
+              ->select(
+                  'proforma_invoice_products.*',
+                  'products.code as part_no',
+                  'products.name_en',
+                  'products.drawing',
+                  'factories.code as fac_no',
+                  'unit_products.name as unit_name'
+              )
+              ->orderBy('proforma_invoice_products.seq', 'asc');
+        } , 'customer'])
+        ->leftJoin('customers', 'proforma_invoices.customer_id', '=', 'customers.id')
+        ->leftJoin('admin_users', 'proforma_invoices.created_by', '=', 'admin_users.id')
+        ->leftJoin('prefixes', 'admin_users.prefix_id', '=', 'prefixes.id')
+        ->select(
+            'proforma_invoices.*'
+            , 'customers.company_name as customer_name'
+            , 'admin_users.firstname as sale_firstname'
+            , 'admin_users.lastname as sale_lastname'
+            , 'prefixes.name as sale_prefix')
+        ->findOrFail($id);
+
+
+
+        // โหลด View สำหรับ PDF พร้อมส่งตัวแปรไป
+        $pdf = \PDF::loadView('admin.ProformaInvoice.proforma_invoice_export_product', $data);
+
+        // สั่งให้เปิด PDF ใน Browser (ถ้าอยากให้โหลดลงเครื่องเลย เปลี่ยน stream เป็น download)
+        return $pdf->stream('EXPORT_PRODUCT_' . $data['ProformaInvoice']->doc_no . '.pdf');
     }
 
 }

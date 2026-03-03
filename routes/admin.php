@@ -166,7 +166,15 @@ Route::middleware('authAdmin:admin')->group(function () {
     Route::get('/ProformaInvoice/ExportExcel', 'Admin\ProformaInvoiceController@export_excel');
     Route::get('/ProformaInvoice/ExportPrint', 'Admin\ProformaInvoiceController@export_print');
     Route::get('/ProformaInvoice/{id}/FA', 'Admin\ProformaInvoiceController@factory_accept');
+    Route::get('/ProformaInvoice/{id}/ExportPo', 'Admin\ProformaInvoiceController@export_po');
+    Route::get('/ProformaInvoice/{id}/ExportProduct', 'Admin\ProformaInvoiceController@export_product');
     Route::resource('/ProformaInvoice', Admin\ProformaInvoiceController::class);
+
+    Route::post('/Factory/Lists', 'Admin\FactoryController@lists');
+    Route::get('/Factory/ExportPDF', 'Admin\FactoryController@export_pdf');
+    Route::get('/Factory/ExportExcel', 'Admin\FactoryController@export_excel');
+    Route::get('/Factory/ExportPrint', 'Admin\FactoryController@export_print');
+    Route::resource('/Factory', Admin\FactoryController::class);
 
     ##FOR##REPLACE##INSTALL##
         });

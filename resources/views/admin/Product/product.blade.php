@@ -163,6 +163,17 @@
                             </div>
                             <div class="col-md-6 col-sm-12">
                                 <div class="form-group">
+                                    <label for="add_factory_id">Factories</label>
+                                    <select name="factory_id" id="add_factory_id" class="form-control  ">
+                                        <option value="">Please Select</option>
+                                        @foreach ($Factories as $Factory)
+                                            <option value="{{ $Factory->id }}">{{ $Factory->name }} ({{ $Factory->code }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
                                     <label for="add_code">Product ID</label>
                                     <input type="text" name="code" id="add_code" class="form-control ">
                                 </div>
@@ -263,7 +274,7 @@
 
                                     <label for="edit_category_id">Category</label>
                                     <select name="category_id" id="edit_category_id" class="form-control  ">
-                                        <option value="">เลือกกรุณาเลือก</option>
+                                        <option value="">Please Select</option>
                                         @foreach ($ProductCategories as $ProductCategory)
                                             <option value="{{ $ProductCategory->id }}">{{ $ProductCategory->name_th }} {{$ProductCategory->name_en}}
                                             </option>
@@ -271,6 +282,19 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+
+                                    <label for="edit_factory_id">Factories</label>
+                                    <select name="factory_id" id="edit_factory_id" class="form-control  ">
+                                        <option value="">Please Select</option>
+                                        @foreach ($Factories as $Factory)
+                                            <option value="{{ $Factory->id }}">{{ $Factory->name }} ({{ $Factory->code }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
                             <div class="col-md-6 col-sm-12">
                                 <div class="form-group">
                                     <label for="edit_code">Product ID</label>
@@ -516,6 +540,7 @@
                 $("#edit_height").val(res.content.height);
                 $("#edit_length").val(res.content.length);
                 $("#edit_weight").val(res.content.weight);
+                $("#edit_factory_id").val(res.content.factory_id);
                 $("#edit_sub_category_id").val(res.content.sub_category_id).trigger('change.select2');
 
                 $('#ModalEdit').modal('show');
