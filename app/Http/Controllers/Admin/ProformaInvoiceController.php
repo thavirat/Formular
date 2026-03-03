@@ -567,6 +567,7 @@ class ProformaInvoiceController extends AdminController
                   'proforma_invoice_products.*',
                   'products.code as part_no',
                   'products.name_en',
+                  'products.name_th',
                   'products.drawing',
                   'factories.code as fac_no',
                   'unit_products.name as unit_name'

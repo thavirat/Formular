@@ -26,8 +26,8 @@
         }
     @endphp
 
-    <div style="position: fixed; top: 65px; right: -70px;">
-        {PAGENO} / {nbpg}
+    <div style="position: fixed; top: 59px; right: -75px;">
+        Page {PAGENO} of {nbpg}
     </div>
 
     <table width="100%" cellpadding="5" cellspacing="0" >
@@ -40,13 +40,13 @@
             <th align="left">
                 <b>EXPORT NO.</b>
             </th>
-            <td>
+            <td style="color: blue;">
                 {{ $ProformaInvoice->doc_no }}
             </td>
-            <th>
+            <th align="right">
                 Sale Rep
             </th>
-            <td>
+            <td style="color: blue;">
                 {{ $ProformaInvoice->sale_prefix }}{{ $ProformaInvoice->sale_firstname }} {{ $ProformaInvoice->sale_lastname }}
             </td>
             <th colspan="2" rowspan="2" style="font-size: 110%;">
@@ -57,7 +57,7 @@
             <th align="left">
                 <b>CUSTOMER</b>
             </th>
-            <td colspan="3">
+            <td colspan="3" style="color: blue;">
                 {{ $ProformaInvoice->customer_name }}
             </td>
         </tr>
@@ -65,13 +65,13 @@
             <th width="15%">
                 <b>PO NO.</b>
             </th>
-            <td width="15%">
-                {{ $ProformaInvoice->po_no }}
+            <td width="15%" style="color: blue;">
+                {{ $ProformaInvoice->customer_po }}
             </td>
             <th width="20%">
                 SHIPMENT DATE
             </th>
-            <td>
+            <td style="color: blue;">
                 {{ date('d/m/Y' , strtotime($ProformaInvoice->shipment_date)) }}
             </td>
             <th>
@@ -84,10 +84,10 @@
     <tr>
         <td style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;" valign="top" align="center">{{ $product->seq }}</td>
         <td style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px; color: blue;" valign="top" align="center">{{ $key + 1 }}</td>
-        <td style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;">{{ $product->part_no }}</td>
-        <td style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;" colspan="2" >{{ $product->name_th }}</td>
-        <td style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;" align="center">{{ number_format($product->qty,0) }}</td>
-        <td style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;">{{ $product->drawing }}</td>
+        <td style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;" valign="top">{{ $product->part_no }}</td>
+        <td style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;" colspan="2" valign="top" >{{ $product->name_th }}</td>
+        <td style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;" align="center" valign="top">{{ number_format($product->qty,0) }}</td>
+        <td style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;">{{ $product->drawing }}<br>&nbsp;</td>
     </tr>
     @endforeach
     </table>
