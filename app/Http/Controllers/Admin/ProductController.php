@@ -75,6 +75,7 @@ class ProductController extends AdminController
             $name_th = $request->input('name_th');
             $name_en = $request->input('name_en');
             $drawing = $request->input('drawing');
+            $cost = $request->input('cost');
             $width = $request->input('width');
             $height = $request->input('height');
             $length = $request->input('length');
@@ -90,6 +91,7 @@ class ProductController extends AdminController
                 $Product->name_th = $name_th;
                 $Product->name_en = $name_en;
                 $Product->drawing = $drawing;
+                $Product->cost = $cost;
                 $Product->width = $width;
                 $Product->height = $height;
                 $Product->length = $length;
@@ -171,6 +173,7 @@ class ProductController extends AdminController
             $height = $request->input('height');
             $length = $request->input('length');
             $weight = $request->input('weight');
+            $cost = $request->input('cost');
             $factory_id = $request->input('factory_id');
             $sub_category_id = $request->input('sub_category_id');
 
@@ -186,6 +189,7 @@ class ProductController extends AdminController
                 $Product->height = $height;
                 $Product->length = $length;
                 $Product->weight = $weight;
+                $Product->cost = $cost;
                 $Product->factory_id = $factory_id;
                 $Product->sub_category_id = $sub_category_id;
                 $Product->save();

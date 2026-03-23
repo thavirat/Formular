@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\Fic2FiExport;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Menu;
@@ -13,9 +14,15 @@ use App\Models\CreditPayment;
 use App\Models\Quotation;
 use App\Models\Currency;
 use App\Models\QuotationProduct;
+use App\Models\ProformaInvoiceStatus;
+use App\Models\AdminUser;
+use App\Models\ContactChannel;
+use App\Models\Comment;
+use Maatwebsite\Excel\Facades\Excel;
 use Auth;
 use DataTables;
 use Help;
+use UserPermission;
 use DB;
 use Validator;
 use Storage;
@@ -42,6 +49,9 @@ class ProformaInvoiceController extends AdminController
         }
         $data['currentMenu'] = Menu::where('url', $this->current_menu)->first();
         $data['SidebarMenus'] = Menu::Active()->get();
+        $data['proforma_invoice_statuses'] = ProformaInvoiceStatus::orderBy('name')->get();
+        $data['admins'] = AdminUser::orderBy('nickname')->get();
+        $data['Customers'] = Customer::orderBy('company_name')->get();
         return view('admin.ProformaInvoice.proforma_invoice', $data);
     }
 
@@ -65,15 +75,15 @@ class ProformaInvoiceController extends AdminController
                 'products.code as part_no'
             );
         }])
-        ->leftJoin('currencies', 'quotations.currency_id', '=', 'currencies.id')
-        ->leftJoin('credit_payments', 'quotations.credit_payment_id', '=', 'credit_payments.id')
-        ->select(
-            'quotations.*',
-            'currencies.name as currency_name',
-            'currencies.symbol',
-            'credit_payments.name as credit_payment_name'
-        )
-        ->find($id);
+            ->leftJoin('currencies', 'quotations.currency_id', '=', 'currencies.id')
+            ->leftJoin('credit_payments', 'quotations.credit_payment_id', '=', 'credit_payments.id')
+            ->select(
+                'quotations.*',
+                'currencies.name as currency_name',
+                'currencies.symbol',
+                'credit_payments.name as credit_payment_name'
+            )
+            ->find($id);
 
         return view('admin.ProformaInvoice.proforma_invoice_create', $data);
     }
@@ -92,8 +102,8 @@ class ProformaInvoiceController extends AdminController
             $date_now = date('Y-m-d');
             $year_month = date('ym');
             $last_run = ProformaInvoice::where('doc_no', 'like', "PI$year_month%")
-                                        ->orderBy('run_no', 'desc')
-                                        ->first();
+                ->orderBy('run_no', 'desc')
+                ->first();
             $run_no = $last_run ? $last_run->run_no + 1 : 1;
             $doc_no = "PI" . $year_month . str_pad($run_no, 4, '0', STR_PAD_LEFT);
 
@@ -163,7 +173,6 @@ class ProformaInvoiceController extends AdminController
                 'content' => 'บันทึกใบ Proforma Invoice เลขที่ ' . $doc_no . ' เรียบร้อยแล้ว',
                 'id'     => $pi->id
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -210,11 +219,11 @@ class ProformaInvoiceController extends AdminController
         // ดึงข้อมูล Proforma Invoice พร้อม Products ที่เรียงตาม seq
         $data['ProformaInvoice'] = ProformaInvoice::with(['Products' => function ($q) {
             $q->leftJoin('products', 'proforma_invoice_products.product_id', '=', 'products.id')
-            ->select(
-                'proforma_invoice_products.*',
-                'products.code as part_no'
-            )
-            ->orderBy('proforma_invoice_products.seq', 'asc'); // เรียงตามลำดับที่บันทึกไว้
+                ->select(
+                    'proforma_invoice_products.*',
+                    'products.code as part_no'
+                )
+                ->orderBy('proforma_invoice_products.seq', 'asc'); // เรียงตามลำดับที่บันทึกไว้
         }])->findOrFail($id);
 
         return view('admin.ProformaInvoice.proforma_invoice_edit', $data);
@@ -300,7 +309,6 @@ class ProformaInvoiceController extends AdminController
 
             DB::commit();
             return response()->json(['status' => 1, 'title' => 'สำเร็จ', 'content' => 'อัปเดตข้อมูลเรียบร้อย']);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['status' => 0, 'title' => 'เกิดข้อผิดพลาด', 'content' => $e->getMessage()]);
@@ -336,7 +344,6 @@ class ProformaInvoiceController extends AdminController
 
             DB::commit();
             return response()->json(['status' => 1, 'title' => 'สำเร็จ', 'content' => 'ลบข้อมูลเรียบร้อยแล้ว']);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['status' => 0, 'title' => 'เกิดข้อผิดพลาด', 'content' => $e->getMessage()]);
@@ -349,82 +356,287 @@ class ProformaInvoiceController extends AdminController
      * @param   \Illuminate\Http\Request  $request
      * @return  \Illuminate\Http\Response
      */
-    public function report()
+    public function report(Request $request)
     {
-        $result = ProformaInvoice::select()->orderByDesc('id');
-        return $result;
+        $result = ProformaInvoice::with(['Comments' => function ($q) {
+            $q->leftJoin('admin_users', 'admin_users.id', 'comments.created_by');
+            $q->leftJoin('contact_channels', 'contact_channels.id', 'comments.channel_id');
+            $q->select(
+                'comments.*',
+                'admin_users.nickname as created_by_name',
+                'contact_channels.name as channel_name'
+            )->orderBy('comments.created_at', 'desc');
+        }])
+            ->leftJoin('admin_users', 'admin_users.id', '=', 'proforma_invoices.created_by')
+            ->leftJoin('admin_users as send_approve', 'proforma_invoices.send_approve_by', '=', 'send_approve.id')
+            ->leftJoin('admin_users as approve', 'proforma_invoices.approve_by', '=', 'approve.id')
+            ->leftJoin('proforma_invoice_statuses', 'proforma_invoices.status_id', '=', 'proforma_invoice_statuses.id')
+            ->select(
+                'proforma_invoices.*',
+                'admin_users.nickname as created_by_name',
+                'send_approve.nickname as send_approve_name',
+                'approve.nickname as approve_name',
+                'proforma_invoice_statuses.name as status_name'
+            );
+
+        if ($request->has('start_date') && $request->start_date != '') {
+            $result->where('proforma_invoices.doc_date', '>=', date('Y-m-d', strtotime($request->start_date)));
+        }
+        if ($request->has('end_date') && $request->end_date != '') {
+            $result->where('proforma_invoices.doc_date', '<=', date('Y-m-d', strtotime($request->end_date)));
+        }
+        if ($request->has('status_id') && $request->status_id != 'all' && $request->status_id !== null && $request->status_id !== '') {
+            $result->where('proforma_invoices.status_id', '=', $request->status_id);
+        }
+        if ($request->has('admin_id') && $request->admin_id != 'all' && $request->admin_id !== null && $request->admin_id !== '') {
+            $result->where('proforma_invoices.created_by', '=', $request->admin_id);
+        }
+        if ($request->has('customer_id') && $request->customer_id != 'all' && $request->customer_id !== null && $request->customer_id !== '') {
+            $result->where('proforma_invoices.customer_id', '=', $request->customer_id);
+        }
+
+        return $result->orderByDesc('proforma_invoices.id');
     }
 
     public function lists(Request $request)
     {
         $result = $this->report($request);
         $lang = config('app.locale');
+        $channels = ContactChannel::get();
+        $all_permission = UserPermission::getMyPermissions();
 
         return DataTables::of($result)
-        ->addColumn('btn_edit', function ($rec) use ($lang) {
-            return '<a href="'.url('admin/'.$lang.'/ProformaInvoice/'.$rec->id.'/edit').'" class="btn btn-xs btn-warning"  data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="แก้ไข">
-            <i class="fa fa-edit"></i>
-            </a>';
-        })
-        ->addColumn('btn_delete', function ($rec) use ($lang) {
-            return '<button class="btn btn-xs btn-danger btn-delete" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="ลบ">
-            <i class="fa fa-trash"></i>
-            </button>';
-        })
-        // ->addColumn('btn_fa', function ($rec) use ($lang) {
-        //     return '<a href="'.url('admin/'.$lang.'/ProformaInvoice/'.$rec->id.'/fa').'" class="btn btn-xs btn-warning"  data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="แก้ไข">
-        //     <i class="fa fa-edit"></i>
-        //     </a>';
-        // })
-        ->addColumn('btn_fa', function ($rec) use ($lang) {
-            return '<a href="'.url('admin/'.$lang.'/ProformaInvoice/'.$rec->id.'/FA').'"
-                class="btn btn-outline-orange btn-h-light-orange btn-a-light-orange border-b-2"
-                title="ออกใบ PI ส่งโรงงาน">
-                <i class="fa fa-file"></i>
-             </a>';
-        })
-        ->addColumn('btn_export_po', function ($rec) use ($lang) {
-            return '<a href="'.url('admin/'.$lang.'/ProformaInvoice/'.$rec->id.'/ExportPo').'"
-                class="btn btn-outline-blue btn-h-light-blue btn-a-light-blue border-b-2"
-                title="ออกใบ PI ส่งโรงงาน">
-                <i class="fa fa-file"></i>
-             </a>';
-        })
-        ->addColumn('btn_export_product', function ($rec) use ($lang) {
-            return '<a href="'.url('admin/'.$lang.'/ProformaInvoice/'.$rec->id.'/ExportProduct').'"
-                class="btn btn-outline-blue btn-h-light-blue btn-a-light-blue border-b-2"
-                title="ออกใบ Export Product">
-                <i class="fa fa-file"></i>
-             </a>';
-        })
-        ->addColumn('action', function ($rec) use ($lang) {
-            $btnEdit = '<a href="'.url('admin/'.$lang.'/ProformaInvoice/'.$rec->id.'/edit').'" class="btn btn-xs btn-warning"  data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="แก้ไข">
-            <i class="fa fa-edit"></i>
-            </a> ';
-            $btnDelete = '<button class="btn btn-xs btn-danger btn-delete" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="ลบ">
-            <i class="fa fa-trash"></i>
-            </button> ';
-            $update = Help::CheckPermissionMenu($this->current_menu, 'u');
-            $str = '';
-            if ($update) {
-                $str .= $btnEdit;
+            ->addColumn('doc_info', function ($rec) {
+                return '<div class="text-primary-d2 font-bolder text-95">' . e($rec->doc_no) . '</div>
+                        <div class="text-80 text-grey-m2"><i class="far fa-calendar-alt mr-1"></i>' . e($rec->doc_date) . '</div>';
+            })
+            ->addColumn('customer_info', function ($rec) {
+                return '<div class="text-dark-m3 font-bold">' . e($rec->company_name) . '</div>
+                        <div class="text-80 text-blue-m2"><i class="far fa-user mr-1"></i>' . e($rec->created_by_name ?? '-') . '</div>';
+            })
+            ->editColumn('total', function ($rec) {
+                return '<span class="text-110 font-bolder text-success-d1">' . number_format($rec->total, 2) . '</span>';
+            })
+            ->addColumn('status_name', function ($rec) {
+                $statusColor = 'secondary';
+                if ((int) $rec->status_id === 1) $statusColor = 'light-grey';
+                if ((int) $rec->status_id === 2) $statusColor = 'warning';
+                if ((int) $rec->status_id === 3) $statusColor = 'success';
+                if ((int) $rec->status_id === 4) $statusColor = 'danger';
+                $str = '<div class="text-center">
+                            <span class="badge badge-lg bgc-' . $statusColor . '-l3 text-' . $statusColor . '-d2 border-1 brc-' . $statusColor . '-m3 mb-1">' . e($rec->status_name) . '</span>';
+                if ((int) $rec->status_id >= 2 && !empty($rec->send_approve_date)) {
+                    $str .= '<div class="text-75 text-grey-m1 mt-1" title="วันที่ส่งขออนุมัติ">
+                                <i class="fa fa-paper-plane mr-1 text-purple-m2"></i>' . e($rec->send_approve_name ?? '-') . '
+                                <br>' . date('d/m/Y H:i', strtotime($rec->send_approve_date)) . '
+                            </div>';
+                }
+                if ((int) $rec->status_id == 3 && !empty($rec->approve_date)) {
+                    $str .= '<div class="text-75 text-success-m1 mt-1 border-t-1 brc-grey-l4 pt-1" title="วันที่อนุมัติ">
+                                <i class="fa fa-check-circle mr-1"></i>' . e($rec->approve_name ?? '-') . '
+                                <br>' . date('d/m/Y H:i', strtotime($rec->approve_date)) . '
+                            </div>';
+                }
+                $str .= '</div>';
+                return $str;
+            })
+            ->editColumn('created_by', function ($rec) {
+                return $rec->created_by_name ?? '-';
+            })
+            ->addColumn('comment_box', function ($rec) use ($channels) {
+                $items = '';
+                foreach ($rec->Comments as $comment) {
+                    $items .= '
+                <div class="mb-2 p-1 border-l-3 brc-success-m2 bgc-grey-l5 radius-1 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-600 text-blue-d1 text-80">' . ($comment->created_by_name ?? '-') . '</span>
+                        <span class="text-70 text-grey-m1"><i class="far fa-clock mr-1 text-75"></i>' . date('d/m/Y H:i', strtotime($comment->created_at)) . '</span>
+                    </div>
+                    <div class="text-85 text-dark-m3 line-height-125 px-1">' . $comment->detail . '</div>
+                    <div class="text-70 text-right mt-1">
+                        <span class="badge badge-sm bgc-grey-l3 text-grey-d2 border-0">' . ($comment->channel_name ?? '-') . '</span>
+                    </div>
+                </div>';
+                }
+
+                $options = '';
+                foreach ($channels as $channel) {
+                    $options .= '<option value="' . $channel->id . '">' . $channel->name . '</option>';
+                }
+
+                $history = '<div class="comment-history mb-3 pr-1" style="max-height: 180px; overflow-y: auto; scrollbar-width: thin;">' . $items . '</div>';
+
+                $inputSection = '
+            <div class="comment-input-group bgc-white p-2 radius-1 border-1 brc-grey-l2 shadow-sm">
+                <textarea class="form-control text-85 border-0 bgc-transparent no-resize comment-' . $rec->id . '"
+                        rows="2" placeholder="พิมพ์บันทึกติดตามงาน..."></textarea>
+
+                <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-t-1 brc-grey-l4">
+                    <div class="flex-grow-1 mr-2">
+                        <select class="custom-select custom-select-sm border-0 bgc-grey-l4 text-80 text-600 channel-' . $rec->id . '">
+                            ' . $options . '
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-success px-3 btn-save-comment shadow-sm radius-2px"
+                            data-id="' . $rec->id . '" data-customer-id="' . $rec->customer_id . '">
+                        <i class="fa fa-paper-plane mr-1 text-90"></i> บันทึก
+                    </button>
+                </div>
+            </div>';
+
+                return '<div class="pi-comment-container p-1" style="min-width: 250px;">' . $history . $inputSection . '</div>';
+            })
+            ->addColumn('action_btns', function ($rec) use ($lang, $all_permission) {
+                $tEdit = __('Edit') . ' — แก้ไข';
+                $tDel = __('Delete') . ' — ลบ';
+                $tPdf = 'PDF — ออกใบ PI ส่งโรงงาน';
+                $tFa = __('FA') . ' — ออกใบ PI ส่งโรงงาน (Factory Accept)';
+                $tExPo = __('EX PO') . ' — ออกใบ PI ส่งโรงงาน (Export PO)';
+                $tPoProduct = __('PO Product') . ' — ออกใบ Export Product';
+                $tFic2Fi = __('Fic 2 Fi') . ' — ออกใบ Fic 2 Fi';
+
+                $update = Help::CheckPermissionMenu($this->current_menu, 'u');
+                $str = '<div class="btn-group btn-group-sm">';
+                $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/pdfFactory?pi_id=' . $rec->id) . '"
+                    class="btn btn-outline-info btn-h-light-info btn-a-light-info border-b-2"
+                    title="' . e($tPdf) . '" target="_blank">
+                    <i class="fa fa-file-pdf"></i>
+                </a>';
+                if ($update) {
+                    $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/' . $rec->id . '/edit') . '"
+                        class="btn btn-outline-warning btn-h-light-warning btn-a-light-warning border-b-2"
+                        title="' . e($tEdit) . '">
+                        <i class="fa fa-edit"></i>
+                    </a>';
+                }
+                $delete = Help::CheckPermissionMenu($this->current_menu, 'd');
+                if ($delete) {
+                    $str .= '<button class="btn btn-outline-danger btn-h-light-danger btn-a-light-danger border-b-2 btn-delete"
+                        data-id="' . $rec->id . '" title="' . e($tDel) . '">
+                        <i class="fa fa-trash-alt"></i>
+                    </button>';
+                }
+                if ((int) $rec->status_id === 1) {
+                    $str .= '<button class="btn btn-outline-purple btn-h-light-purple btn-a-light-purple border-b-2 btn-request-approval"
+                        data-id="' . $rec->id . '" title="ส่งขออนุมัติ">
+                        <i class="fa fa-paper-plane"></i>
+                    </button>';
+                }
+                $approvePiPermission = isset($all_permission['approve_pi']) ? $all_permission['approve_pi'] : 'F';
+                if ((int) $rec->status_id === 2 && $approvePiPermission === 'T') {
+                    $str .= '<button class="btn btn-outline-success btn-h-light-success btn-a-light-success border-b-2 btn-approve"
+                        data-id="' . $rec->id . '" title="อนุมัติ">
+                        <i class="fa fa-check-circle"></i>
+                    </button>';
+                }
+                $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/' . $rec->id . '/FA') . '"
+                    class="btn btn-outline-orange btn-h-light-orange btn-a-light-orange border-b-2"
+                    title="' . e($tFa) . '">
+                    <i class="fa fa-industry"></i>
+                </a>';
+                $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/' . $rec->id . '/ExportPo') . '"
+                    class="btn btn-outline-blue btn-h-light-blue btn-a-light-blue border-b-2"
+                    title="' . e($tExPo) . '">
+                    <i class="fa fa-shipping-fast"></i>
+                </a>';
+                $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/' . $rec->id . '/ExportProduct') . '"
+                    class="btn btn-outline-secondary btn-h-light-secondary btn-a-light-secondary border-b-2"
+                    title="' . e($tPoProduct) . '">
+                    <i class="fa fa-boxes"></i>
+                </a>';
+                $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/' . $rec->id . '/Fic2Fi') . '"
+                    class="btn btn-outline-purple btn-h-light-purple btn-a-light-purple border-b-2"
+                    title="' . e($tFic2Fi) . '">
+                    <i class="fa fa-random"></i>
+                </a>';
+                $str .= '</div>';
+                return $str;
+            })
+            ->addIndexColumn()
+            ->rawColumns(['doc_info', 'customer_info', 'total', 'status_name', 'comment_box', 'action_btns'])
+            ->make(true);
+    }
+
+    public function RequestApproval(Request $request)
+    {
+        try {
+            if (empty($request->id)) {
+                return response()->json(['status' => 0, 'title' => 'ผิดพลาด', 'content' => 'กรุณากรอกรายละเอียด']);
             }
-            $delete = Help::CheckPermissionMenu($this->current_menu, 'd');
-            if ($delete) {
-                $str .= $btnDelete;
+            ProformaInvoice::where('id', $request->id)->update([
+                'status_id' => 2,
+                'send_approve_by' => Auth::guard('admin')->user()->id,
+                'send_approve_date' => date('Y-m-d H:i:s')
+            ]);
+            return response()->json([
+                'status' => 1,
+                'title' => 'สำเร็จ',
+                'content' => 'ส่งอนุมัติเรียบร้อย'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ], 500);
+        }
+    }
+
+    public function Approve(Request $request)
+    {
+        try {
+            if (empty($request->id)) {
+                return response()->json(['status' => 0, 'title' => 'ผิดพลาด', 'content' => 'กรุณากรอกรายละเอียด']);
+            }
+            ProformaInvoice::where('id', $request->id)->update([
+                'status_id' => 3,
+                'approve_by' => Auth::guard('admin')->user()->id,
+                'approve_date' => date('Y-m-d H:i:s')
+            ]);
+            return response()->json([
+                'status' => 1,
+                'title' => 'สำเร็จ',
+                'content' => 'ส่งอนุมัติเรียบร้อย'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ], 500);
+        }
+    }
+
+    public function save_comment(Request $request)
+    {
+        try {
+            if (empty($request->detail)) {
+                return response()->json(['status' => 0, 'title' => 'ผิดพลาด', 'content' => 'กรุณากรอกรายละเอียด']);
             }
 
-            $str .= '<a href="'.url('admin/'.$lang.'/ProformaInvoice/pdfFactory?pi_id='.$rec->id).'"
-                class="btn btn-outline-orange btn-h-light-orange btn-a-light-orange border-b-2"
-                title="ออกใบ PI ส่งโรงงาน">
-                <i class="fa fa-file-pdf-o"></i>
-             </a>';
+            $comment = new Comment();
+            $comment->channel_id  = $request->contact_channel_id;
+            $comment->customer_id = $request->customer_id;
+            $comment->pi_id       = $request->pi_id;
+            $comment->detail      = $request->detail;
+            $comment->created_by  = Auth::guard('admin')->user()->id;
+            $comment->save();
 
-            return $str;
-        })
-        ->addIndexColumn()
-        ->rawColumns(['btn_edit', 'btn_delete', 'btn_fa', 'action' , 'btn_export_po' , 'btn_export_product'])
-        ->make(true);
+            return response()->json([
+                'status' => 1,
+                'title' => 'สำเร็จ',
+                'content' => 'บันทึกคอมเมนต์เรียบร้อยแล้ว'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ], 500);
+        }
     }
 
     public function export_excel(Request $request)
@@ -460,9 +672,7 @@ class ProformaInvoiceController extends AdminController
     public function pdfFactory(Request $request)
     {
         $id = $request->input('pi_id');
-        $pi = ProformaInvoice::with(['Products' => function ($q) {
-
-        }])->findOrFail($id);
+        $pi = ProformaInvoice::with(['Products' => function ($q) {}])->findOrFail($id);
 
         $data = [
             'pi' => $pi,
@@ -493,21 +703,21 @@ class ProformaInvoiceController extends AdminController
         // ดึงข้อมูล PI แบบเดียวกับหน้า Show
         $data['ProformaInvoice'] = ProformaInvoice::with(['products' => function ($q) {
             $q->leftJoin('products', 'proforma_invoice_products.product_id', '=', 'products.id')
-            ->leftJoin('factories', 'products.factory_id', '=', 'factories.id')
-            ->leftJoin('unit_products', 'products.unit_id', '=', 'unit_products.id')
-              ->select(
-                  'proforma_invoice_products.*',
-                  'products.code as part_no',
-                  'products.name_en',
-                  'products.drawing',
-                  'factories.code as fac_no',
-                  'unit_products.name as unit_name'
-              )
-              ->orderBy('proforma_invoice_products.seq', 'asc');
-        } , 'customer'])
-        ->leftJoin('customers', 'proforma_invoices.customer_id', '=', 'customers.id')
-        ->select('proforma_invoices.*', 'customers.company_name as customer_name')
-        ->findOrFail($id);
+                ->leftJoin('factories', 'products.factory_id', '=', 'factories.id')
+                ->leftJoin('unit_products', 'products.unit_id', '=', 'unit_products.id')
+                ->select(
+                    'proforma_invoice_products.*',
+                    'products.code as part_no',
+                    'products.name_en',
+                    'products.drawing',
+                    'factories.code as fac_no',
+                    'unit_products.name as unit_name'
+                )
+                ->orderBy('proforma_invoice_products.seq', 'asc');
+        }, 'customer'])
+            ->leftJoin('customers', 'proforma_invoices.customer_id', '=', 'customers.id')
+            ->select('proforma_invoices.*', 'customers.company_name as customer_name')
+            ->findOrFail($id);
 
 
 
@@ -523,28 +733,29 @@ class ProformaInvoiceController extends AdminController
         // ดึงข้อมูล PI แบบเดียวกับหน้า Show
         $data['ProformaInvoice'] = ProformaInvoice::with(['products' => function ($q) {
             $q->leftJoin('products', 'proforma_invoice_products.product_id', '=', 'products.id')
-            ->leftJoin('factories', 'products.factory_id', '=', 'factories.id')
-            ->leftJoin('unit_products', 'products.unit_id', '=', 'unit_products.id')
-              ->select(
-                  'proforma_invoice_products.*',
-                  'products.code as part_no',
-                  'products.name_en',
-                  'products.drawing',
-                  'factories.code as fac_no',
-                  'unit_products.name as unit_name'
-              )
-              ->orderBy('proforma_invoice_products.seq', 'asc');
-        } , 'customer'])
-        ->leftJoin('customers', 'proforma_invoices.customer_id', '=', 'customers.id')
-        ->leftJoin('admin_users', 'proforma_invoices.created_by', '=', 'admin_users.id')
-        ->leftJoin('prefixes', 'admin_users.prefix_id', '=', 'prefixes.id')
-        ->select(
-            'proforma_invoices.*'
-            , 'customers.company_name as customer_name'
-            , 'admin_users.firstname as sale_firstname'
-            , 'admin_users.lastname as sale_lastname'
-            , 'prefixes.name as sale_prefix')
-        ->findOrFail($id);
+                ->leftJoin('factories', 'products.factory_id', '=', 'factories.id')
+                ->leftJoin('unit_products', 'products.unit_id', '=', 'unit_products.id')
+                ->select(
+                    'proforma_invoice_products.*',
+                    'products.code as part_no',
+                    'products.name_en',
+                    'products.drawing',
+                    'factories.code as fac_no',
+                    'unit_products.name as unit_name'
+                )
+                ->orderBy('proforma_invoice_products.seq', 'asc');
+        }, 'customer'])
+            ->leftJoin('customers', 'proforma_invoices.customer_id', '=', 'customers.id')
+            ->leftJoin('admin_users', 'proforma_invoices.created_by', '=', 'admin_users.id')
+            ->leftJoin('prefixes', 'admin_users.prefix_id', '=', 'prefixes.id')
+            ->select(
+                'proforma_invoices.*',
+                'customers.company_name as customer_name',
+                'admin_users.firstname as sale_firstname',
+                'admin_users.lastname as sale_lastname',
+                'prefixes.name as sale_prefix'
+            )
+            ->findOrFail($id);
 
 
 
@@ -561,29 +772,30 @@ class ProformaInvoiceController extends AdminController
         // ดึงข้อมูล PI แบบเดียวกับหน้า Show
         $data['ProformaInvoice'] = ProformaInvoice::with(['products' => function ($q) {
             $q->leftJoin('products', 'proforma_invoice_products.product_id', '=', 'products.id')
-            ->leftJoin('factories', 'products.factory_id', '=', 'factories.id')
-            ->leftJoin('unit_products', 'products.unit_id', '=', 'unit_products.id')
-              ->select(
-                  'proforma_invoice_products.*',
-                  'products.code as part_no',
-                  'products.name_en',
-                  'products.name_th',
-                  'products.drawing',
-                  'factories.code as fac_no',
-                  'unit_products.name as unit_name'
-              )
-              ->orderBy('proforma_invoice_products.seq', 'asc');
-        } , 'customer'])
-        ->leftJoin('customers', 'proforma_invoices.customer_id', '=', 'customers.id')
-        ->leftJoin('admin_users', 'proforma_invoices.created_by', '=', 'admin_users.id')
-        ->leftJoin('prefixes', 'admin_users.prefix_id', '=', 'prefixes.id')
-        ->select(
-            'proforma_invoices.*'
-            , 'customers.company_name as customer_name'
-            , 'admin_users.firstname as sale_firstname'
-            , 'admin_users.lastname as sale_lastname'
-            , 'prefixes.name as sale_prefix')
-        ->findOrFail($id);
+                ->leftJoin('factories', 'products.factory_id', '=', 'factories.id')
+                ->leftJoin('unit_products', 'products.unit_id', '=', 'unit_products.id')
+                ->select(
+                    'proforma_invoice_products.*',
+                    'products.code as part_no',
+                    'products.name_en',
+                    'products.name_th',
+                    'products.drawing',
+                    'factories.code as fac_no',
+                    'unit_products.name as unit_name'
+                )
+                ->orderBy('proforma_invoice_products.seq', 'asc');
+        }, 'customer'])
+            ->leftJoin('customers', 'proforma_invoices.customer_id', '=', 'customers.id')
+            ->leftJoin('admin_users', 'proforma_invoices.created_by', '=', 'admin_users.id')
+            ->leftJoin('prefixes', 'admin_users.prefix_id', '=', 'prefixes.id')
+            ->select(
+                'proforma_invoices.*',
+                'customers.company_name as customer_name',
+                'admin_users.firstname as sale_firstname',
+                'admin_users.lastname as sale_lastname',
+                'prefixes.name as sale_prefix'
+            )
+            ->findOrFail($id);
 
 
 
@@ -594,4 +806,24 @@ class ProformaInvoiceController extends AdminController
         return $pdf->stream('EXPORT_PRODUCT_' . $data['ProformaInvoice']->doc_no . '.pdf');
     }
 
+    public function fic_2_fi(Request $request, $id)
+    {
+        $pi = ProformaInvoice::with(['products' => function ($q) {
+            $q->leftJoin('products', 'proforma_invoice_products.product_id', '=', 'products.id')
+                ->leftJoin('factories', 'products.factory_id', '=', 'factories.id')
+                ->leftJoin('unit_products', 'products.unit_id', '=', 'unit_products.id')
+                ->select(
+                    'proforma_invoice_products.*',
+                    'products.code as part_no',
+                    'products.name_en',
+                    'products.name_th',
+                    'products.drawing',
+                    'factories.code as fac_no',
+                    'unit_products.name as unit_name'
+                )
+                ->orderBy('proforma_invoice_products.seq', 'asc');
+        }, 'createdBy' , 'customer'])->findOrFail($id);
+
+        return Excel::download(new Fic2FiExport($pi), 'FIC2FI_' . $pi->doc_no . '_' . date('YmdHis') . '.xlsx');
+    }
 }

@@ -17,6 +17,7 @@ use App\Models\Incoterm;
 use App\Models\Currency;
 use App\Models\CreditPayment;
 use App\Models\QuotationProduct;
+use App\Models\CustomerCodeProduct;
 use App\Models\ContactChannel;
 use App\Models\QuotationStatus;
 use App\Models\AdminUser;
@@ -147,6 +148,11 @@ class QuotationController extends AdminController
                 $quotation_details = [];
                 foreach($product as $key => $value) {
                     if($value){
+                        $this->ensureCustomerCodeProduct(
+                            (int) $customer_id,
+                            (int) $value,
+                            $customer_code[$key] ?? null
+                        );
                         $quotation_details[] = [
                             'quotation_id' => $Quotation->id,
                             'product_id' => $value,
@@ -295,6 +301,11 @@ class QuotationController extends AdminController
                 $quotation_detail = [];
                 foreach($product as $key => $value) {
                     if($value){
+                        $this->ensureCustomerCodeProduct(
+                            (int) $customer_id,
+                            (int) $value,
+                            $customer_code[$key] ?? null
+                        );
                         $quotation_detail[] =[
                             'quotation_id' => $Quotation->id,
                             'product_id' => $value,
@@ -369,7 +380,7 @@ class QuotationController extends AdminController
                 'comments.*'
                 ,'admin_users.nickname'
                 ,'contact_channels.name as channel_name'
-            );
+            )->orderBy('comments.created_at', 'desc');
 
         }])->leftJoin('admin_users' , 'quotations.created_by', '=', 'admin_users.id')
         ->leftJoin('admin_users as send_approve' , 'quotations.send_approve_by', '=', 'send_approve.id')
@@ -396,6 +407,9 @@ class QuotationController extends AdminController
         }
         if($request->has('admin_id') && $request->admin_id != 'all'){
             $result = $result->where('quotations.created_by' , '=' , $request->admin_id);
+        }
+        if($request->has('customer_id') && $request->customer_id != 'all'){
+            $result = $result->where('quotations.customer_id' , '=' , $request->customer_id);
         }
         return $result;
     }
@@ -684,6 +698,38 @@ class QuotationController extends AdminController
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
             ], 500);
+        }
+    }
+
+    /**
+     * สร้าง mapping รหัสลูกค้า–สินค้าใน customer_code_products ถ้ายังไม่มี
+     */
+    private function ensureCustomerCodeProduct(int $customerId, int $productId, $cusCode): void
+    {
+        if ($productId <= 0 || $customerId <= 0) {
+            return;
+        }
+        $code = trim((string) ($cusCode ?? ''));
+        if ($code === '') {
+            return;
+        }
+        $row = CustomerCodeProduct::where('customer_id', $customerId)
+            ->where('product_id', $productId)
+            ->first();
+
+        if (!$row) {
+            CustomerCodeProduct::create([
+                'customer_id' => $customerId,
+                'product_id' => $productId,
+                'code' => $code,
+            ]);
+            return;
+        }
+
+        // มี mapping เดิมแต่ยังไม่มี code ให้เติมค่าอัตโนมัติ
+        if (trim((string) $row->code) === '') {
+            $row->code = $code;
+            $row->save();
         }
     }
 

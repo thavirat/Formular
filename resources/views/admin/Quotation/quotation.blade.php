@@ -86,7 +86,7 @@
                 <div class="car dcard">
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-3">
+                            <div class="col-2">
                                 <div class="form-group">
                                     <label for="filter_doc_date_start">{{ __('Filter Date Start') }} <span
                                             class="text-danger">*</span></label>
@@ -105,7 +105,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-3">
+                            <div class="col-2">
                                 <div class="form-group">
                                     <label for="filter_doc_date_end">{{ __('Filter Date End') }} <span
                                             class="text-danger">*</span></label>
@@ -126,7 +126,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-3">
+                            <div class="col-2">
                                 <div class="form-group">
                                     <label for="filter_status">{{ __('Filter Status') }}</label>
                                     <select name="filter_status" id="filter_status" class="form-control">
@@ -137,13 +137,24 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-3">
+                            <div class="col-2">
                                 <div class="form-group">
                                     <label for="filter_admin">{{ __('Filter Admin') }}</label>
                                     <select name="filter_admin" id="filter_admin" class="form-control">
                                         <option value="all">{{ __('All Admin') }}</option>
                                         @foreach ($admins as $admin)
                                             <option value="{{ $admin->id }}">{{ $admin->nickname }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-2">
+                                <div class="form-group">
+                                    <label for="filter_customer">{{ __('Customer') }}</label>
+                                    <select name="filter_customer" id="filter_customer" class="form-control">
+                                        <option value="all">{{ __('All Customer') }}</option>
+                                        @foreach ($Customers as $customer)
+                                            <option value="{{ $customer->id }}">{{ $customer->company_name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -203,6 +214,7 @@
                     d.end_date = $('#filter_doc_date_end').val();
                     d.status_id = $('#filter_status').val();
                     d.admin_id = $('#filter_admin').val();
+                    d.customer_id = $('#filter_customer').val();
 
                 }
             },
@@ -418,6 +430,18 @@
         })
         $("#edit_credit_payment_id").select2({
             placeholder: 'กรุณาเลือก',
+            allowClear: true
+        })
+        $("#filter_status").select2({
+            placeholder: 'กรุณาเลือกสถานะ',
+            allowClear: true
+        })
+        $("#filter_admin").select2({
+            placeholder: 'กรุณาเลือกผู้จัดทำ',
+            allowClear: true
+        })
+        $("#filter_customer").select2({
+            placeholder: 'กรุณาเลือกลูกค้า',
             allowClear: true
         })
 

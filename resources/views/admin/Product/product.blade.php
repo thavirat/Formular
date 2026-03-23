@@ -174,7 +174,20 @@
                             </div>
                             <div class="col-md-6 col-sm-12">
                                 <div class="form-group">
-                                    <label for="add_code">Product ID</label>
+
+                                    <label for="add_sub_category_id">Sub Category</label>
+                                    <select name="sub_category_id" id="add_sub_category_id" class="form-control  ">
+                                        <option value="">เลือกกรุณาเลือก</option>
+                                        @foreach ($SubCategories as $SubCategory)
+                                            <option value="{{ $SubCategory->id }}">{{ $SubCategory->name_th }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="add_code">Product Code</label>
                                     <input type="text" name="code" id="add_code" class="form-control ">
                                 </div>
                             </div>
@@ -197,6 +210,13 @@
                                 <div class="form-group">
                                     <label for="add_drawing">Drawing</label>
                                     <input type="text" name="drawing" id="add_drawing" class="form-control ">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="add_cost">Cost</label>
+                                    <input type="text" name="cost" id="add_cost" class="form-control ">
                                 </div>
                             </div>
 
@@ -228,18 +248,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
 
-                                    <label for="add_sub_category_id">Sub Category</label>
-                                    <select name="sub_category_id" id="add_sub_category_id" class="form-control  ">
-                                        <option value="">เลือกกรุณาเลือก</option>
-                                        @foreach ($SubCategories as $SubCategory)
-                                            <option value="{{ $SubCategory->id }}">{{ $SubCategory->name_th }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -297,7 +306,19 @@
 
                             <div class="col-md-6 col-sm-12">
                                 <div class="form-group">
-                                    <label for="edit_code">Product ID</label>
+                                    <label for="edit_sub_category_id">Sub Category</label>
+                                    <select name="sub_category_id" id="edit_sub_category_id" class="form-control  ">
+                                        <option value="">เลือกกรุณาเลือก</option>
+                                        @foreach ($SubCategories as $SubCategory)
+                                            <option value="{{ $SubCategory->id }}">{{ $SubCategory->name_th }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="edit_code">Product Code</label>
                                     <input type="text" name="code" id="edit_code" class="form-control ">
                                 </div>
                             </div>
@@ -320,6 +341,13 @@
                                 <div class="form-group">
                                     <label for="edit_drawing">Drawing</label>
                                     <input type="text" name="drawing" id="edit_drawing" class="form-control ">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="edit_cost">Cost</label>
+                                    <input type="text" name="cost" id="edit_cost" class="form-control ">
                                 </div>
                             </div>
 
@@ -351,18 +379,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
 
-                                    <label for="edit_sub_category_id">Sub Category</label>
-                                    <select name="sub_category_id" id="edit_sub_category_id" class="form-control  ">
-                                        <option value="">เลือกกรุณาเลือก</option>
-                                        @foreach ($SubCategories as $SubCategory)
-                                            <option value="{{ $SubCategory->id }}">{{ $SubCategory->name_th }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -539,6 +556,7 @@
                 $("#edit_width").val(res.content.width);
                 $("#edit_height").val(res.content.height);
                 $("#edit_length").val(res.content.length);
+                $("#edit_cost").val(res.content.cost);
                 $("#edit_weight").val(res.content.weight);
                 $("#edit_factory_id").val(res.content.factory_id);
                 $("#edit_sub_category_id").val(res.content.sub_category_id).trigger('change.select2');

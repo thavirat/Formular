@@ -17,6 +17,32 @@
     .btn-a-light-orange:active {
         background-color: #ffe8cc !important;
     }
+    #tableProformaInvoice thead th {
+        background-color: #f1f4f9 !important;
+        color: #5a6a85 !important;
+        text-transform: none !important;
+        font-size: 0.9rem;
+        padding: 15px 10px !important;
+    }
+    #tableProformaInvoice tbody td {
+        vertical-align: top !important;
+        padding-top: 15px !important;
+        padding-bottom: 15px !important;
+    }
+    #tableProformaInvoice .btn-group .btn {
+        margin: 0 1px;
+        padding: 4px 8px;
+    }
+    .table .form-control {
+        font-size: 0.85rem;
+        border-radius: 4px;
+    }
+    .comment-list-wrapper {
+        max-height: 120px;
+        overflow-y: auto;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
 </style>
 @endsection
 
@@ -64,43 +90,121 @@
     <div class="row mt-3">
         <div class="col-12">
             <div class="card dcard">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-2">
+                            <div class="form-group">
+                                <label for="filter_doc_date_start">{{ __('Filter Date Start') }} <span
+                                        class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" name="filter_doc_date_start" class="form-control init-date"
+                                        id="filter_doc_date_start" value="{{ date('Y-m-01') }}" readonly>
+                                    <div class="input-group-append btn-clear-date" style="cursor: pointer;"
+                                        data-target="#filter_doc_date_start">
+                                        <div class="input-group-text text-danger-m1">
+                                            <i class="fa fa-times"></i>
+                                        </div>
+                                    </div>
+                                    <div class="input-group-append">
+                                        <div class="input-group-text"><i class="far fa-calendar"></i></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="form-group">
+                                <label for="filter_doc_date_end">{{ __('Filter Date End') }} <span
+                                        class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" name="filter_doc_date_end" class="form-control init-date"
+                                        id="filter_doc_date_end" value="{{ date('Y-m-t') }}" readonly>
+
+                                    <div class="input-group-append btn-clear-date" style="cursor: pointer;"
+                                        data-target="#filter_doc_date_end">
+                                        <div class="input-group-text text-danger-m1">
+                                            <i class="fa fa-times"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="input-group-append">
+                                        <div class="input-group-text"><i class="far fa-calendar"></i></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="form-group">
+                                <label for="filter_status">{{ __('Filter Status') }}</label>
+                                <select name="filter_status" id="filter_status" class="form-control">
+                                    <option value="all">{{ __('All Status') }}</option>
+                                    @foreach ($proforma_invoice_statuses as $status)
+                                        <option value="{{ $status->id }}">{{ $status->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="form-group">
+                                <label for="filter_admin">{{ __('Filter Admin') }}</label>
+                                <select name="filter_admin" id="filter_admin" class="form-control">
+                                    <option value="all">{{ __('All Admin') }}</option>
+                                    @foreach ($admins as $admin)
+                                        <option value="{{ $admin->id }}">{{ $admin->nickname }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="form-group">
+                                <label for="filter_customer">{{ __('Customer') }}</label>
+                                <select name="filter_customer" id="filter_customer" class="form-control">
+                                    <option value="all">{{ __('All Customer') }}</option>
+                                    @foreach ($Customers as $customer)
+                                        <option value="{{ $customer->id }}">{{ $customer->company_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12 text-center">
+                            <div class="form-group">
+                                <label for="filter_button" style="visibility: hidden;">_</label>
+                                <button type="button" class="btn btn-primary" id="filter_button">
+                                    <i class="fa fa-search"></i> {{ __('Filter') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card dcard">
                 <div class="card-body p-0">
                     <div class="d-flex justify-content-between flex-column flex-sm-row px-2 px-sm-0">
                         <div class="pos-rel ml-sm-auto mr-sm-2 order-last order-sm-0">
                         </div>
                     </div>
 
-                    <table id="tableProformaInvoice" class="table table-border-x brc-secondary-l4 border-0 mb-0 w-100">
-                        <thead class="text-dark-tp3 bgc-grey-l4 text-90 border-b-1 brc-transparent">
-                            <tr>
-                                <th class="text-center" width="5%" rowspan="2">{{__('No')}}</th>
-                                <th rowspan="2">{{__('Doc No')}}</th>
-                                <th rowspan="2">{{__('Doc Date')}}</th>
-                                <th rowspan="2">{{__('Company')}}</th>
-                                <th rowspan="2">{{__('Total')}}</th>
-                                <th rowspan="2">{{__('Created By')}}</th>
-                                <th class="text-center" colspan="7">{{__('Tools')}}</th>
-                            </tr>
-                            <tr>
-                                <th>{{__('Edit')}}</th>
-                                <th>{{__('Delete')}}</th>
-                                <th>{{__('FA')}}</th>
-                                <th>{{__('EX PO')}}</th>
-                                 <th>{{__('PO Product')}}</th>
-                                {{--<th>{{__('PO')}}</th>
-                                <th></th>
-                                <th></th> --}}
+                    <table id="tableProformaInvoice" class="table table-striped-primary table-borderless border-0 mb-0 w-100 table-hover">
+                        <thead>
+                            <tr class="bgc-primary-d1 text-white">
+                                <th class="text-center" width="5%">#</th>
+                                <th>เลขที่ / วันที่เอกสาร</th>
+                                <th>ลูกค้า / ผู้จัดทำ</th>
+                                <th class="text-right">ยอดรวม</th>
+                                <th>สถานะ</th>
+                                <th width="300px">บันทึกติดตามงาน</th>
+                                <th class="text-center">จัดการ</th>
                             </tr>
                         </thead>
-                        <tbody class="mt-1">
-                        </tbody>
+                        <tbody class="align-middle"></tbody>
                     </table>
 
 
                 </div><!-- /.card-body -->
             </div><!-- /.card -->
         </div><!-- /.col -->
-    </div>
+    </div><!-- /.row (filters + table) -->
 
 </div>
 
@@ -183,9 +287,11 @@
             "url": url_gb+"/admin/ProformaInvoice/Lists",
             "type": "POST",
             "data": function ( d ) {
-                // d.status = "A";
-                // d.custom = $('#myInput').val();
-                // etc
+                d.start_date = $('#filter_doc_date_start').val();
+                d.end_date = $('#filter_doc_date_end').val();
+                d.status_id = $('#filter_status').val();
+                d.admin_id = $('#filter_admin').val();
+                d.customer_id = $('#filter_customer').val();
             }
         },
         "drawCallback": function( settings ) {
@@ -194,48 +300,25 @@
         "responsive": false,
         "columns": [
             {"data": "DT_RowIndex", 'searchable': false, 'orderable': false, "class": "text-center"},
-            {"data": "doc_no", "name": 'doc_no'},
-            {"data": "doc_date", "name": 'doc_date'},
-            {"data": "company_name", "name": 'company_name'},
-            {"data": "total", "name": 'total'},
-            {"data": "created_by", "name": 'created_by'},
+            {"data": "doc_info", "name": 'doc_no', "className": "align-middle"},
+            {"data": "customer_info", "name": 'company_name', "className": "align-middle"},
+            {"data": "total", "name": 'total', "className": "text-right align-middle text-600 text-success-d1"},
+            {"data": "status_name", "name": 'proforma_invoice_statuses.name', "className": "text-right align-middle text-600 text-success-d1"},
             {
-                "data": "btn_edit" ,
-                "name": "btn_edit",
+                "data": "comment_box",
                 "searchable": false,
                 "sortable": false,
-                "class": "text-center"
+                "className": "align-middle"
             },
             {
-                "data": "btn_delete" ,
-                "name": "btn_delete",
+                "data": "action_btns" ,
                 "searchable": false,
                 "sortable": false,
-                "class": "text-center"
-            },
-            {
-                "data": "btn_fa" ,
-                "name": "btn_fa",
-                "searchable": false,
-                "sortable": false,
-                "class": "text-center"
-            },
-            {
-                "data": "btn_export_po" ,
-                "name": "btn_export_po",
-                "searchable": false,
-                "sortable": false,
-                "class": "text-center"
-            },
-            {
-                "data": "btn_export_product" ,
-                "name": "btn_export_product",
-                "searchable": false,
-                "sortable": false,
-                "class": "text-center"
+                "className": "text-center align-middle"
             },
 
-        ]
+        ],
+        "order": [[1, "desc"]]
     });
 
     $('body').on('click','.btn-add',function(data){
@@ -342,7 +425,138 @@
         });
     });
 
+    $('body').on('click', '#filter_button', function() {
+        tableProformaInvoice.api().ajax.reload();
+    });
 
+    $("#filter_status").select2({
+        placeholder: 'กรุณาเลือกสถานะ',
+        allowClear: true
+    });
+    $("#filter_admin").select2({
+        placeholder: 'กรุณาเลือกผู้จัดทำ',
+        allowClear: true
+    });
+    $("#filter_customer").select2({
+        placeholder: 'กรุณาเลือกลูกค้า',
+        allowClear: true
+    });
+
+    $('body').on('click', '.btn-save-comment', function() {
+        var id = $(this).data('id');
+        var customer_id = $(this).data('customer-id');
+        var btn = $(this);
+        var detail = $('.comment-' + id).val();
+        var channel_id = $('.channel-' + id).val();
+
+        if (detail.trim() == "") {
+            Swal.fire('แจ้งเตือน', 'กรุณากรอกรายละเอียดคอมเมนต์', 'warning');
+            return false;
+        }
+
+        loadingButton(btn);
+        $.ajax({
+            method: "POST",
+            url: url_gb + "/admin/ProformaInvoice/SaveComment",
+            data: {
+                _token: $('meta[name="csrf-token"]').attr('content'),
+                pi_id: id,
+                customer_id: customer_id,
+                detail: detail,
+                contact_channel_id: channel_id
+            }
+        }).done(function(res) {
+            resetButton(btn);
+            if (res.status == 1) {
+                tableProformaInvoice.api().ajax.reload(null, false);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'บันทึกสำเร็จ',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            } else {
+                Swal.fire('ผิดพลาด', res.content, 'error');
+            }
+        }).fail(function(res) {
+            ajaxFail(res, "");
+        });
+    });
+
+    $('body').on('click', '.btn-request-approval', function() {
+        var id = $(this).data('id');
+        var btn = $(this);
+
+        Swal.fire({
+            title: 'ยืนยันการส่งขออนุมัติ?',
+            text: "เมื่อส่งแล้ว จะไม่สามารถแก้ไขข้อมูลได้ชั่วคราวจนกว่าจะได้รับการพิจารณา",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#8914cc',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'ยืนยันส่งข้อมูล',
+            cancelButtonText: 'ยกเลิก'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                loadingButton(btn);
+                $.ajax({
+                    method: "POST",
+                    url: url_gb + "/admin/ProformaInvoice/RequestApproval",
+                    data: { id: id }
+                }).done(function(res) {
+                    resetButton(btn);
+                    if (res.status == 1) {
+                        Swal.fire('สำเร็จ', res.content, 'success');
+                        tableProformaInvoice.api().ajax.reload(null, false);
+                    } else {
+                        Swal.fire('ผิดพลาด', res.content, 'error');
+                    }
+                }).fail(function(res) {
+                    ajaxFail(res, "");
+                });
+            }
+        });
+    });
+
+    $('body').on('click', '.btn-approve', function() {
+        var id = $(this).data('id');
+        var btn = $(this);
+
+        Swal.fire({
+            title: 'ยืนยันการอนุมัติ?',
+            text: "เมื่ออนุมัติแล้ว เอกสารนี้จะถือเป็นอันสิ้นสุด",
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'ยืนยันการอนุมัติ',
+            cancelButtonText: 'ยกเลิก'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                loadingButton(btn);
+                $.ajax({
+                    method: "POST",
+                    url: url_gb + "/admin/ProformaInvoice/Approve",
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr('content'),
+                        id: id
+                    }
+                }).done(function(res) {
+                    resetButton(btn);
+                    if (res.status == 1) {
+                        Swal.fire('อนุมัติแล้ว', res.content, 'success');
+                        tableProformaInvoice.api().ajax.reload(null, false);
+                    } else {
+                        Swal.fire('ผิดพลาด', res.content, 'error');
+                    }
+                }).fail(function(res) {
+                    ajaxFail(res, "");
+                });
+            }
+        });
+    });
 
 </script>
 @endpush

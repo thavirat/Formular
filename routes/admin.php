@@ -161,13 +161,17 @@ Route::middleware('authAdmin:admin')->group(function () {
     Route::resource('/ContactChannel', Admin\ContactChannelController::class);
 
     Route::get('/ProformaInvoice/pdfFactory', 'Admin\ProformaInvoiceController@pdfFactory');
+    Route::post('/ProformaInvoice/RequestApproval', 'Admin\ProformaInvoiceController@RequestApproval');
+    Route::post('/ProformaInvoice/Approve', 'Admin\ProformaInvoiceController@Approve');
     Route::post('/ProformaInvoice/Lists', 'Admin\ProformaInvoiceController@lists');
+    Route::post('/ProformaInvoice/SaveComment', 'Admin\ProformaInvoiceController@save_comment');
     Route::get('/ProformaInvoice/ExportPDF', 'Admin\ProformaInvoiceController@export_pdf');
     Route::get('/ProformaInvoice/ExportExcel', 'Admin\ProformaInvoiceController@export_excel');
     Route::get('/ProformaInvoice/ExportPrint', 'Admin\ProformaInvoiceController@export_print');
     Route::get('/ProformaInvoice/{id}/FA', 'Admin\ProformaInvoiceController@factory_accept');
     Route::get('/ProformaInvoice/{id}/ExportPo', 'Admin\ProformaInvoiceController@export_po');
     Route::get('/ProformaInvoice/{id}/ExportProduct', 'Admin\ProformaInvoiceController@export_product');
+    Route::get('/ProformaInvoice/{id}/Fic2Fi', 'Admin\ProformaInvoiceController@fic_2_fi');
     Route::resource('/ProformaInvoice', Admin\ProformaInvoiceController::class);
 
     Route::post('/Factory/Lists', 'Admin\FactoryController@lists');

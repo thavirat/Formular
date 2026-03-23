@@ -6,7 +6,7 @@
 <div class="page-content container container-plus">
     <div class="page-header mb-2 pb-2 flex-column flex-sm-row align-items-start align-items-sm-center py-25 px-1">
         <h1 class="page-title text-primary-d2 text-140">
-            {{__('Customer Management')}} : <span class="text-secondary-d3 text-120">{{ $customer->company_name ?? 'Customer Name' }}</span>
+            {{__('Customer Management')}} : <span class="text-secondary-d3 text-120">{{ $customer->company_name ?? __('Customer Name') }}</span>
         </h1>
 
         <div class="page-tools mt-3 mt-sm-0 mb-sm-n1">
