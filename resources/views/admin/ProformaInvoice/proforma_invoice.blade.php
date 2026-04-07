@@ -98,7 +98,7 @@
                                         class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <input type="text" name="filter_doc_date_start" class="form-control init-date"
-                                        id="filter_doc_date_start" value="{{ date('Y-m-01') }}" readonly>
+                                        id="filter_doc_date_start" value="" readonly>
                                     <div class="input-group-append btn-clear-date" style="cursor: pointer;"
                                         data-target="#filter_doc_date_start">
                                         <div class="input-group-text text-danger-m1">
