@@ -29,8 +29,6 @@ return new class extends Migration
             $table->dropColumn('send_approve_by');
             $table->dropForeign(['approve_by']);
             $table->dropColumn('approve_by');
-            $table->dropColumn('send_approve_date');
-            $table->dropColumn('approve_date');
         });
     }
 };

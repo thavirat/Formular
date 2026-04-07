@@ -101,8 +101,11 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::post('/Quotation/Approve', 'Admin\QuotationController@Approve');
                 Route::post('/Quotation/Lists', 'Admin\QuotationController@lists');
                 Route::post('/Quotation/SaveComment', 'Admin\QuotationController@save_comment');
+                Route::post('/Quotation/ImportExcel', 'Admin\QuotationController@import_excel');
                 Route::get('/Quotation/ExportPDF', 'Admin\QuotationController@export_pdf');
+                Route::get('/Quotation/{id}/ExportExcelDoc', 'Admin\QuotationController@export_excel_doc');
                 Route::get('/Quotation/{id}/pdf', 'Admin\QuotationController@view_pdf');
+                Route::get('/Quotation/{id}/cube', 'Admin\QuotationController@view_cube_pdf');
                 Route::get('/Quotation/ExportExcel', 'Admin\QuotationController@export_excel');
                 Route::get('/Quotation/ExportPrint', 'Admin\QuotationController@export_print');
                 Route::resource('/Quotation', Admin\QuotationController::class);

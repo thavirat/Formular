@@ -100,6 +100,30 @@
         .remark-list li {
             margin-bottom: 3px;
         }
+        .page-break {
+            page-break-before: always;
+        }
+        .cube-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .cube-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 10px;
+        }
+        .cube-table th,
+        .cube-table td {
+            border: 1px solid #9aa3ad;
+            padding: 5px 4px;
+        }
+        .cube-table th {
+            background: #ecf0f3;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -238,6 +262,63 @@
             <li>สินค้าตู้แอร์ใช้กล่องแบบ "N"</li>
         </ol>
     </div>
+
+    <div class="page-break"></div>
+    <div class="cube-title">ใบสรุปจำนวนคิว</div>
+    @php $grandCube = 0; @endphp
+    <table class="cube-table">
+        <thead>
+            <tr>
+                <th width="35">ITM.</th>
+                <th width="120">รหัสสินค้า</th>
+                <th>ชื่อสินค้า</th>
+                <th width="55">กว้าง</th>
+                <th width="55">ยาว</th>
+                <th width="55">สูง</th>
+                <th width="62">Qty/Item</th>
+                <th width="45">Qty</th>
+                <th width="70">คิว</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($ProformaInvoice->products as $item)
+                @php
+                    $width = (float) ($item->width ?? 0);
+                    $length = (float) ($item->length ?? 0);
+                    $height = (float) ($item->height ?? 0);
+                    $qtyPerItem = (float) ($item->qty_per_item ?? 1);
+                    $qty = (float) ($item->qty ?? 0);
+                    $cubePerUnit = (float) ($item->cube ?? 0);
+                    $cubeFromDimension = ($width * $length * $height) / 1000000000;
+                    $lineCube = $cubePerUnit > 0
+                        ? ($cubePerUnit * $qty * $qtyPerItem)
+                        : ($cubeFromDimension * $qty * $qtyPerItem);
+                    $grandCube += $lineCube;
+                @endphp
+                <tr>
+                    <td class="text-center">{{ $item->seq }}</td>
+                    <td>{{ $item->part_no ?: '-' }}</td>
+                    <td>{{ $item->name_en ?: $item->detail_eng ?: '-' }}</td>
+                    <td class="text-right">{{ number_format($width, 2) }}</td>
+                    <td class="text-right">{{ number_format($length, 2) }}</td>
+                    <td class="text-right">{{ number_format($height, 2) }}</td>
+                    <td class="text-right">{{ number_format($qtyPerItem, 2) }}</td>
+                    <td class="text-right">{{ number_format($qty, 0) }}</td>
+                    <td class="text-right">{{ number_format($lineCube, 4) }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="9" class="text-center">ไม่มีรายการสินค้า</td>
+                </tr>
+            @endforelse
+        </tbody>
+        <tfoot>
+            <tr style="background:#f6f7f8;">
+                <td colspan="8" class="text-right font-bold">คิวรวม</td>
+                <td class="text-right font-bold">{{ number_format($grandCube, 4) }}</td>
+            </tr>
+        </tfoot>
+    </table>
 
 </body>
 </html>

@@ -68,6 +68,14 @@
         <div class="page-header mb-2 pb-2 flex-column flex-sm-row align-items-start align-items-sm-center py-25 px-1">
             <h1 class="page-title text-primary-d2 text-140">{{ $currentMenu->title }} </h1>
             <div class="page-tools mt-3 mt-sm-0 mb-sm-n1">
+                @if ($my_menu_permission[$currentMenu->url]['u'] == 'T')
+                    <button type="button"
+                        class="btn btn-light-primary btn-h-primary btn-a-primary border-0 radius-3 py-2 text-600 text-90 btn-import-excel">
+                        <span class="d-none d-sm-inline mr-1">Import Excel</span>
+                        <i class="fa fa-file-import text-110 w-2 h-2"></i>
+                    </button>
+                    <input type="file" id="quotationImportExcelFile" accept=".xlsx,.xls" style="display: none;">
+                @endif
                 @if ($my_menu_permission[$currentMenu->url]['c'] == 'T')
                     <a href="{{ url('admin/' . $lang . '/Quotation/create') }}"
                         class="btn btn-light-green btn-h-green btn-a-green border-0 radius-3 py-2 text-600 text-90 btn-add">
@@ -92,7 +100,7 @@
                                             class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <input type="text" name="filter_doc_date_start" class="form-control init-date"
-                                            id="filter_doc_date_start" value="{{ date('Y-m-01') }}" readonly>
+                                            id="filter_doc_date_start" value="" readonly>
                                         <div class="input-group-append btn-clear-date" style="cursor: pointer;"
                                             data-target="#filter_doc_date_start">
                                             <div class="input-group-text text-danger-m1">
@@ -576,6 +584,34 @@
 
         $('body').on('click', '#filter_button', function() {
             tableQuotation.api().ajax.reload();
+        });
+
+        $('body').on('click', '.btn-import-excel', function() {
+            $('#quotationImportExcelFile').val('').trigger('click');
+        });
+        $('body').on('change', '#quotationImportExcelFile', function() {
+            var fileInput = this;
+            if (!fileInput.files || !fileInput.files.length) return;
+            var formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+
+            $.ajax({
+                method: "POST",
+                url: url_gb + "/admin/Quotation/ImportExcel",
+                data: formData,
+                processData: false,
+                contentType: false
+            }).done(function(res) {
+                if (res.status == 1) {
+                    Swal.fire('สำเร็จ', res.content, 'success');
+                    tableQuotation.api().ajax.reload(null, false);
+                } else {
+                    Swal.fire('ผิดพลาด', res.content, 'error');
+                }
+            }).fail(function(res) {
+                ajaxFail(res, "");
+            });
         });
     </script>
 @endpush

@@ -21,6 +21,10 @@ use App\Models\CustomerCodeProduct;
 use App\Models\ContactChannel;
 use App\Models\QuotationStatus;
 use App\Models\AdminUser;
+use App\Models\Product;
+use App\Exports\QuotationPdfExcelExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
 class QuotationController extends AdminController
 {
     public $current_menu;
@@ -228,6 +232,11 @@ class QuotationController extends AdminController
             $q->select(
                 'quotation_products.*'
                 , 'products.code as part_no'
+                , 'products.name_en as product_name'
+                , 'products.width'
+                , 'products.length'
+                , 'products.height'
+                , 'products.cube'
             );
         }])
         ->leftJoin('currencies' , 'quotations.currency_id', '=', 'currencies.id')
@@ -519,6 +528,8 @@ class QuotationController extends AdminController
 
             $str = '<div class="btn-group btn-group-sm">';
             $str .= '<a href="'.url('admin/'.$lang.'/Quotation/'.$rec->id.'/pdf').'" target="_blank" class="btn btn-outline-info btn-h-light-info btn-a-light-info border-b-2" title="PDF"><i class="fa fa-file-pdf"></i></a>';
+            $str .= '<a href="'.url('admin/'.$lang.'/Quotation/'.$rec->id.'/cube').'" target="_blank" class="btn btn-outline-secondary btn-h-light-secondary btn-a-light-secondary border-b-2" title="ใบคิว"><i class="fa fa-cubes"></i></a>';
+            $str .= '<a href="'.url('admin/'.$lang.'/Quotation/'.$rec->id.'/ExportExcelDoc').'" class="btn btn-outline-primary btn-h-light-primary btn-a-light-primary border-b-2" title="Excel"><i class="fa fa-file-excel"></i></a>';
             if($update){
                 $str .= '<a href="'.url('admin/'.$lang.'/Quotation/'.$rec->id.'/edit').'" class="btn btn-outline-warning btn-h-light-warning btn-a-light-warning border-b-2" title="แก้ไข"><i class="fa fa-edit"></i></a>';
             }
@@ -606,6 +617,226 @@ class QuotationController extends AdminController
         $quotation = $data['Quotation'];
         $pdf = \PDF::loadView('admin.Quotation.quotation_pdf', $data);
         return $pdf->stream($quotation->doc_no.'_'.date('Ymd_Hi').'.pdf');
+    }
+
+    public function view_cube_pdf($id)
+    {
+        $data['Quotation'] = Quotation::with(['products' => function ($q) {
+            $q->leftJoin('products', 'quotation_products.product_id', '=', 'products.id');
+            $q->select(
+                'quotation_products.*',
+                'products.code as part_no',
+                'products.name_en as product_name',
+                'products.width',
+                'products.length',
+                'products.height',
+                'products.cube'
+            );
+        }])
+        ->select('quotations.*')
+        ->findOrFail($id);
+
+        $quotation = $data['Quotation'];
+        $pdf = \PDF::loadView('admin.Quotation.quotation_cube_pdf', $data);
+        return $pdf->stream($quotation->doc_no . '_CUBE_' . date('Ymd_Hi') . '.pdf');
+    }
+
+    public function export_excel_doc($id)
+    {
+        $quotation = Quotation::with(['products' => function ($q) {
+            $q->leftJoin('products', 'quotation_products.product_id', '=', 'products.id');
+            $q->select(
+                'quotation_products.*',
+                'products.code as part_no'
+            );
+        }])
+        ->leftJoin('currencies', 'quotations.currency_id', '=', 'currencies.id')
+        ->leftJoin('credit_payments', 'quotations.credit_payment_id', '=', 'credit_payments.id')
+        ->select(
+            'quotations.*',
+            'currencies.name as currency_name',
+            'currencies.symbol',
+            'credit_payments.name as credit_payment_name'
+        )
+        ->findOrFail($id);
+
+        $filename = 'Quotation_' . $quotation->doc_no . '_' . date('Ymd_Hi') . '.xlsx';
+        return Excel::download(new QuotationPdfExcelExport($quotation), $filename);
+    }
+
+    public function import_excel(Request $request)
+    {
+        if (!$request->hasFile('file')) {
+            return response()->json(['status' => 0, 'title' => 'ผิดพลาด', 'content' => 'กรุณาเลือกไฟล์ Excel']);
+        }
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|file|mimes:xlsx,xls'
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => 0, 'title' => 'ผิดพลาด', 'content' => 'รองรับเฉพาะไฟล์ .xlsx หรือ .xls']);
+        }
+
+        DB::beginTransaction();
+        try {
+            $sheets = Excel::toArray([], $request->file('file'));
+            $requiredColumns = ['doc_no', 'item_no', 'part_no', 'qty', 'unit_price', 'total_price'];
+            $rows = [];
+            $headers = [];
+            $headerRowIndex = null;
+
+            foreach ($sheets as $sheetRows) {
+                foreach ($sheetRows as $rowIndex => $rowData) {
+                    $candidate = array_map(function ($header) {
+                        return strtolower(trim((string) $header));
+                    }, $rowData);
+                    $hasAllColumns = true;
+                    foreach ($requiredColumns as $column) {
+                        if (!in_array($column, $candidate, true)) {
+                            $hasAllColumns = false;
+                            break;
+                        }
+                    }
+                    if ($hasAllColumns) {
+                        $rows = $sheetRows;
+                        $headers = $candidate;
+                        $headerRowIndex = $rowIndex;
+                        break 2;
+                    }
+                }
+            }
+
+            if (empty($rows) || $headerRowIndex === null) {
+                return response()->json(['status' => 0, 'title' => 'ผิดพลาด', 'content' => 'ไม่พบตารางข้อมูลสำหรับ import ในไฟล์']);
+            }
+
+            $previewByItemNo = [];
+            foreach ($sheets as $sheetRows) {
+                $previewLines = $this->extractQuotationPreviewPricing($sheetRows);
+                if (!empty($previewLines)) {
+                    foreach ($previewLines as $line) {
+                        $previewByItemNo[(int) $line['item_no']] = $line;
+                    }
+                    break;
+                }
+            }
+
+            $recordsByDoc = [];
+            for ($i = $headerRowIndex + 1; $i < count($rows); $i++) {
+                $line = $rows[$i];
+                $record = [];
+                foreach ($headers as $index => $header) {
+                    $record[$header] = $line[$index] ?? null;
+                }
+                $docNo = trim((string) ($record['doc_no'] ?? ''));
+                if ($docNo === '') {
+                    continue;
+                }
+                $recordsByDoc[$docNo][] = $record;
+            }
+
+            if (empty($recordsByDoc)) {
+                return response()->json(['status' => 0, 'title' => 'ผิดพลาด', 'content' => 'ไม่พบข้อมูล doc_no ในไฟล์']);
+            }
+
+            $updated = 0;
+            $notFound = [];
+
+            foreach ($recordsByDoc as $docNo => $records) {
+                $quotation = Quotation::where('doc_no', $docNo)->first();
+                if (!$quotation) {
+                    $notFound[] = $docNo;
+                    continue;
+                }
+                $head = $records[0];
+
+                $docDate = $this->parseExcelDateValue($head['doc_date'] ?? null);
+                if ($docDate) $quotation->doc_date = $docDate;
+
+                if (!empty($head['customer_id'])) $quotation->customer_id = (int) $head['customer_id'];
+                if (isset($head['contact_name'])) $quotation->contact_name = $head['contact_name'];
+                if (isset($head['company_name'])) $quotation->company_name = $head['company_name'];
+                if (isset($head['tax_id'])) $quotation->tax_id = $head['tax_id'];
+                if (isset($head['address'])) $quotation->address = $head['address'];
+                if (isset($head['phone'])) $quotation->phone = $head['phone'];
+                if (isset($head['mobile'])) $quotation->mobile = $head['mobile'];
+                if (isset($head['fax_no'])) $quotation->fax_no = $head['fax_no'];
+                if (!empty($head['currency_id'])) $quotation->currency_id = (int) $head['currency_id'];
+                if (!empty($head['credit_payment_id'])) $quotation->credit_payment_id = (int) $head['credit_payment_id'];
+                if (!empty($head['incoterm_id'])) $quotation->incoterm_id = (int) $head['incoterm_id'];
+                if (!empty($head['status_id'])) $quotation->status_id = (int) $head['status_id'];
+
+                $details = [];
+                $grandTotal = 0;
+                foreach ($records as $record) {
+                    $partNo = trim((string) ($record['part_no'] ?? ''));
+                    $productId = !empty($record['product_id']) ? (int) $record['product_id'] : null;
+                    if (!$productId && $partNo !== '') {
+                        $productId = Product::where('code', $partNo)->value('id');
+                    }
+                    if (!$productId) {
+                        continue;
+                    }
+
+                    $qty = (float) ($record['qty'] ?? 0);
+                    $itemNo = (int) ($record['item_no'] ?? 0);
+                    $unitPrice = (float) ($record['unit_price'] ?? 0);
+                    $totalPrice = (float) ($record['total_price'] ?? ($qty * $unitPrice));
+                    if ($itemNo > 0 && isset($previewByItemNo[$itemNo])) {
+                        $pv = $previewByItemNo[$itemNo];
+                        $pvPart = trim((string) ($pv['part_no'] ?? ''));
+                        if ($pvPart === '' || strcasecmp($pvPart, $partNo) === 0) {
+                            $unitPrice = (float) ($pv['unit_price'] ?? $unitPrice);
+                            $totalPrice = isset($pv['total_price'])
+                                ? (float) $pv['total_price']
+                                : ($qty * $unitPrice);
+                        }
+                    }
+                    $grandTotal += $totalPrice;
+
+                    $details[] = [
+                        'quotation_id' => $quotation->id,
+                        'product_id' => $productId,
+                        'drawing' => $record['drawing'] ?? null,
+                        'cus_code' => $record['cus_code'] ?? null,
+                        'detail_eng' => $record['description'] ?? null,
+                        'qty' => $qty,
+                        'price_per_item' => $unitPrice,
+                        'discount_percents' => (float) ($record['discount_percent'] ?? 0),
+                        'discount_amount' => (float) ($record['discount_amount'] ?? 0),
+                        'total_price' => $totalPrice,
+                    ];
+                }
+
+                if (!empty($details)) {
+                    QuotationProduct::where('quotation_id', $quotation->id)->delete();
+                    QuotationProduct::insert($details);
+                    $quotation->subtotal = $grandTotal;
+                    $quotation->total = $grandTotal;
+                }
+
+                $quotation->save();
+                $updated++;
+            }
+
+            DB::commit();
+            $message = 'อัปเดต Quotation สำเร็จ ' . $updated . ' เอกสาร';
+            if (!empty($notFound)) {
+                $message .= ' (ไม่พบ doc_no: ' . implode(', ', $notFound) . ')';
+            }
+
+            return response()->json([
+                'status' => 1,
+                'title' => 'สำเร็จ',
+                'content' => $message
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 0,
+                'title' => 'ผิดพลาด',
+                'content' => $e->getMessage()
+            ]);
+        }
     }
 
     public function save_comment(Request $request)
@@ -730,6 +961,118 @@ class QuotationController extends AdminController
         if (trim((string) $row->code) === '') {
             $row->code = $code;
             $row->save();
+        }
+    }
+
+    /**
+     * ดึง Qty / Unit Price / Amount จากชีทรูปแบบ Quotation (แถวหัว ITM., Part No., …)
+     * เพื่อให้ผู้ใช้แก้ราคาในชีทแรกแล้ว import ยังสอดคล้องกับชีทข้อมูล
+     */
+    private function extractQuotationPreviewPricing(array $sheetRows): array
+    {
+        $headerIdx = null;
+        $colMap = [];
+
+        foreach ($sheetRows as $ri => $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $cells = array_map(function ($c) {
+                return strtolower(trim((string) $c));
+            }, $row);
+
+            $hasItm = false;
+            $hasPartNo = false;
+            foreach ($cells as $c) {
+                if ($c === 'itm.' || $c === 'itm') {
+                    $hasItm = true;
+                }
+                if ($c === 'part no.' || $c === 'part no' || $c === 'part_no') {
+                    $hasPartNo = true;
+                }
+            }
+            if (!$hasItm || !$hasPartNo) {
+                continue;
+            }
+
+            $headerIdx = $ri;
+            foreach ($row as $ci => $h) {
+                $h = strtolower(trim((string) $h));
+                if ($h === 'itm.' || $h === 'itm') {
+                    $colMap['item_no'] = $ci;
+                }
+                if ($h === 'part no.' || $h === 'part no' || $h === 'part_no') {
+                    $colMap['part_no'] = $ci;
+                }
+                if ($h === 'qty') {
+                    $colMap['qty'] = $ci;
+                }
+                if (str_contains($h, 'unit price') || $h === 'unit price') {
+                    $colMap['unit_price'] = $ci;
+                }
+                if ($h === 'amount' || $h === 'total' || str_contains($h, 'amount')) {
+                    $colMap['total_price'] = $ci;
+                }
+            }
+            break;
+        }
+
+        if ($headerIdx === null || !isset($colMap['part_no'], $colMap['unit_price'])) {
+            return [];
+        }
+
+        $out = [];
+        for ($ri = $headerIdx + 1; $ri < count($sheetRows); $ri++) {
+            $row = $sheetRows[$ri];
+            if (!is_array($row)) {
+                continue;
+            }
+            $first = $row[0] ?? null;
+            if ($first === null || $first === '') {
+                break;
+            }
+            if (is_string($first) && stripos($first, 'total in words') !== false) {
+                break;
+            }
+            if (is_string($first) && stripos($first, 'total') === 0 && strlen($first) < 12) {
+                break;
+            }
+
+            $itemRaw = isset($colMap['item_no']) ? ($row[$colMap['item_no']] ?? null) : ($ri - $headerIdx);
+            $itemNo = (int) $itemRaw;
+            $partNo = isset($colMap['part_no']) ? trim((string) ($row[$colMap['part_no']] ?? '')) : '';
+            $qty = isset($colMap['qty']) ? (float) ($row[$colMap['qty']] ?? 0) : 0;
+            $unitPrice = isset($colMap['unit_price']) ? (float) ($row[$colMap['unit_price']] ?? 0) : 0;
+            $totalPrice = isset($colMap['total_price']) ? (float) ($row[$colMap['total_price']] ?? 0) : 0;
+
+            $out[] = [
+                'item_no' => $itemNo > 0 ? $itemNo : ($ri - $headerIdx),
+                'part_no' => $partNo,
+                'qty' => $qty,
+                'unit_price' => $unitPrice,
+                'total_price' => $totalPrice,
+            ];
+        }
+
+        return $out;
+    }
+
+    private function parseExcelDateValue($value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        if (is_numeric($value)) {
+            try {
+                return Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value))->format('Y-m-d');
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
+        try {
+            return Carbon::parse($value)->format('Y-m-d');
+        } catch (\Exception $e) {
+            return null;
         }
     }
 
