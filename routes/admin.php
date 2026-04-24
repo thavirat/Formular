@@ -177,6 +177,11 @@ Route::middleware('authAdmin:admin')->group(function () {
     Route::get('/ProformaInvoice/{id}/Fic2Fi', 'Admin\ProformaInvoiceController@fic_2_fi');
     Route::resource('/ProformaInvoice', Admin\ProformaInvoiceController::class);
 
+    Route::get('/FactoryPayment', 'Admin\FactoryPaymentController@index');
+    Route::post('/FactoryPayment/Lists', 'Admin\FactoryPaymentController@lists');
+    Route::get('/CustomerReceipt', 'Admin\CustomerReceiptController@index');
+    Route::post('/CustomerReceipt/Lists', 'Admin\CustomerReceiptController@lists');
+
     Route::post('/Factory/Lists', 'Admin\FactoryController@lists');
     Route::get('/Factory/ExportPDF', 'Admin\FactoryController@export_pdf');
     Route::get('/Factory/ExportExcel', 'Admin\FactoryController@export_excel');

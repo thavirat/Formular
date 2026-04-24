@@ -529,26 +529,28 @@ class ProformaInvoiceController extends AdminController
                         <i class="fa fa-check-circle"></i>
                     </button>';
                 }
-                $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/' . $rec->id . '/FA') . '"
-                    class="btn btn-outline-orange btn-h-light-orange btn-a-light-orange border-b-2"
-                    title="' . e($tFa) . '">
-                    <i class="fa fa-industry"></i>
-                </a>';
-                $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/' . $rec->id . '/ExportPo') . '"
-                    class="btn btn-outline-blue btn-h-light-blue btn-a-light-blue border-b-2"
-                    title="' . e($tExPo) . '">
-                    <i class="fa fa-shipping-fast"></i>
-                </a>';
-                $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/' . $rec->id . '/ExportProduct') . '"
-                    class="btn btn-outline-secondary btn-h-light-secondary btn-a-light-secondary border-b-2"
-                    title="' . e($tPoProduct) . '">
-                    <i class="fa fa-boxes"></i>
-                </a>';
-                $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/' . $rec->id . '/Fic2Fi') . '"
-                    class="btn btn-outline-purple btn-h-light-purple btn-a-light-purple border-b-2"
-                    title="' . e($tFic2Fi) . '">
-                    <i class="fa fa-random"></i>
-                </a>';
+                if ((int) $rec->status_id === 3) {
+                    $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/' . $rec->id . '/FA') . '"
+                        class="btn btn-outline-orange btn-h-light-orange btn-a-light-orange border-b-2"
+                        title="' . e($tFa) . '">
+                        <i class="fa fa-industry"></i>
+                    </a>';
+                    $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/' . $rec->id . '/ExportPo') . '"
+                        class="btn btn-outline-blue btn-h-light-blue btn-a-light-blue border-b-2"
+                        title="' . e($tExPo) . '">
+                        <i class="fa fa-shipping-fast"></i>
+                    </a>';
+                    $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/' . $rec->id . '/ExportProduct') . '"
+                        class="btn btn-outline-secondary btn-h-light-secondary btn-a-light-secondary border-b-2"
+                        title="' . e($tPoProduct) . '">
+                        <i class="fa fa-boxes"></i>
+                    </a>';
+                    $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/' . $rec->id . '/Fic2Fi') . '"
+                        class="btn btn-outline-purple btn-h-light-purple btn-a-light-purple border-b-2"
+                        title="' . e($tFic2Fi) . '">
+                        <i class="fa fa-random"></i>
+                    </a>';
+                }
                 $str .= '</div>';
                 return $str;
             })
@@ -563,11 +565,20 @@ class ProformaInvoiceController extends AdminController
             if (empty($request->id)) {
                 return response()->json(['status' => 0, 'title' => 'ผิดพลาด', 'content' => 'กรุณากรอกรายละเอียด']);
             }
-            ProformaInvoice::where('id', $request->id)->update([
+            $affected = ProformaInvoice::where('id', $request->id)
+                ->where('status_id', 1) // 1 = Draft
+                ->update([
                 'status_id' => 2,
                 'send_approve_by' => Auth::guard('admin')->user()->id,
                 'send_approve_date' => date('Y-m-d H:i:s')
             ]);
+            if ($affected === 0) {
+                return response()->json([
+                    'status' => 0,
+                    'title' => 'ผิดพลาด',
+                    'content' => 'ส่งขออนุมัติได้เฉพาะเอกสารสถานะ Draft เท่านั้น'
+                ]);
+            }
             return response()->json([
                 'status' => 1,
                 'title' => 'สำเร็จ',
@@ -589,11 +600,20 @@ class ProformaInvoiceController extends AdminController
             if (empty($request->id)) {
                 return response()->json(['status' => 0, 'title' => 'ผิดพลาด', 'content' => 'กรุณากรอกรายละเอียด']);
             }
-            ProformaInvoice::where('id', $request->id)->update([
+            $affected = ProformaInvoice::where('id', $request->id)
+                ->where('status_id', 2) // 2 = รออนุมัติ
+                ->update([
                 'status_id' => 3,
                 'approve_by' => Auth::guard('admin')->user()->id,
                 'approve_date' => date('Y-m-d H:i:s')
             ]);
+            if ($affected === 0) {
+                return response()->json([
+                    'status' => 0,
+                    'title' => 'ผิดพลาด',
+                    'content' => 'อนุมัติได้เฉพาะเอกสารสถานะรออนุมัติเท่านั้น'
+                ]);
+            }
             return response()->json([
                 'status' => 1,
                 'title' => 'สำเร็จ',
