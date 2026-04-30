@@ -138,31 +138,42 @@ trait ApprovedProformaInvoiceListTrait
                 $tEdit = __('Edit') . ' — แก้ไข';
                 $tDel = __('Delete') . ' — ลบ';
                 $tPdf = 'PDF — ออกใบ PI ส่งโรงงาน';
+                $tPay = 'ชำระเงิน';
                 $tFa = __('FA') . ' — ออกใบ PI ส่งโรงงาน (Factory Accept)';
                 $tExPo = __('EX PO') . ' — ออกใบ PI ส่งโรงงาน (Export PO)';
                 $tPoProduct = __('PO Product') . ' — ออกใบ Export Product';
                 $tFic2Fi = __('Fic 2 Fi') . ' — ออกใบ Fic 2 Fi';
 
-                $update = Help::CheckPermissionMenu($piMenu, 'u');
+                $isCustomerReceipt = ($this->current_menu === 'CustomerReceipt');
+
                 $str = '<div class="btn-group btn-group-sm">';
                 $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/pdfFactory?pi_id=' . $rec->id) . '"
                     class="btn btn-outline-info btn-h-light-info btn-a-light-info border-b-2"
                     title="' . e($tPdf) . '" target="_blank">
                     <i class="fa fa-file-pdf"></i>
                 </a>';
-                if ($update) {
-                    $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/' . $rec->id . '/edit') . '"
-                        class="btn btn-outline-warning btn-h-light-warning btn-a-light-warning border-b-2"
-                        title="' . e($tEdit) . '">
-                        <i class="fa fa-edit"></i>
+                if ($isCustomerReceipt) {
+                    $str .= '<a href="' . url('admin/' . $lang . '/CustomerReceipt/RecordPayment/' . $rec->id) . '"
+                        class="btn btn-outline-success btn-h-light-success btn-a-light-success border-b-2"
+                        title="' . e($tPay) . '">
+                        <i class="fa fa-money-bill-wave"></i>
                     </a>';
-                }
-                $delete = Help::CheckPermissionMenu($piMenu, 'd');
-                if ($delete) {
-                    $str .= '<button class="btn btn-outline-danger btn-h-light-danger btn-a-light-danger border-b-2 btn-delete-pi"
-                        data-id="' . $rec->id . '" title="' . e($tDel) . '">
-                        <i class="fa fa-trash-alt"></i>
-                    </button>';
+                } else {
+                    $update = Help::CheckPermissionMenu($piMenu, 'u');
+                    if ($update) {
+                        $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/' . $rec->id . '/edit') . '"
+                            class="btn btn-outline-warning btn-h-light-warning btn-a-light-warning border-b-2"
+                            title="' . e($tEdit) . '">
+                            <i class="fa fa-edit"></i>
+                        </a>';
+                    }
+                    $delete = Help::CheckPermissionMenu($piMenu, 'd');
+                    if ($delete) {
+                        $str .= '<button class="btn btn-outline-danger btn-h-light-danger btn-a-light-danger border-b-2 btn-delete-pi"
+                            data-id="' . $rec->id . '" title="' . e($tDel) . '">
+                            <i class="fa fa-trash-alt"></i>
+                        </button>';
+                    }
                 }
                 $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/' . $rec->id . '/FA') . '"
                     class="btn btn-outline-orange btn-h-light-orange btn-a-light-orange border-b-2"

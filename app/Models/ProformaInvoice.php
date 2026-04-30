@@ -25,4 +25,9 @@ class ProformaInvoice extends Model
     {
         return $this->hasMany(Comment::class, 'pi_id');
     }
+
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'currency_id');
+    }
 }

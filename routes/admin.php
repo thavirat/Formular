@@ -181,12 +181,38 @@ Route::middleware('authAdmin:admin')->group(function () {
     Route::post('/FactoryPayment/Lists', 'Admin\FactoryPaymentController@lists');
     Route::get('/CustomerReceipt', 'Admin\CustomerReceiptController@index');
     Route::post('/CustomerReceipt/Lists', 'Admin\CustomerReceiptController@lists');
+    Route::get('/CustomerReceipt/RecordPayment/{id}', 'Admin\CustomerReceiptController@recordPayment');
+    Route::get('/CustomerReceipt/PaymentTotals/{id}', 'Admin\CustomerReceiptController@paymentTotals');
 
     Route::post('/Factory/Lists', 'Admin\FactoryController@lists');
     Route::get('/Factory/ExportPDF', 'Admin\FactoryController@export_pdf');
     Route::get('/Factory/ExportExcel', 'Admin\FactoryController@export_excel');
     Route::get('/Factory/ExportPrint', 'Admin\FactoryController@export_print');
     Route::resource('/Factory', Admin\FactoryController::class);
+
+    Route::post('/Bank/Lists', 'Admin\BankController@lists');
+    Route::get('/Bank/ExportPDF', 'Admin\BankController@export_pdf');
+    Route::get('/Bank/ExportExcel', 'Admin\BankController@export_excel');
+    Route::get('/Bank/ExportPrint', 'Admin\BankController@export_print');
+    Route::resource('/Bank', Admin\BankController::class);
+
+    Route::post('/BankAccount/Lists', 'Admin\BankAccountController@lists');
+    Route::get('/BankAccount/ExportPDF', 'Admin\BankAccountController@export_pdf');
+    Route::get('/BankAccount/ExportExcel', 'Admin\BankAccountController@export_excel');
+    Route::get('/BankAccount/ExportPrint', 'Admin\BankAccountController@export_print');
+    Route::resource('/BankAccount', Admin\BankAccountController::class);
+
+    Route::post('/PaymentMethod/Lists', 'Admin\PaymentMethodController@lists');
+    Route::get('/PaymentMethod/ExportPDF', 'Admin\PaymentMethodController@export_pdf');
+    Route::get('/PaymentMethod/ExportExcel', 'Admin\PaymentMethodController@export_excel');
+    Route::get('/PaymentMethod/ExportPrint', 'Admin\PaymentMethodController@export_print');
+    Route::resource('/PaymentMethod', Admin\PaymentMethodController::class);
+
+    Route::post('/CustomerPayment/Lists', 'Admin\CustomerPaymentController@lists');
+    Route::get('/CustomerPayment/ExportPDF', 'Admin\CustomerPaymentController@export_pdf');
+    Route::get('/CustomerPayment/ExportExcel', 'Admin\CustomerPaymentController@export_excel');
+    Route::get('/CustomerPayment/ExportPrint', 'Admin\CustomerPaymentController@export_print');
+    Route::resource('/CustomerPayment', Admin\CustomerPaymentController::class);
 
     ##FOR##REPLACE##INSTALL##
         });

@@ -83,14 +83,44 @@ class Help
      */
 
     public static function convertDateThaiToDbFormat($date , $prefix){
-        $spl = explode($prefix , $date);
-        return ($spl[2]-543).'-'.$spl[1].'-'.$spl[0];
+        if ($date === null || $date === '') {
+            return null;
+        }
+        $date = trim((string) $date);
+        if ($date === '') {
+            return null;
+        }
+        // รูปแบบ DB อยู่แล้ว (เช่น จาก datetime picker / copy-paste)
+        if (preg_match('/^\d{4}-\d{2}-\d{2}(\s|$)/', $date)) {
+            return substr($date, 0, 10);
+        }
+        $spl = explode($prefix, $date);
+        if (count($spl) !== 3 || $spl[0] === '' || $spl[1] === '' || $spl[2] === '') {
+            return null;
+        }
+        $d = (int) $spl[0];
+        $m = (int) $spl[1];
+        $yBe = (int) $spl[2];
+        $yCe = $yBe - 543;
+
+        return sprintf('%04d-%02d-%02d', $yCe, $m, $d);
     }
 
 
     public static function convertDateToDbFormat($date,$para = '/')
     {
+        if ($date === null || $date === '') {
+            return null;
+        }
+        $date = trim((string) $date);
+        if (preg_match('/^\d{4}-\d{2}-\d{2}(\s|$)/', $date)) {
+            return substr($date, 0, 10);
+        }
         $dateSplit = explode($para, $date);
+        if (count($dateSplit) !== 3) {
+            return null;
+        }
+
         return $dateSplit[2].'-'.$dateSplit[1].'-'.$dateSplit[0];
     }
 
