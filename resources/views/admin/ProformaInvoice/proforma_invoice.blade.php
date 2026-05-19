@@ -47,7 +47,7 @@
 @endsection
 
 @section('body')
-<div class="page-content container container-plus">
+<div class="page-content container-fluid container-plus">
     <div class="page-header mb-2 pb-2 flex-column flex-sm-row align-items-start align-items-sm-center py-25 px-1">
         <h1 class="page-title text-primary-d2 text-140">{{ $currentMenu->title }} </h1>
         <div class="page-tools mt-3 mt-sm-0 mb-sm-n1">
@@ -76,12 +76,12 @@
                 </a>
             @endif
             @if( $my_menu_permission[$currentMenu->url]['c'] == 'T' )
-                <button type="button" class="btn btn-light-green btn-h-green btn-a-green border-0 radius-3 py-2 text-600 text-90 btn-add">
+                <a href="{{ $url_pi_create ?? url('admin/ProformaInvoice/create') }}" class="btn btn-light-green btn-h-green btn-a-green border-0 radius-3 py-2 text-600 text-90">
                     <span class="d-none d-sm-inline mr-1">
                         เพิ่มข้อมูล
                     </span>
                     <i class="fa fa-plus text-110 w-2 h-2"></i>
-                </button>
+                </a>
             @endif
         </div>
     </div>
@@ -209,39 +209,6 @@
 </div>
 
 
-    <!-- Modal Add -->
-    <div class="modal fade modal-lg" id="ModalAdd" role="dialog" aria-labelledby="ModalAddLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <form id="FormAdd" data-parsley-validate="true">
-                    <div class="modal-header">
-                        <h5 class="modal-title text-primary-d3" id="ModalAddLabel">
-                            เพิ่มข้อมูล{{ $currentMenu->title }}
-                        </h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-6 col-sm-12">
-                                <div class="form-group">
-                                    <label for="add_doc_no">เลขที่เอกสาร</label>
-                                    <input type="text" name="doc_no" id="add_doc_no" class="form-control autofocus" >
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary px-4" data-dismiss="modal"> <i class="fa fa-window-close"></i> ปิด </button>
-                        <button type="submit" class="btn btn-primary"> <i class="fa fa-save"></i> บันทึก </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal Edit -->
     <div class="modal fade modal-lg" id="ModalEdit" role="dialog" aria-labelledby="ModalEditLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -319,34 +286,6 @@
 
         ],
         "order": [[1, "desc"]]
-    });
-
-    $('body').on('click','.btn-add',function(data){
-        $('#ModalAdd').modal('show');
-    });
-
-    $('body').on('submit', '#FormAdd', function(e){
-        e.preventDefault();
-        var form = $(this);
-        loadingButton(form.find('button[type=submit]'));
-        $.ajax({
-            method: "POST",
-            url: url_gb+"/admin/ProformaInvoice",
-            dataType : "json",
-            data: form.serialize()
-        }).done(function( res ) {
-            resetButton(form.find('button[type=submit]'));
-            if(res.status == 1){
-                Swal.fire(res.title, res.content,'success');
-                resetFormCustom(form);
-                tableProformaInvoice.api().ajax.reload();
-                $('#ModalAdd').modal('hide');
-            }else{
-                Swal.fire(res.title, res.content,'error');
-            }
-        }).fail(function(res){
-            ajaxFail(res , form);
-        });
     });
 
     $('body').on('submit', '#FormEdit', function(e){

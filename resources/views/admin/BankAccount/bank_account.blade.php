@@ -7,7 +7,7 @@
 @endpush
 
 @section('body')
-<div class="page-content container container-plus">
+<div class="page-content container-fluid container-plus">
     <div class="page-header mb-2 pb-2 flex-column flex-sm-row align-items-start align-items-sm-center py-25 px-1">
         <h1 class="page-title text-primary-d2 text-140">{{ $currentMenu->title }} </h1>
         <div class="page-tools mt-3 mt-sm-0 mb-sm-n1">
@@ -350,7 +350,7 @@
         }).done(function( res ) {
             resetButton(btn);
                                     $("#edit_bank_id").val(res.content.bank_id).trigger('change.select2');
-                                                $("#edit_account_no").val(res.content.account_no);                                                $("#edit_account_name").val(res.content.account_name);                                                $("#edit_account_type").val(res.content.account_type);                                                $("#edit_account_branch").val(res.content.account_branch);                        
+                                                $("#edit_account_no").val(res.content.account_no);                                                $("#edit_account_name").val(res.content.account_name);                                                $("#edit_account_type").val(res.content.account_type);                                                $("#edit_account_branch").val(res.content.account_branch);
             $('#ModalEdit').modal('show');
         }).fail(function(res){
             ajaxFail(res , "");

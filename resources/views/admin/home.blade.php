@@ -2,7 +2,7 @@
 @section('css')
 @endsection
 @section('body')
-    <div class="page-content container container-plus">
+    <div class="page-content container-fluid container-plus">
         <!-- page header and toolbox -->
         <div class="page-header pb-2">
             <h1 class="page-title text-primary-d2 text-150">

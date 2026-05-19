@@ -41,7 +41,7 @@ class ProformaInvoiceController extends AdminController
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $permission = Help::CheckPermissionMenu($this->current_menu, 'r');
         if (!$permission) {
@@ -52,6 +52,8 @@ class ProformaInvoiceController extends AdminController
         $data['proforma_invoice_statuses'] = ProformaInvoiceStatus::orderBy('name')->get();
         $data['admins'] = AdminUser::orderBy('nickname')->get();
         $data['Customers'] = Customer::orderBy('company_name')->get();
+        $data['url_pi_create'] = $this->proformaInvoiceCreateUrl($request);
+
         return view('admin.ProformaInvoice.proforma_invoice', $data);
     }
 
@@ -62,28 +64,44 @@ class ProformaInvoiceController extends AdminController
      */
     public function create(Request $request)
     {
-        $id = $request->quotation_id;
+        $permission = Help::CheckPermissionMenu($this->current_menu, 'c');
+        if (!$permission) {
+            return redirect('/admin/PermissionDenined');
+        }
+
         $data['currentMenu'] = Menu::where('url', $this->current_menu)->first();
         $data['Customers'] = Customer::orderBy('company_name')->get();
         $data['Incoterms'] = Incoterm::orderBy('code')->get();
         $data['Currencies'] = Currency::orderBy('name')->get();
         $data['CreditPayments'] = CreditPayment::orderBy('name')->get();
-        $data['Quotation'] = Quotation::with(['products' => function ($q) {
-            $q->leftJoin('products', 'quotation_products.product_id', '=', 'products.id');
-            $q->select(
-                'quotation_products.*',
-                'products.code as part_no'
-            );
-        }])
-            ->leftJoin('currencies', 'quotations.currency_id', '=', 'currencies.id')
-            ->leftJoin('credit_payments', 'quotations.credit_payment_id', '=', 'credit_payments.id')
-            ->select(
-                'quotations.*',
-                'currencies.name as currency_name',
-                'currencies.symbol',
-                'credit_payments.name as credit_payment_name'
-            )
-            ->find($id);
+        $data['admin_lang_slash'] = $this->adminLangSlash($request);
+        $data['default_currency_symbol'] = Currency::orderBy('name')->value('symbol') ?? '';
+
+        $id = $request->query('quotation_id');
+        $data['Quotation'] = null;
+
+        if ($id !== null && $id !== '') {
+            $data['Quotation'] = Quotation::with(['products' => function ($q) {
+                $q->leftJoin('products', 'quotation_products.product_id', '=', 'products.id');
+                $q->select(
+                    'quotation_products.*',
+                    'products.code as part_no'
+                );
+            }])
+                ->leftJoin('currencies', 'quotations.currency_id', '=', 'currencies.id')
+                ->leftJoin('credit_payments', 'quotations.credit_payment_id', '=', 'credit_payments.id')
+                ->select(
+                    'quotations.*',
+                    'currencies.name as currency_name',
+                    'currencies.symbol',
+                    'credit_payments.name as credit_payment_name'
+                )
+                ->find($id);
+
+            if (!$data['Quotation']) {
+                abort(404, 'Quotation not found');
+            }
+        }
 
         return view('admin.ProformaInvoice.proforma_invoice_create', $data);
     }
@@ -107,8 +125,11 @@ class ProformaInvoiceController extends AdminController
             $run_no = $last_run ? $last_run->run_no + 1 : 1;
             $doc_no = "PI" . $year_month . str_pad($run_no, 4, '0', STR_PAD_LEFT);
 
+            $quotationId = $request->input('quotation_id');
+            $quotationId = ($quotationId === '' || $quotationId === null) ? null : (int) $quotationId;
+
             $pi = new ProformaInvoice();
-            $pi->quotation_id      = $request->quotation_id;
+            $pi->quotation_id      = $quotationId;
             $pi->status_id         = 1;
             $pi->customer_id       = $request->customer_id;
             $pi->incoterm_id       = $request->incoterm_id;
@@ -139,16 +160,15 @@ class ProformaInvoiceController extends AdminController
 
                     $request_qty = $request->qty[$key] ?? 0;
 
-                    // 1. ค้นหาสินค้าตัวนี้ใน Quotation
-                    $quotationProduct = QuotationProduct::where('quotation_id', $request->quotation_id)
-                        ->where('product_id', $product_id)
-                        ->first();
+                    if ($quotationId) {
+                        $quotationProduct = QuotationProduct::where('quotation_id', $quotationId)
+                            ->where('product_id', $product_id)
+                            ->first();
 
-
-
-                    if ($quotationProduct) {
-                        QuotationProduct::where('id', $quotationProduct->id)
-                            ->update(['proforma_qty' => $quotationProduct->proforma_qty + $request_qty]);
+                        if ($quotationProduct) {
+                            QuotationProduct::where('id', $quotationProduct->id)
+                                ->update(['proforma_qty' => $quotationProduct->proforma_qty + $request_qty]);
+                        }
                     }
 
                     $item = new ProformaInvoiceProduct();
@@ -205,7 +225,7 @@ class ProformaInvoiceController extends AdminController
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
         $data['SidebarMenus'] = Menu::Active()->get();
         $data['currentMenu']  = Menu::where('url', $this->current_menu)->first();
@@ -226,6 +246,8 @@ class ProformaInvoiceController extends AdminController
                 ->orderBy('proforma_invoice_products.seq', 'asc'); // เรียงตามลำดับที่บันทึกไว้
         }])->findOrFail($id);
 
+        $data['admin_lang_slash'] = $this->adminLangSlash($request);
+
         return view('admin.ProformaInvoice.proforma_invoice_edit', $data);
     }
 
@@ -243,18 +265,23 @@ class ProformaInvoiceController extends AdminController
         try {
             $pi = ProformaInvoice::findOrFail($id);
 
-            // --- 1. คืนค่ายอดโควต้าเดิมกลับไปให้ Quotation ก่อน ---
+            $newQuotationId = $request->input('quotation_id');
+            $newQuotationId = ($newQuotationId === '' || $newQuotationId === null) ? null : (int) $newQuotationId;
+
+            // --- 1. คืนค่ายอดโควต้าเดิมกลับไปให้ Quotation ก่อน (เฉพาะ PI ที่ผูกใบเสนอราคา) ---
             $old_pi_products = ProformaInvoiceProduct::where('pi_id', $pi->id)->get();
-            foreach ($old_pi_products as $old_item) {
-                QuotationProduct::where('quotation_id', $pi->quotation_id)
-                    ->where('product_id', $old_item->product_id)
-                    ->decrement('proforma_qty', $old_item->qty); // ลดค่ายอดที่เคยดึงไป
+            if ($pi->quotation_id) {
+                foreach ($old_pi_products as $old_item) {
+                    QuotationProduct::where('quotation_id', $pi->quotation_id)
+                        ->where('product_id', $old_item->product_id)
+                        ->decrement('proforma_qty', $old_item->qty); // ลดค่ายอดที่เคยดึงไป
+                }
             }
 
             // ลบรายการสินค้า PI เดิมทิ้งทั้งหมดเพื่อเตรียม Insert ใหม่
             ProformaInvoiceProduct::where('pi_id', $pi->id)->delete();
 
-            $pi->quotation_id      = $request->quotation_id;
+            $pi->quotation_id      = $newQuotationId;
             $pi->status_id         = 1;
             $pi->customer_id       = $request->customer_id;
             $pi->incoterm_id       = $request->incoterm_id;
@@ -283,13 +310,15 @@ class ProformaInvoiceController extends AdminController
 
                     $request_qty = $request->qty[$key] ?? 0;
 
-                    $quotationProduct = QuotationProduct::where('quotation_id', $pi->quotation_id)
-                        ->where('product_id', $product_id)
-                        ->first();
+                    if ($newQuotationId) {
+                        $quotationProduct = QuotationProduct::where('quotation_id', $newQuotationId)
+                            ->where('product_id', $product_id)
+                            ->first();
 
-                    if ($quotationProduct) {
-                        QuotationProduct::where('id', $quotationProduct->id)
-                            ->increment('proforma_qty', $request_qty);
+                        if ($quotationProduct) {
+                            QuotationProduct::where('id', $quotationProduct->id)
+                                ->increment('proforma_qty', $request_qty);
+                        }
                     }
 
                     // Insert รายการ PI
@@ -330,12 +359,14 @@ class ProformaInvoiceController extends AdminController
             // 1. ดึงรายการสินค้าใน PI ที่กำลังจะลบ
             $pi_products = ProformaInvoiceProduct::where('pi_id', $pi->id)->get();
 
-            // 2. คืนยอด proforma_qty กลับไปให้ Quotation
-            foreach ($pi_products as $item) {
-                DB::table('quotation_products')
-                    ->where('quotation_id', $pi->quotation_id)
-                    ->where('product_id', $item->product_id)
-                    ->decrement('proforma_qty', $item->qty); // ลบยอดที่เคยจองไว้ออก
+            // 2. คืนยอด proforma_qty กลับไปให้ Quotation (เฉพาะ PI ที่ผูกใบเสนอราคา)
+            if ($pi->quotation_id) {
+                foreach ($pi_products as $item) {
+                    DB::table('quotation_products')
+                        ->where('quotation_id', $pi->quotation_id)
+                        ->where('product_id', $item->product_id)
+                        ->decrement('proforma_qty', $item->qty); // ลบยอดที่เคยจองไว้ออก
+                }
             }
 
             // 3. ลบรายการสินค้า PI และ ตัว PI
@@ -849,5 +880,21 @@ class ProformaInvoiceController extends AdminController
         }, 'createdBy' , 'customer'])->findOrFail($id);
 
         return Excel::download(new Fic2FiExport($pi), 'FIC2FI_' . $pi->doc_no . '_' . date('YmdHis') . '.xlsx');
+    }
+
+    /** URL prefix segment สำหรับ route แบบ admin/{th|en|ch}/... */
+    private function adminLangSlash(Request $request): string
+    {
+        $locales = ['th', 'en', 'ch'];
+        $seg2 = $request->segment(2);
+
+        return in_array($seg2, $locales, true) ? $seg2.'/' : '';
+    }
+
+    private function proformaInvoiceCreateUrl(Request $request): string
+    {
+        $slash = $this->adminLangSlash($request);
+
+        return url('admin/'.$slash.'ProformaInvoice/create');
     }
 }

@@ -214,7 +214,15 @@ Route::middleware('authAdmin:admin')->group(function () {
     Route::get('/CustomerPayment/ExportPrint', 'Admin\CustomerPaymentController@export_print');
     Route::resource('/CustomerPayment', Admin\CustomerPaymentController::class);
 
-    ##FOR##REPLACE##INSTALL##
+                Route::post('/PackingForm/Lists', 'Admin\PackingFormController@lists');
+                Route::post('/PackingForm/Import', 'Admin\PackingFormController@import');
+                Route::get('/PackingForm/SearchPiProduct', 'Admin\PackingFormController@searchPiProduct');
+                Route::get('/PackingForm/{id}/pdf', 'Admin\PackingFormController@pdf');
+                Route::get('/PackingForm/{id}/pdf/customer', 'Admin\PackingFormController@pdfCustomer');
+                Route::get('/PackingForm/{id}/pdf/accounting', 'Admin\PackingFormController@pdfAccounting');
+                Route::resource('/PackingForm', Admin\PackingFormController::class)->except(['create', 'store', 'show']);
+
+                ##FOR##REPLACE##INSTALL##
         });
     }
 

@@ -28,10 +28,16 @@
 @endsection
 
 @section('body')
-    <div class="page-content container container-plus">
+    <div class="page-content container-fluid container-plus">
         <div class="page-header mb-2 pb-2 flex-column flex-sm-row align-items-start align-items-sm-center py-25 px-1">
-            <h1 class="page-title text-primary-d2 text-140">{{ __('Create Proforma Invoice') }} {{ __('From Quotation') }}
-                #{{ $Quotation->doc_no }}</h1>
+            <h1 class="page-title text-primary-d2 text-140">
+                @if($Quotation)
+                    {{ __('Create Proforma Invoice') }} {{ __('From Quotation') }}
+                    #{{ $Quotation->doc_no }}
+                @else
+                    {{ __('Create Proforma Invoice') }}
+                @endif
+            </h1>
         </div>
 
         <div class="row mt-3">
@@ -39,7 +45,7 @@
                 <div class="card dcard">
                     <div class="card-body p-3">
                         <form action="" id="form-pi" method="POST">
-                            <input type="hidden" name="quotation_id" value="{{ $Quotation->id }}">
+                            <input type="hidden" name="quotation_id" value="{{ $Quotation ? $Quotation->id : '' }}">
                             <div class="row">
                                 <div class="col-3">
                                     <div class="form-group">
@@ -49,7 +55,7 @@
                                             <option value="">{{ __('Select Customer') }}</option>
                                             @foreach ($Customers as $customer)
                                                 <option value="{{ $customer->id }}"
-                                                    {{ $Quotation->customer_id == $customer->id ? 'selected' : '' }}>
+                                                    {{ $Quotation && $Quotation->customer_id == $customer->id ? 'selected' : '' }}>
                                                     {{ $customer->company_name }} - {{ $customer->contact_name }}</option>
                                             @endforeach
                                         </select>
@@ -97,28 +103,28 @@
                                     <div class="form-group">
                                         <label for="contact_name">{{ __('Contact Name') }}</label>
                                         <input type="text" name="contact_name" id="contact_name" class="form-control"
-                                            value="{{ $Quotation->contact_name }}">
+                                            value="{{ $Quotation ? $Quotation->contact_name : '' }}">
                                     </div>
                                     <div class="form-group">
                                         <label for="company_name">{{ __('Company Name') }}</label>
                                         <input type="text" name="company_name" id="company_name" class="form-control"
-                                            value="{{ $Quotation->company_name }}" required>
+                                            value="{{ $Quotation ? $Quotation->company_name : '' }}" required>
                                     </div>
                                     <div class="form-group">
                                         <label for="tax_id">{{ __('Tax ID') }}</label>
                                         <input type="text" name="tax_id" id="tax_id" class="form-control"
-                                            value="{{ $Quotation->tax_id }}">
+                                            value="{{ $Quotation ? $Quotation->tax_id : '' }}">
                                     </div>
                                 </div>
                                 <div class="col-3">
                                     <div class="form-group">
                                         <label for="address">{{ __('Address') }}</label>
-                                        <textarea name="address" id="address" class="form-control" rows="5" style="height: 124px;">{{ $Quotation->address }}</textarea>
+                                        <textarea name="address" id="address" class="form-control" rows="5" style="height: 124px;">{{ $Quotation ? $Quotation->address : '' }}</textarea>
                                     </div>
                                     <div class="form-group">
                                         <label for="fax_no">{{ __('Fax No') }}</label>
                                         <input type="text" name="fax_no" id="fax_no" class="form-control"
-                                            value="{{ $Quotation->fax_no }}">
+                                            value="{{ $Quotation ? $Quotation->fax_no : '' }}">
                                     </div>
                                 </div>
                                 <div class="col-3">
@@ -135,7 +141,7 @@
                                     <div class="form-group">
                                         <label for="customer_po">{{ __('Customer PO') }}</label>
                                         <input type="text" name="customer_po" id="customer_po" class="form-control" required
-                                            value="{{ $Quotation->customer_po }}">
+                                            value="{{ $Quotation ? $Quotation->customer_po : '' }}">
                                     </div>
                                 </div>
                                 <div class="col-3">
@@ -145,7 +151,7 @@
                                         <select name="incoterm_id" id="incoterm_id" class="form-control select2" required>
                                             @foreach ($Incoterms as $incoterm)
                                                 <option value="{{ $incoterm->id }}"
-                                                    {{ $Quotation->incoterm_id == $incoterm->id ? 'selected' : '' }}>
+                                                    {{ $Quotation && $Quotation->incoterm_id == $incoterm->id ? 'selected' : '' }}>
                                                     {{ $incoterm->code }}</option>
                                             @endforeach
                                         </select>
@@ -157,7 +163,7 @@
                                             required>
                                             @foreach ($Currencies as $currency)
                                                 <option value="{{ $currency->id }}"
-                                                    {{ $Quotation->currency_id == $currency->id ? 'selected' : '' }}>
+                                                    {{ $Quotation && $Quotation->currency_id == $currency->id ? 'selected' : '' }}>
                                                     {{ $currency->symbol }}</option>
                                             @endforeach
                                         </select>
@@ -169,7 +175,7 @@
                                             class="form-control select2" required>
                                             @foreach ($CreditPayments as $CreditPayment)
                                                 <option value="{{ $CreditPayment->id }}"
-                                                    {{ $Quotation->credit_payment_id == $CreditPayment->id ? 'selected' : '' }}>
+                                                    {{ $Quotation && $Quotation->credit_payment_id == $CreditPayment->id ? 'selected' : '' }}>
                                                     {{ $CreditPayment->name }}</option>
                                             @endforeach
                                         </select>
@@ -192,11 +198,12 @@
                                                 <th width="8%">{{ __('Qty (to PI)') }}</th>
                                                 <th width="10%">{{ __('Unit Price') }}</th>
                                                 <th width="12%">{{ __('Amount') }} (<span
-                                                        class="show_currency">{{ $Quotation->symbol }}</span>)</th>
+                                                        class="show_currency">{{ $Quotation ? $Quotation->symbol : $default_currency_symbol }}</span>)</th>
                                                 <th width="5%"></th>
                                             </tr>
                                         </thead>
                                         <tbody>
+                                            @if ($Quotation && $Quotation->products && $Quotation->products->count())
                                             @foreach ($Quotation->products as $item)
                                                 <tr>
                                                     <td class="text-center align-middle">
@@ -236,6 +243,27 @@
                                                                 class="fa fa-trash"></i></button></td>
                                                 </tr>
                                             @endforeach
+                                            @else
+                                                <tr>
+                                                    <td class="text-center align-middle">
+                                                        <div class="d-flex align-items-center justify-content-center">
+                                                            <i class="fas fa-grip-vertical cursor-move text-muted mr-2" title="Drag to reorder"></i>
+                                                            <input type="number" class="form-control text-center item-seq p-1" name="seq[]" value="1" readonly style="width: 50px;">
+                                                        </div>
+                                                    </td>
+                                                    <td class="product-select-container">
+                                                        <select class="form-control product" name="product[]" required></select>
+                                                    </td>
+                                                    <td><input type="text" class="form-control text-80" name="drawing[]"></td>
+                                                    <td><input type="text" class="form-control text-80" name="customer_code[]"></td>
+                                                    <td><input type="text" class="form-control text-80" name="description[]"></td>
+                                                    <td><input type="number" class="form-control qty_order" name="qty_order[]" value="1" step="any" readonly></td>
+                                                    <td><input type="number" class="form-control qty" name="qty[]" value="1" step="any"></td>
+                                                    <td><input type="number" class="form-control unit_price" name="unit_price[]" value="0" step="any"></td>
+                                                    <td><input type="number" class="form-control amount" name="amount[]" readonly></td>
+                                                    <td class="text-center align-middle"><button type="button" class="btn btn-outline-danger btn-sm removeRow"><i class="fa fa-trash"></i></button></td>
+                                                </tr>
+                                            @endif
                                         </tbody>
                                         <tfoot>
                                             <tr>
@@ -244,7 +272,7 @@
                                                         id="addRow"><i class="fa fa-plus"></i> เพิ่มแถว</button>
                                                 </th>
                                                 <th colspan="6" class="text-right">Total Amount (<span
-                                                        class="show_currency">{{ $Quotation->symbol }}</span>)</th>
+                                                        class="show_currency">{{ $Quotation ? $Quotation->symbol : $default_currency_symbol }}</span>)</th>
                                                 <th><input type="text" id="grand_total" name="grand_total"
                                                         class="form-control text-bold text-primary" readonly></th>
                                                 <th></th>
@@ -323,7 +351,7 @@
                     dropdownAutoWidth: false,
                     containerCssClass: 'fixed-select2',
                     ajax: {
-                        url: url_gb + "/admin/{{ $lang }}/Product/Search",
+                        url: url_gb + "/admin/{{ $admin_lang_slash }}Product/Search",
                         dataType: 'json',
                         delay: 250,
                         transport: function(params, success, failure) {
@@ -451,7 +479,7 @@
                     if (res.status == 1) {
                         Swal.fire(res.title, res.content, 'success').then(() => {
                             window.location.href = url_gb +
-                                "/admin/{{ $lang }}/ProformaInvoice";
+                                "/admin/{{ $admin_lang_slash }}ProformaInvoice";
                         });
                     } else {
                         Swal.fire(res.title, res.content, 'error');

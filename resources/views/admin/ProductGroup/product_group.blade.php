@@ -7,7 +7,7 @@
 @endpush
 
 @section('body')
-<div class="page-content container container-plus">
+<div class="page-content container-fluid container-plus">
     <div class="page-header mb-2 pb-2 flex-column flex-sm-row align-items-start align-items-sm-center py-25 px-1">
         <h1 class="page-title text-primary-d2 text-140">{{ $currentMenu->title }} </h1>
         <div class="page-tools mt-3 mt-sm-0 mb-sm-n1">
@@ -307,7 +307,7 @@
             dataType: 'json',
         }).done(function( res ) {
             resetButton(btn);
-                                    $("#edit_code").val(res.content.code);                                                $("#edit_name_th").val(res.content.name_th);                                                $("#edit_name_en").val(res.content.name_en);                        
+                                    $("#edit_code").val(res.content.code);                                                $("#edit_name_th").val(res.content.name_th);                                                $("#edit_name_en").val(res.content.name_en);
             $('#ModalEdit').modal('show');
         }).fail(function(res){
             ajaxFail(res , "");

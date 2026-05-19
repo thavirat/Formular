@@ -4,7 +4,7 @@
 @endsection
 @section('body')
 
-    <div id="app" class="page-content container container-plus">
+    <div id="app" class="page-content container-fluid container-plus">
         <form id="frmInstall" @submit.prevent="install">
             <div class="card acard mt-2 mt-lg-3">
                 <div class="card-header">
@@ -99,7 +99,7 @@
                                                 <div class="input-group-prepend">
                                                     <span class="input-group-text">ชื่อ</span>
                                                 </div>
-                                                <input type="text" class="form-control" 
+                                                <input type="text" class="form-control"
                                                     :name="`name_in_form[${v . Field}]`" v-model="v.name_in_form" v-on:keyup="changeNameIntable(index)">
                                             </div>
                                         </div>
@@ -327,7 +327,7 @@
                 selectInput(index, event) {
                     var val = event.target.value;
                     this.fields[index].input_in_form = val;
-                    
+
                     this.clearAllOption(index);
 
                     if (val == 'checkbox') {

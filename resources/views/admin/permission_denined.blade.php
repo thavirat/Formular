@@ -2,7 +2,7 @@
 @section('css')
 @endsection
 @section('body')
-    <div class="page-content container container-plus">
+    <div class="page-content container-fluid container-plus">
 
         <div>
             <div class="row mt-3">

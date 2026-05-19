@@ -26,7 +26,7 @@
 @endsection
 
 @section('body')
-<div class="page-content container container-plus">
+<div class="page-content container-fluid container-plus">
     <div class="page-header mb-2 pb-2 flex-column flex-sm-row align-items-start align-items-sm-center py-25 px-1">
         <h1 class="page-title text-primary-d2 text-140">{{__('Edit Proforma Invoice')}} #{{ $ProformaInvoice->doc_no }}</h1>
     </div>
@@ -37,6 +37,7 @@
                 <div class="card-body p-3">
                     <form action="" id="form-edit-pi" method="POST">
                         <input type="hidden" name="_method" value="PUT">
+                        <input type="hidden" name="quotation_id" value="{{ $ProformaInvoice->quotation_id ?? '' }}">
                         <input type="hidden" id="pi_id" value="{{ $ProformaInvoice->id }}">
 
                         <div class="row">
@@ -241,7 +242,7 @@ $(document).ready(function() {
             dropdownAutoWidth: false,
             containerCssClass: 'fixed-select2',
             ajax: {
-                url: url_gb + "/admin/{{$lang}}/Product/Search",
+                url: url_gb + "/admin/{{ $admin_lang_slash }}Product/Search",
                 dataType: 'json',
                 delay: 250,
                 transport: function (params, success, failure) {
@@ -357,7 +358,7 @@ $(document).ready(function() {
             resetButton(form.find('button[type=submit]'));
             if (res.status == 1) {
                 Swal.fire(res.title, res.content, 'success').then(() => {
-                    window.location.href = url_gb + "/admin/{{$lang}}/ProformaInvoice";
+                    window.location.href = url_gb + "/admin/{{ $admin_lang_slash }}ProformaInvoice";
                 });
             } else {
                 Swal.fire(res.title, res.content, 'error');
