@@ -54,7 +54,7 @@
                                     <div class="form-group">
                                         <label for="customer_id">{{ __('Select Customer') }} <span
                                                 class="text-danger">*</span></label>
-                                        <select name="customer_id" id="customer_id" class="form-control select2" required>
+                                        <select name="customer_id" id="customer_id" class="form-control select2" >
                                             <option value="">{{ __('Select Customer') }}</option>
                                             @foreach ($Customers as $customer)
                                                 <option value="{{ $customer->id }}"
@@ -71,7 +71,7 @@
                                                 class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <input type="text" name="ship_date" class="form-control init-date"
-                                                id="ship_date" value="" required
+                                                id="ship_date" value=""
                                                 readonly>
                                             <div class="input-group-append remove_date_time">
                                                 <div class="input-group-text"><i class="fa fa-times"></i></div>
@@ -111,7 +111,7 @@
                                     <div class="form-group">
                                         <label for="company_name">{{ __('Company Name') }}</label>
                                         <input type="text" name="company_name" id="company_name" class="form-control"
-                                            value="{{ $Quotation ? $Quotation->company_name : '' }}" required>
+                                            value="{{ $Quotation ? $Quotation->company_name : '' }}" >
                                     </div>
                                     <div class="form-group">
                                         <label for="tax_id">{{ __('Tax ID') }}</label>
@@ -133,17 +133,17 @@
                                 <div class="col-3">
                                     <div class="form-group">
                                         <label for="ship_to_code">{{ __('Ship To Code') }}</label>
-                                        <input type="text" name="ship_to_code" id="ship_to_code" class="form-control" required
+                                        <input type="text" name="ship_to_code" id="ship_to_code" class="form-control"
                                             value="">
                                     </div>
                                     <div class="form-group">
                                         <label for="ship_remark">{{ __('Ship Remark') }}</label>
-                                        <input type="text" name="ship_remark" id="ship_remark" class="form-control" required
+                                        <input type="text" name="ship_remark" id="ship_remark" class="form-control"
                                             value="">
                                     </div>
                                     <div class="form-group">
                                         <label for="customer_po">{{ __('Customer PO') }}</label>
-                                        <input type="text" name="customer_po" id="customer_po" class="form-control" required
+                                        <input type="text" name="customer_po" id="customer_po" class="form-control"
                                             value="{{ $Quotation ? $Quotation->customer_po : '' }}">
                                     </div>
                                 </div>
@@ -151,7 +151,7 @@
                                     <div class="form-group">
                                         <label for="incoterm_id">{{ __('Incoterm') }} <span
                                                 class="text-danger">*</span></label>
-                                        <select name="incoterm_id" id="incoterm_id" class="form-control select2" required>
+                                        <select name="incoterm_id" id="incoterm_id" class="form-control select2" >
                                             @foreach ($Incoterms as $incoterm)
                                                 <option value="{{ $incoterm->id }}"
                                                     {{ $Quotation && $Quotation->incoterm_id == $incoterm->id ? 'selected' : '' }}>
@@ -163,7 +163,7 @@
                                         <label for="currency_id">{{ __('Currency') }} <span
                                                 class="text-danger">*</span></label>
                                         <select name="currency_id" id="currency_id" class="form-control select2"
-                                            required>
+                                            >
                                             @foreach ($Currencies as $currency)
                                                 <option value="{{ $currency->id }}"
                                                     {{ $Quotation && $Quotation->currency_id == $currency->id ? 'selected' : '' }}>
@@ -175,7 +175,7 @@
                                         <label for="credit_payment_id">{{ __('Credit Payment') }} <span
                                                 class="text-danger">*</span></label>
                                         <select name="credit_payment_id" id="credit_payment_id"
-                                            class="form-control select2" required>
+                                            class="form-control select2" >
                                             @foreach ($CreditPayments as $CreditPayment)
                                                 <option value="{{ $CreditPayment->id }}"
                                                     {{ $Quotation && $Quotation->credit_payment_id == $CreditPayment->id ? 'selected' : '' }}>

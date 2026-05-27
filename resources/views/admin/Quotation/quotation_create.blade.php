@@ -37,7 +37,7 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="customer_id">{{__('Select Customer')}} <span class="text-danger">*</span></label>
-                                    <select name="customer_id" id="customer_id" class="form-control select2" required>
+                                    <select name="customer_id" id="customer_id" class="form-control select2" >
                                         <option value="">{{__('Select Customer')}}</option>
                                         @foreach($Customers as $customer)
                                             <option value="{{$customer->id}}">{{$customer->company_name}} - {{$customer->contact_name}}</option>
@@ -68,7 +68,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="company_name">{{__('Company Name')}}</label>
-                                    <input type="text" name="company_name" id="company_name" class="form-control" required>
+                                    <input type="text" name="company_name" id="company_name" class="form-control" >
                                 </div>
                                 <div class="form-group">
                                     <label for="tax_id">{{__('Tax ID')}}</label>
@@ -89,7 +89,7 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="incoterm_id">{{__('Incoterm')}} <span class="text-danger">*</span></label>
-                                    <select name="incoterm_id" id="incoterm_id" class="form-control select2" required>
+                                    <select name="incoterm_id" id="incoterm_id" class="form-control select2" >
                                         <option value="">{{__('Select Incoterm')}}</option>
                                         @foreach($Incoterms as $incoterm)
                                             <option value="{{$incoterm->id}}">{{$incoterm->code}}</option>
@@ -98,7 +98,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="currency_id">{{__('Currency')}} <span class="text-danger">*</span></label>
-                                    <select name="currency_id" id="currency_id" class="form-control select2" required>
+                                    <select name="currency_id" id="currency_id" class="form-control select2" >
                                         <option value="">{{__('Select Currency')}}</option>
                                         @foreach($Currencies as $currency)
                                             <option value="{{$currency->id}}">{{$currency->symbol}}</option>
@@ -107,7 +107,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="credit_payment_id">{{__('Credit Payment')}} <span class="text-danger">*</span></label>
-                                    <select name="credit_payment_id" id="credit_payment_id" class="form-control select2" required>
+                                    <select name="credit_payment_id" id="credit_payment_id" class="form-control select2" >
                                         <option value="">{{__('Select Credit Payment')}}</option>
                                         @foreach($CreditPayments as $CreditPayment)
                                             <option value="{{$CreditPayment->id}}">{{$CreditPayment->name}}</option>

@@ -48,7 +48,7 @@
                             <div class="col-3">
                                 <div class="form-group">
                                     <label for="customer_id">{{__('Select Customer')}} <span class="text-danger">*</span></label>
-                                    <select name="customer_id" id="customer_id" class="form-control select2" required>
+                                    <select name="customer_id" id="customer_id" class="form-control select2" >
                                         <option value="">{{__('Select Customer')}}</option>
                                         @foreach($Customers as $customer)
                                             <option value="{{$customer->id}}" {{ $ProformaInvoice->customer_id == $customer->id ? 'selected' : '' }}>
@@ -83,7 +83,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="company_name">{{__('Company Name')}}</label>
-                                    <input type="text" name="company_name" id="company_name" class="form-control" value="{{$ProformaInvoice->company_name}}" required>
+                                    <input type="text" name="company_name" id="company_name" class="form-control" value="{{$ProformaInvoice->company_name}}" >
                                 </div>
                                 <div class="form-group">
                                     <label for="tax_id">{{__('Tax ID')}}</label>
@@ -103,7 +103,7 @@
                             <div class="col-3">
                                 <div class="form-group">
                                     <label for="incoterm_id">{{__('Incoterm')}} <span class="text-danger">*</span></label>
-                                    <select name="incoterm_id" id="incoterm_id" class="form-control select2" required>
+                                    <select name="incoterm_id" id="incoterm_id" class="form-control select2" >
                                         @foreach($Incoterms as $incoterm)
                                             <option value="{{$incoterm->id}}" {{ $ProformaInvoice->incoterm_id == $incoterm->id ? 'selected' : '' }}>{{$incoterm->code}}</option>
                                         @endforeach
@@ -111,7 +111,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="currency_id">{{__('Currency')}} <span class="text-danger">*</span></label>
-                                    <select name="currency_id" id="currency_id" class="form-control select2" required>
+                                    <select name="currency_id" id="currency_id" class="form-control select2" >
                                         @foreach($Currencies as $currency)
                                             <option value="{{$currency->id}}" {{ $ProformaInvoice->currency_id == $currency->id ? 'selected' : '' }}>{{$currency->symbol}}</option>
                                         @endforeach
@@ -119,7 +119,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="credit_payment_id">{{__('Credit Payment')}} <span class="text-danger">*</span></label>
-                                    <select name="credit_payment_id" id="credit_payment_id" class="form-control select2" required>
+                                    <select name="credit_payment_id" id="credit_payment_id" class="form-control select2" >
                                         @foreach($CreditPayments as $CreditPayment)
                                             <option value="{{$CreditPayment->id}}" {{ $ProformaInvoice->credit_payment_id == $CreditPayment->id ? 'selected' : '' }}>{{$CreditPayment->name}}</option>
                                         @endforeach

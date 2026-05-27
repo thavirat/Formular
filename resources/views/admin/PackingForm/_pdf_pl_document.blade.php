@@ -190,8 +190,11 @@
         .items tbody tr:last-child > td {
             border-bottom: 1px solid #000;
         }
+        .items.items-has-foot tbody tr:last-child > td {
+            border-bottom: none;
+        }
         .items > tfoot > tr.row-qty-summary > td {
-            border-top: none;
+            border-top: 1px solid #000 !important;
             border-bottom: 1px solid #000 !important;
         }
         .items > tfoot > tr:last-child > td {
@@ -304,7 +307,7 @@
     </tr>
 </table>
 
-<table class="items">
+<table class="items{{ !$isAccounting && count($qtyByUom) > 0 ? ' items-has-foot' : '' }}">
     <thead>
         @if($isAccounting)
         <tr>
