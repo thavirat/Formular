@@ -8,6 +8,10 @@
         <h1 class="page-title text-primary-d2 text-140">{{ $currentMenu->title }}</h1>
         <div class="page-tools mt-3 mt-sm-0 mb-sm-n1">
             @if( $my_menu_permission[$currentMenu->url]['c'] == 'T' )
+                <a href="{{ url('admin/'.$route_locale.'/PackingForm/create') }}" class="btn btn-light-green btn-h-green btn-a-green border-0 radius-3 py-2 text-600 text-90 mr-1">
+                    <span class="d-none d-sm-inline mr-1">เพิ่มข้อมูล</span>
+                    <i class="fa fa-plus text-110 w-2 h-2"></i>
+                </a>
                 <button type="button" class="btn btn-light-primary btn-h-primary btn-a-primary border-0 radius-3 py-2 text-600 text-90" id="btn-open-import">
                     <span class="d-none d-sm-inline mr-1">นำเข้า Excel</span>
                     <i class="fa fa-file-upload text-110 w-2 h-2"></i>

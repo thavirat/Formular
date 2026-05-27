@@ -40,4 +40,9 @@ class Product extends Model
     public function Factory(){
         return $this->belongsTo('\App\Models\Factory' , 'factory_id' , 'id');
     }
+
+    public function unitProduct()
+    {
+        return $this->belongsTo(UnitProduct::class, 'unit_id');
+    }
 }

@@ -18,6 +18,7 @@ use App\Models\ProformaInvoiceStatus;
 use App\Models\AdminUser;
 use App\Models\ContactChannel;
 use App\Models\Comment;
+use App\Services\PackingListExcelExportService;
 use Maatwebsite\Excel\Facades\Excel;
 use Auth;
 use DataTables;
@@ -53,6 +54,11 @@ class ProformaInvoiceController extends AdminController
         $data['admins'] = AdminUser::orderBy('nickname')->get();
         $data['Customers'] = Customer::orderBy('company_name')->get();
         $data['url_pi_create'] = $this->proformaInvoiceCreateUrl($request);
+        $data['app_debug'] = (bool) config('app.debug');
+        if ($data['app_debug']) {
+            $slash = $this->adminLangSlash($request);
+            $data['packing_export_template_url'] = url('admin/'.$slash.'ProformaInvoice/ExportPackingListTemplate');
+        }
 
         return view('admin.ProformaInvoice.proforma_invoice', $data);
     }
@@ -410,6 +416,14 @@ class ProformaInvoiceController extends AdminController
                 'proforma_invoice_statuses.name as status_name'
             );
 
+        $pfx = DB::getTablePrefix();
+        $pipTbl = $pfx . (new ProformaInvoiceProduct)->getTable();
+        $piTbl  = $pfx . (new ProformaInvoice)->getTable();
+
+        $result
+            ->selectRaw("(SELECT COALESCE(SUM(pip.qty), 0) FROM {$pipTbl} pip WHERE pip.pi_id = {$piTbl}.id) as total_qty")
+            ->selectRaw("(SELECT COALESCE(SUM(pip.produced_qty), 0) FROM {$pipTbl} pip WHERE pip.pi_id = {$piTbl}.id) as total_produced_qty");
+
         if ($request->has('start_date') && $request->start_date != '') {
             $result->where('proforma_invoices.doc_date', '>=', date('Y-m-d', strtotime($request->start_date)));
         }
@@ -424,6 +438,14 @@ class ProformaInvoiceController extends AdminController
         }
         if ($request->has('customer_id') && $request->customer_id != 'all' && $request->customer_id !== null && $request->customer_id !== '') {
             $result->where('proforma_invoices.customer_id', '=', $request->customer_id);
+        }
+
+        $production = $request->input('production_status');
+        if ($production === 'completed') {
+            $result->whereRaw("(SELECT COALESCE(SUM(pip.qty), 0) FROM {$pipTbl} pip WHERE pip.pi_id = {$piTbl}.id) > 0")
+                   ->whereRaw("(SELECT COALESCE(SUM(pip.produced_qty), 0) FROM {$pipTbl} pip WHERE pip.pi_id = {$piTbl}.id) >= (SELECT COALESCE(SUM(pip.qty), 0) FROM {$pipTbl} pip WHERE pip.pi_id = {$piTbl}.id)");
+        } elseif ($production === 'incomplete') {
+            $result->whereRaw("(SELECT COALESCE(SUM(pip.produced_qty), 0) FROM {$pipTbl} pip WHERE pip.pi_id = {$piTbl}.id) < (SELECT COALESCE(SUM(pip.qty), 0) FROM {$pipTbl} pip WHERE pip.pi_id = {$piTbl}.id)");
         }
 
         return $result->orderByDesc('proforma_invoices.id');
@@ -447,6 +469,26 @@ class ProformaInvoiceController extends AdminController
             })
             ->editColumn('total', function ($rec) {
                 return '<span class="text-110 font-bolder text-success-d1">' . number_format($rec->total, 2) . '</span>';
+            })
+            ->addColumn('produced_progress', function ($rec) {
+                $totalQty = (float) ($rec->total_qty ?? 0);
+                $producedQty = (float) ($rec->total_produced_qty ?? 0);
+
+                if ($totalQty <= 0) {
+                    return '<span class="text-muted text-80">-</span>';
+                }
+
+                $pct = min(100, round(($producedQty / $totalQty) * 100));
+                $color = $pct >= 100 ? 'success' : ($pct >= 50 ? 'warning' : 'danger');
+                $label = number_format($producedQty, 0) . ' / ' . number_format($totalQty, 0);
+
+                return '<div class="text-center">
+                    <div class="text-90 text-600 mb-1">' . $label . '</div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bgc-' . $color . '" style="width: ' . $pct . '%"></div>
+                    </div>
+                    <div class="text-75 text-' . $color . '-d1 mt-1">' . $pct . '%</div>
+                </div>';
             })
             ->addColumn('status_name', function ($rec) {
                 $statusColor = 'secondary';
@@ -582,11 +624,18 @@ class ProformaInvoiceController extends AdminController
                         <i class="fa fa-random"></i>
                     </a>';
                 }
+                if (config('app.debug')) {
+                    $str .= '<a href="' . url('admin/' . $lang . '/ProformaInvoice/' . $rec->id . '/ExportPackingList') . '"
+                        class="btn btn-outline-primary btn-h-light-primary btn-a-light-primary border-b-2"
+                        title="Packing List Excel (Debug) — ดาวน์โหลดเพื่อนำเข้า Packing">
+                        <i class="fa fa-file-excel"></i>
+                    </a>';
+                }
                 $str .= '</div>';
                 return $str;
             })
             ->addIndexColumn()
-            ->rawColumns(['doc_info', 'customer_info', 'total', 'status_name', 'comment_box', 'action_btns'])
+            ->rawColumns(['doc_info', 'customer_info', 'total', 'produced_progress', 'status_name', 'comment_box', 'action_btns'])
             ->make(true);
     }
 
@@ -882,6 +931,29 @@ class ProformaInvoiceController extends AdminController
         return Excel::download(new Fic2FiExport($pi), 'FIC2FI_' . $pi->doc_no . '_' . date('YmdHis') . '.xlsx');
     }
 
+    public function export_packing_list_template(PackingListExcelExportService $exporter)
+    {
+        $this->abortUnlessAppDebug();
+
+        return $exporter->downloadBlankTemplate();
+    }
+
+    public function export_packing_list($id, PackingListExcelExportService $exporter)
+    {
+        $this->abortUnlessAppDebug();
+
+        $pi = ProformaInvoice::with('customer')->findOrFail($id);
+
+        return $exporter->downloadForProformaInvoice($pi);
+    }
+
+    private function abortUnlessAppDebug(): void
+    {
+        if (!config('app.debug')) {
+            abort(404);
+        }
+    }
+
     /** URL prefix segment สำหรับ route แบบ admin/{th|en|ch}/... */
     private function adminLangSlash(Request $request): string
     {
@@ -896,5 +968,91 @@ class ProformaInvoiceController extends AdminController
         $slash = $this->adminLangSlash($request);
 
         return url('admin/'.$slash.'ProformaInvoice/create');
+    }
+
+    public function outstandingReport(Request $request)
+    {
+        $data['currentMenu'] = Menu::where('url', $this->current_menu)->first();
+        $data['SidebarMenus'] = Menu::Active()->get();
+        $data['Customers'] = Customer::orderBy('company_name')->get();
+
+        return view('admin.ProformaInvoice.outstanding_report', $data);
+    }
+
+    public function outstandingReportLists(Request $request)
+    {
+        $pfx = DB::getTablePrefix();
+        $pipTbl = $pfx . (new ProformaInvoiceProduct)->getTable();
+        $piTbl  = $pfx . (new ProformaInvoice)->getTable();
+
+        $result = ProformaInvoiceProduct::query()
+            ->join('proforma_invoices', 'proforma_invoices.id', '=', 'proforma_invoice_products.pi_id')
+            ->leftJoin('products', 'products.id', '=', 'proforma_invoice_products.product_id')
+            ->select(
+                'proforma_invoice_products.*',
+                'proforma_invoices.doc_no',
+                'proforma_invoices.doc_date',
+                'proforma_invoices.company_name as customer_name',
+                'products.code as product_code'
+            );
+
+        if ($request->filled('customer_id') && $request->customer_id !== 'all') {
+            $result->where('proforma_invoices.customer_id', $request->customer_id);
+        }
+        if ($request->filled('start_date')) {
+            $result->where('proforma_invoices.doc_date', '>=', date('Y-m-d', strtotime($request->start_date)));
+        }
+        if ($request->filled('end_date')) {
+            $result->where('proforma_invoices.doc_date', '<=', date('Y-m-d', strtotime($request->end_date)));
+        }
+
+        $showMode = $request->input('show_mode', 'incomplete');
+        if ($showMode === 'incomplete') {
+            $result->whereColumn('proforma_invoice_products.produced_qty', '<', 'proforma_invoice_products.qty');
+        } elseif ($showMode === 'completed') {
+            $result->whereColumn('proforma_invoice_products.produced_qty', '>=', 'proforma_invoice_products.qty')
+                   ->where('proforma_invoice_products.qty', '>', 0);
+        }
+
+        $result->orderBy('proforma_invoices.doc_date', 'desc')
+               ->orderBy('proforma_invoices.doc_no', 'desc');
+
+        return DataTables::of($result)
+            ->addColumn('customer_name', function ($rec) {
+                return e($rec->customer_name ?? '-');
+            })
+            ->addColumn('doc_no', function ($rec) {
+                return e($rec->doc_no);
+            })
+            ->addColumn('doc_date', function ($rec) {
+                return e($rec->doc_date);
+            })
+            ->addColumn('part_no_display', function ($rec) {
+                return e($rec->product_code ?? $rec->part_no ?? '-');
+            })
+            ->addColumn('qty_display', function ($rec) {
+                return number_format($rec->qty, 0);
+            })
+            ->addColumn('produced_qty_display', function ($rec) {
+                return number_format($rec->produced_qty, 0);
+            })
+            ->addColumn('remaining', function ($rec) {
+                $remain = max(0, $rec->qty - $rec->produced_qty);
+                return '<span class="text-danger-d1 text-600">' . number_format($remain, 0) . '</span>';
+            })
+            ->addColumn('progress', function ($rec) {
+                $qty = (float) $rec->qty;
+                $produced = (float) $rec->produced_qty;
+                if ($qty <= 0) return '<span class="text-muted">-</span>';
+                $pct = min(100, round(($produced / $qty) * 100));
+                $color = $pct >= 100 ? 'success' : ($pct >= 50 ? 'warning' : 'danger');
+                return '<div class="progress" style="height:6px;min-width:60px;">
+                    <div class="progress-bar bgc-' . $color . '" style="width:' . $pct . '%"></div>
+                </div>
+                <div class="text-center text-75 text-' . $color . '-d1 mt-1">' . $pct . '%</div>';
+            })
+            ->addIndexColumn()
+            ->rawColumns(['remaining', 'progress'])
+            ->make(true);
     }
 }

@@ -75,6 +75,18 @@
                     <i class="fas fa-file-excel text-110 w-2 h-2"></i>
                 </a>
             @endif
+            @if(!empty($app_debug) && $app_debug && !empty($packing_export_template_url))
+                <a href="{{ $packing_export_template_url }}" class="btn btn-light-primary btn-h-primary btn-a-primary border-0 radius-3 py-2 text-600 text-90" title="ดาวน์โหลด Excel ว่าง (รูปแบบ SANDEN) สำหรับนำเข้า Packing — แสดงเมื่อ APP_DEBUG=true">
+                    <span class="d-none d-sm-inline mr-1">Packing Excel</span>
+                    <i class="fas fa-file-excel text-110 w-2 h-2"></i>
+                </a>
+            @endif
+            <a href="{{ url('admin/ProformaInvoice/OutstandingReport') }}" target="_blank" class="btn btn-outline-orange btn-h-light-orange btn-a-light-orange border-0 radius-3 py-2 text-600 text-90">
+                <span class="d-none d-sm-inline mr-1">
+                    รายงานค้างผลิต
+                </span>
+                <i class="fa fa-industry text-110 w-2 h-2"></i>
+            </a>
             @if( $my_menu_permission[$currentMenu->url]['c'] == 'T' )
                 <a href="{{ $url_pi_create ?? url('admin/ProformaInvoice/create') }}" class="btn btn-light-green btn-h-green btn-a-green border-0 radius-3 py-2 text-600 text-90">
                     <span class="d-none d-sm-inline mr-1">
@@ -165,6 +177,16 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="col-2">
+                            <div class="form-group">
+                                <label for="filter_production">สถานะการผลิต</label>
+                                <select name="filter_production" id="filter_production" class="form-control">
+                                    <option value="all">ทั้งหมด</option>
+                                    <option value="completed">ผลิตครบแล้ว</option>
+                                    <option value="incomplete">ยังผลิตไม่ครบ</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="col-12 text-center">
                             <div class="form-group">
                                 <label for="filter_button" style="visibility: hidden;">_</label>
@@ -192,6 +214,7 @@
                                 <th>เลขที่ / วันที่เอกสาร</th>
                                 <th>ลูกค้า / ผู้จัดทำ</th>
                                 <th class="text-right">ยอดรวม</th>
+                                <th class="text-center" width="120">ผลิตเสร็จ</th>
                                 <th>สถานะ</th>
                                 <th width="300px">บันทึกติดตามงาน</th>
                                 <th class="text-center">จัดการ</th>
@@ -259,6 +282,7 @@
                 d.status_id = $('#filter_status').val();
                 d.admin_id = $('#filter_admin').val();
                 d.customer_id = $('#filter_customer').val();
+                d.production_status = $('#filter_production').val();
             }
         },
         "drawCallback": function( settings ) {
@@ -270,6 +294,7 @@
             {"data": "doc_info", "name": 'doc_no', "className": "align-middle"},
             {"data": "customer_info", "name": 'company_name', "className": "align-middle"},
             {"data": "total", "name": 'total', "className": "text-right align-middle text-600 text-success-d1"},
+            {"data": "produced_progress", "searchable": false, "orderable": false, "className": "align-middle"},
             {"data": "status_name", "name": 'proforma_invoice_statuses.name', "className": "text-right align-middle text-600 text-success-d1"},
             {
                 "data": "comment_box",
@@ -379,6 +404,11 @@
     $("#filter_customer").select2({
         placeholder: 'กรุณาเลือกลูกค้า',
         allowClear: true
+    });
+    $("#filter_production").select2({
+        placeholder: 'สถานะการผลิต',
+        allowClear: true,
+        minimumResultsForSearch: Infinity
     });
 
     $('body').on('click', '.btn-save-comment', function() {

@@ -175,6 +175,10 @@ Route::middleware('authAdmin:admin')->group(function () {
     Route::get('/ProformaInvoice/{id}/ExportPo', 'Admin\ProformaInvoiceController@export_po');
     Route::get('/ProformaInvoice/{id}/ExportProduct', 'Admin\ProformaInvoiceController@export_product');
     Route::get('/ProformaInvoice/{id}/Fic2Fi', 'Admin\ProformaInvoiceController@fic_2_fi');
+    Route::get('/ProformaInvoice/ExportPackingListTemplate', 'Admin\ProformaInvoiceController@export_packing_list_template');
+    Route::get('/ProformaInvoice/{id}/ExportPackingList', 'Admin\ProformaInvoiceController@export_packing_list');
+    Route::get('/ProformaInvoice/OutstandingReport', 'Admin\ProformaInvoiceController@outstandingReport');
+    Route::post('/ProformaInvoice/OutstandingReport/Lists', 'Admin\ProformaInvoiceController@outstandingReportLists');
     Route::resource('/ProformaInvoice', Admin\ProformaInvoiceController::class);
 
     Route::get('/FactoryPayment', 'Admin\FactoryPaymentController@index');
@@ -220,9 +224,15 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::get('/PackingForm/{id}/pdf', 'Admin\PackingFormController@pdf');
                 Route::get('/PackingForm/{id}/pdf/customer', 'Admin\PackingFormController@pdfCustomer');
                 Route::get('/PackingForm/{id}/pdf/accounting', 'Admin\PackingFormController@pdfAccounting');
-                Route::resource('/PackingForm', Admin\PackingFormController::class)->except(['create', 'store', 'show']);
+                Route::resource('/PackingForm', Admin\PackingFormController::class)->except(['show']);
 
-                ##FOR##REPLACE##INSTALL##
+                Route::post('/AccountCredit/Lists', 'Admin\AccountCreditController@lists');
+    Route::get('/AccountCredit/ExportPDF', 'Admin\AccountCreditController@export_pdf');
+    Route::get('/AccountCredit/ExportExcel', 'Admin\AccountCreditController@export_excel');
+    Route::get('/AccountCredit/ExportPrint', 'Admin\AccountCreditController@export_print');
+    Route::resource('/AccountCredit', Admin\AccountCreditController::class);
+
+    ##FOR##REPLACE##INSTALL##
         });
     }
 

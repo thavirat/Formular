@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Menu;
 use App\Models\PackingForm;
 use App\Models\PackingFormDetail;
+use App\Models\ProformaInvoiceProduct;
 use App\Services\PackingListImportService;
 use DataTables;
 use Help;
@@ -129,36 +130,33 @@ class PackingFormController extends AdminController
             return response()->json(['items' => []]);
         }
 
-        $query = DB::table('proforma_invoice_products as pip')
-            ->join('proforma_invoices as pi', 'pi.id', '=', 'pip.pi_id')
-            ->leftJoin('products as pr', 'pr.id', '=', 'pip.product_id')
+        $query = \App\Models\ProformaInvoiceProduct::query()
+            ->with(['pi:id,doc_no', 'product:id,code'])
             ->where(function ($w) use ($partNo) {
-                $w->whereRaw('TRIM(pip.part_no) = ?', [$partNo])
-                    ->orWhereRaw('TRIM(pr.code) = ?', [$partNo]);
+                $w->whereRaw('TRIM(part_no) = ?', [$partNo])
+                    ->orWhereHas('product', function ($productQuery) use ($partNo) {
+                        $productQuery->whereRaw('TRIM(code) = ?', [$partNo]);
+                    });
             });
 
         if ($q !== '') {
-            $query->where('pi.doc_no', 'like', '%'.$q.'%');
+            $query->whereHas('pi', function ($piQuery) use ($q) {
+                $piQuery->where('doc_no', 'like', '%'.$q.'%');
+            });
         }
 
         $rows = $query
-            ->orderByDesc('pi.id')
-            ->orderBy('pip.id')
+            ->orderByDesc('pi_id')
+            ->orderBy('id')
             ->limit(30)
-            ->select(
-                'pip.id',
-                'pi.doc_no',
-                'pip.part_no',
-                'pr.code as product_code',
-                'pip.detail_eng'
-            )
-            ->get();
+            ->get(['id', 'pi_id', 'part_no', 'detail_eng', 'product_id']);
 
         $items = [];
         foreach ($rows as $row) {
-            $displayPart = trim((string) ($row->part_no ?: $row->product_code));
+            $displayPart = trim((string) ($row->part_no ?: ($row->product->code ?? '')));
             $desc = $row->detail_eng ? Str::limit((string) $row->detail_eng, 48) : '';
-            $text = $row->doc_no.' — '.$displayPart.($desc !== '' ? ' — '.$desc : '');
+            $docNo = $row->pi->doc_no ?? '';
+            $text = $docNo.' — '.$displayPart.($desc !== '' ? ' — '.$desc : '');
             $items[] = [
                 'id' => (int) $row->id,
                 'text' => $text,
@@ -194,7 +192,8 @@ class PackingFormController extends AdminController
             'details' => function ($q) {
                 $q->orderBy('excel_row')->orderBy('id');
             },
-            'details.piProduct.pi',
+            'details.piProduct.pi.currency',
+            'details.piProduct.product.unitProduct',
         ])->findOrFail($id);
 
         $view = $variant === 'accounting'
@@ -215,6 +214,162 @@ class PackingFormController extends AdminController
         $filename = ($packingForm->doc_no ?: 'PackingList').$suffix.'_'.date('Ymd').'.pdf';
 
         return $pdf->stream($filename);
+    }
+
+    public function create(Request $request)
+    {
+        $permission = Help::CheckPermissionMenu($this->current_menu, 'c');
+        if (!$permission) {
+            return redirect('/admin/PermissionDenined');
+        }
+        $data['SidebarMenus'] = Menu::Active()->get();
+        $data['currentMenu'] = Menu::where('url', $this->current_menu)->first();
+        $data['admin_lang_slash'] = in_array($request->segment(2), ['th', 'en', 'ch'], true)
+            ? $request->segment(2).'/'
+            : '';
+
+        return view('admin.PackingForm.packing_form_create', $data);
+    }
+
+    public function store(Request $request)
+    {
+        $permission = Help::CheckPermissionMenu($this->current_menu, 'c');
+        if (!$permission) {
+            return response()->json(['status' => 0, 'title' => 'ไม่มีสิทธิ์', 'content' => 'Permission denied'], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'doc_date' => 'nullable|date',
+            'customer_name' => 'nullable|string|max:255',
+            'country' => 'nullable|string|max:255',
+            'to' => 'nullable|string|max:255',
+            'invoice_no' => 'nullable|string|max:100',
+            'place_of_issue' => 'nullable|string|max:100',
+            'customer_address' => 'nullable|string',
+            'customer_phone' => 'nullable|string|max:100',
+            'sailing_date' => 'nullable|date',
+            'shipped_from' => 'nullable|string|max:255',
+            'per_vessel' => 'nullable|string|max:255',
+            'lc_no' => 'nullable|string|max:100',
+            'issued_by' => 'nullable|string|max:255',
+            'pkg' => 'nullable|integer|min:0',
+            'qty' => 'nullable|integer|min:0',
+            'cubic_meter' => 'nullable|numeric',
+            'weight_nw' => 'nullable|numeric',
+            'weight_gw' => 'nullable|numeric',
+            'weight_nt' => 'nullable|numeric',
+            'weight_gt' => 'nullable|numeric',
+            'part_no' => 'required|array|min:1',
+            'part_no.*' => 'nullable|string|max:255',
+            'detail_qty' => 'required|array',
+            'detail_qty.*' => 'nullable|integer|min:0',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 0,
+                'title' => 'ข้อมูลไม่ถูกต้อง',
+                'content' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $yearMonth = date('ym');
+            $last = PackingForm::where('doc_no', 'like', 'PL'.$yearMonth.'%')
+                ->orderByDesc('run_no')
+                ->first();
+            $runNo = $last ? ((int) $last->run_no) + 1 : 1;
+            $docNo = 'PL'.$yearMonth.str_pad((string) $runNo, 4, '0', STR_PAD_LEFT);
+
+            $form = new PackingForm();
+            $form->doc_no = $docNo;
+            $form->run_no = $runNo;
+            $form->doc_date = $request->input('doc_date') ?: now()->format('Y-m-d');
+            $form->customer_name = $request->input('customer_name');
+            $form->country = $request->input('country');
+            $form->to = $request->input('to');
+            $form->invoice_no = $request->input('invoice_no');
+            $form->place_of_issue = $request->input('place_of_issue');
+            $form->customer_address = $request->input('customer_address');
+            $form->customer_phone = $request->input('customer_phone');
+            $form->sailing_date = $request->input('sailing_date') ?: null;
+            $form->shipped_from = $request->input('shipped_from');
+            $form->per_vessel = $request->input('per_vessel');
+            $form->lc_no = $request->input('lc_no');
+            $form->issued_by = $request->input('issued_by');
+            $form->pkg = $request->filled('pkg') ? (int) $request->input('pkg') : null;
+            $form->qty = (int) ($request->input('qty') ?? 0);
+            $form->cubic_meter = $this->nullableDecimalInput($request->input('cubic_meter'));
+            $form->weight_nw = $this->nullableDecimalInput($request->input('weight_nw'));
+            $form->weight_gw = $this->nullableDecimalInput($request->input('weight_gw'));
+            $form->weight_nt = $this->nullableDecimalInput($request->input('weight_nt'));
+            $form->weight_gt = $this->nullableDecimalInput($request->input('weight_gt'));
+            $form->save();
+
+            $partNos = $request->input('part_no', []);
+            $qtys = $request->input('detail_qty', []);
+            $descriptions = $request->input('description', []);
+            $cusParts = $request->input('cus_part_no', []);
+            $piProductIds = $request->input('pi_product_id', []);
+            $froms = $request->input('from', []);
+            $tos = $request->input('line_to', []);
+            $formulars = $request->input('formular_number', []);
+            $widths = $request->input('width', []);
+            $lengths = $request->input('lenght', []);
+            $heights = $request->input('height', []);
+            $cbms = $request->input('detail_cubic_meter', []);
+            $nws = $request->input('detail_weight_nw', []);
+            $gws = $request->input('detail_weight_gw', []);
+            $nts = $request->input('detail_weight_nt', []);
+            $gts = $request->input('detail_weight_gt', []);
+            $uoms = $request->input('uom', []);
+            $fromCos = $request->input('from_co', []);
+
+            foreach ($partNos as $idx => $partNo) {
+                $partNo = trim((string) $partNo);
+                if ($partNo === '') {
+                    continue;
+                }
+
+                $detail = new PackingFormDetail();
+                $detail->packing_form_id = $form->id;
+                $detail->excel_row = $idx + 1;
+                $detail->from = $this->nullableIntInput($froms[$idx] ?? null);
+                $detail->to = $this->nullableIntInput($tos[$idx] ?? null);
+                $detail->part_no = $partNo ?: null;
+                $detail->qty = (int) ($qtys[$idx] ?? 0);
+                $detail->description = $descriptions[$idx] ?? null;
+                $detail->cus_part_no = $cusParts[$idx] ?? null;
+                $detail->formular_number = $formulars[$idx] ?? null;
+                $detail->width = $this->nullableDecimalInput($widths[$idx] ?? null);
+                $detail->lenght = $this->nullableDecimalInput($lengths[$idx] ?? null);
+                $detail->height = $this->nullableDecimalInput($heights[$idx] ?? null);
+                $detail->cubic_meter = $this->nullableDecimalInput($cbms[$idx] ?? null);
+                $detail->weight_nw = $this->nullableDecimalInput($nws[$idx] ?? null);
+                $detail->weight_gw = $this->nullableDecimalInput($gws[$idx] ?? null);
+                $detail->weight_nt = $this->nullableDecimalInput($nts[$idx] ?? null);
+                $detail->weight_gt = $this->nullableDecimalInput($gts[$idx] ?? null);
+                $detail->uom = isset($uoms[$idx]) && trim((string) $uoms[$idx]) !== '' ? trim((string) $uoms[$idx]) : null;
+                $detail->from_co = isset($fromCos[$idx]) && trim((string) $fromCos[$idx]) !== '' ? trim((string) $fromCos[$idx]) : null;
+                $pid = $piProductIds[$idx] ?? null;
+                $detail->pi_product_id = $pid !== '' && $pid !== null ? (int) $pid : null;
+                $detail->save();
+
+                if ($detail->pi_product_id) {
+                    $affectedPiProductIds[] = $detail->pi_product_id;
+                }
+            }
+
+            $this->recalcProducedQty($affectedPiProductIds ?? []);
+
+            DB::commit();
+
+            return response()->json(['status' => 1, 'title' => 'สำเร็จ', 'content' => 'สร้าง Packing List '.$docNo.' เรียบร้อย']);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json(['status' => 0, 'title' => 'ผิดพลาด', 'content' => $e->getMessage()]);
+        }
     }
 
     public function edit(Request $request, $id)
@@ -285,6 +440,12 @@ class PackingFormController extends AdminController
         DB::beginTransaction();
         try {
             $form = PackingForm::findOrFail($id);
+
+            $oldPiProductIds = PackingFormDetail::where('packing_form_id', $form->id)
+                ->whereNotNull('pi_product_id')
+                ->pluck('pi_product_id')
+                ->toArray();
+
             $form->doc_date = $request->input('doc_date') ?: $form->doc_date;
             $form->customer_name = $request->input('customer_name');
             $form->country = $request->input('country');
@@ -376,6 +537,13 @@ class PackingFormController extends AdminController
                 ->whereNotIn('id', $keepIds)
                 ->delete();
 
+            $newPiProductIds = PackingFormDetail::where('packing_form_id', $form->id)
+                ->whereNotNull('pi_product_id')
+                ->pluck('pi_product_id')
+                ->toArray();
+
+            $this->recalcProducedQty(array_merge($oldPiProductIds, $newPiProductIds));
+
             DB::commit();
 
             return response()->json(['status' => 1, 'title' => 'สำเร็จ', 'content' => 'บันทึกแล้ว']);
@@ -395,8 +563,17 @@ class PackingFormController extends AdminController
         DB::beginTransaction();
         try {
             $form = PackingForm::findOrFail($id);
+
+            $affectedPiProductIds = PackingFormDetail::where('packing_form_id', $form->id)
+                ->whereNotNull('pi_product_id')
+                ->pluck('pi_product_id')
+                ->toArray();
+
             PackingFormDetail::where('packing_form_id', $form->id)->delete();
             $form->delete();
+
+            $this->recalcProducedQty($affectedPiProductIds);
+
             DB::commit();
 
             return response()->json(['status' => 1, 'title' => 'สำเร็จ', 'content' => 'ลบแล้ว']);
@@ -404,6 +581,23 @@ class PackingFormController extends AdminController
             DB::rollBack();
 
             return response()->json(['status' => 0, 'title' => 'ผิดพลาด', 'content' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Recalculate produced_qty for given PI product IDs
+     * by summing qty from all packing_form_details linked to each pi_product_id.
+     */
+    private function recalcProducedQty(array $piProductIds): void
+    {
+        $ids = array_filter(array_unique(array_map('intval', $piProductIds)));
+        if (empty($ids)) {
+            return;
+        }
+
+        foreach ($ids as $pipId) {
+            $sum = (int) PackingFormDetail::where('pi_product_id', $pipId)->sum('qty');
+            ProformaInvoiceProduct::where('id', $pipId)->update(['produced_qty' => $sum]);
         }
     }
 

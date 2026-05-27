@@ -1,18 +1,31 @@
 @extends('admin.layouts.default')
 
-@section('title', $currentMenu->title)
+@section('title', 'สร้าง Packing List')
+
+@push('styles')
+<style>
+    .packing-detail-scroll { overflow-x: auto; }
+    #detailTable .form-control-sm { min-width: 4.5rem; }
+    #detailTable td { vertical-align: middle; }
+    .form-control:focus {
+        border-color: #67bbb9;
+        box-shadow: 0 0 0 0.2rem rgba(103, 187, 185, 0.25);
+    }
+    .input-loading {
+        background-color: #f8f9fa;
+        border-color: #ffc107 !important;
+        color: #ffc107;
+    }
+    .select2-container--default .select2-selection--single { height: calc(1.5em + 0.5rem + 2px); min-height: 31px; }
+    .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 1.5; padding-top: 2px; }
+</style>
+@endpush
 
 @section('body')
 <div class="page-content container-fluid container-plus">
     <div class="page-header mb-2 pb-2 flex-column flex-sm-row align-items-start align-items-sm-center py-25 px-1">
-        <h1 class="page-title text-primary-d2 text-140">แก้ไข Packing List {{ $packingForm->doc_no }}</h1>
+        <h1 class="page-title text-primary-d2 text-140">สร้าง Packing List</h1>
         <div class="page-tools mt-3 mt-sm-0">
-            <a href="{{ url('admin/'.$admin_lang_slash.'PackingForm/'.$packingForm->id.'/pdf/customer') }}" class="btn btn-light-info border-0 radius-3 py-2 text-600 text-90 mr-1" target="_blank" title="PL ของลูกค้า">
-                <i class="fa fa-file-pdf"></i> PL ลูกค้า
-            </a>
-            <a href="{{ url('admin/'.$admin_lang_slash.'PackingForm/'.$packingForm->id.'/pdf/accounting') }}" class="btn btn-light-secondary border-0 radius-3 py-2 text-600 text-90 mr-1" target="_blank" title="PL ของบัญชี">
-                <i class="fa fa-file-pdf"></i> PL บัญชี
-            </a>
             <a href="{{ url('admin/'.$admin_lang_slash.'PackingForm') }}" class="btn btn-light-secondary border-0 radius-3 py-2 text-600 text-90">
                 <i class="fa fa-arrow-left"></i> กลับรายการ
             </a>
@@ -21,13 +34,10 @@
 
     <div class="card dcard">
         <div class="card-body p-3">
-            <form id="form-packing-edit">
+            <form id="form-packing-create">
                 @csrf
-                <input type="hidden" name="_method" value="PUT">
 
-                @include('admin.PackingForm._header_form', ['packingForm' => $packingForm])
-
-                <p class="text-90 text-muted mb-2">เลือก PI: คลิกช่องแล้วพิมพ์เลข PI ได้ทันที (กรองตาม Part no ในแถว) — กด Tab เพื่อไปช่องถัดไป</p>
+                @include('admin.PackingForm._header_form_create')
 
                 <h5 class="text-primary-d2 mt-3 mb-2">รายการสินค้า</h5>
                 <div class="table-responsive packing-detail-scroll">
@@ -56,93 +66,37 @@
                                 <th width="3%"></th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @foreach($packingForm->details as $d)
-                                @include('admin.PackingForm._detail_row', ['detail' => $d])
-                            @endforeach
-                        </tbody>
+                        <tbody></tbody>
                     </table>
                 </div>
                 <button type="button" class="btn btn-sm btn-outline-primary mb-3" id="btn-add-row"><i class="fa fa-plus"></i> เพิ่มแถว (Add Row)</button>
 
-                <button type="submit" class="btn btn-success"><i class="fa fa-save"></i> บันทึก</button>
+                <div class="text-center mt-2">
+                    <button type="submit" class="btn btn-success btn-lg px-5"><i class="fa fa-save"></i> บันทึก Packing List</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
 @endsection
 
-@push('styles')
-<style>
-    .packing-detail-scroll { overflow-x: auto; }
-    #detailTable .form-control-sm { min-width: 4.5rem; }
-    #detailTable td { vertical-align: middle; }
-    .form-control:focus {
-        border-color: #67bbb9;
-        box-shadow: 0 0 0 0.2rem rgba(103, 187, 185, 0.25);
-    }
-    .input-loading {
-        background-color: #f8f9fa;
-        border-color: #ffc107 !important;
-        color: #ffc107;
-    }
-    .select2-container--default .select2-selection--single { height: calc(1.5em + 0.5rem + 2px); min-height: 31px; }
-    .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 1.5; padding-top: 2px; }
-</style>
-@endpush
-
 @push('scripts')
-<script type="text/template" id="detail-row-tpl">
-@include('admin.PackingForm._detail_row', ['detail' => null])
-</script>
-<script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function() {
+
     var packingPiSearchUrl = url_gb + "/admin/{{ $admin_lang_slash }}PackingForm/SearchPiProduct";
+    var rowCounter = 0;
+
+    function updateRowNumbers() {
+        $('#detailTable tbody tr').each(function(index) {
+            $(this).find('.row-number').text(index + 1);
+        });
+    }
 
     function getRowPartNo($row) {
         return ($row.find('input.part-no-input').val() || '').trim();
-    }
-
-    function packingFocusables() {
-        return $('#form-packing-edit').find('input.packing-tab:visible:not([readonly]):not([disabled]), .select2-selection.packing-tab-s2:visible');
-    }
-
-    function focusField($el) {
-        if ($el.hasClass('select2-selection')) {
-            $el.closest('.select2-container').prev('select.select2-pi-line').select2('open');
-        } else if ($el.hasClass('select2-pi-line')) {
-            $el.select2('open');
-        } else {
-            $el.focus();
-        }
-    }
-
-    function focusNextField($current) {
-        var $focusables = packingFocusables();
-        var $target = $current.hasClass('select2-pi-line') ? $current.next('.select2-container').find('.select2-selection') : $current;
-        var idx = $focusables.index($target);
-        if (idx >= 0 && idx < $focusables.length - 1) {
-            focusField($focusables.eq(idx + 1));
-        } else if (idx === $focusables.length - 1) {
-            $('#btn-add-row').click();
-        }
-    }
-
-    function focusPrevField($current) {
-        var $focusables = packingFocusables();
-        var $target = $current.hasClass('select2-pi-line') ? $current.next('.select2-container').find('.select2-selection') : $current;
-        var idx = $focusables.index($target);
-        if (idx > 0) {
-            focusField($focusables.eq(idx - 1));
-        }
-    }
-
-    function clearPiSelect($row) {
-        var $sel = $row.find('.select2-pi-line');
-        if ($sel.hasClass('select2-hidden-accessible')) {
-            $sel.select2('destroy');
-        }
-        $sel.empty();
-        initPiLineSelect($sel);
     }
 
     function initPiLineSelect($select) {
@@ -150,7 +104,7 @@
             $select.select2('destroy');
         }
         $select.select2({
-            placeholder: $select.data('placeholder') || 'พิมพ์เลข PI...',
+            placeholder: 'พิมพ์เลข PI...',
             allowClear: true,
             width: '100%',
             minimumInputLength: 0,
@@ -187,9 +141,7 @@
         $select.off('select2:open.packing').on('select2:open.packing', function() {
             setTimeout(function() {
                 var field = document.querySelector('.select2-container--open .select2-search__field');
-                if (field) {
-                    field.focus();
-                }
+                if (field) field.focus();
             }, 0);
         });
 
@@ -224,10 +176,51 @@
         });
     }
 
-    $(document).on('keydown', '.select2-container--open .select2-search__field', function(e) {
-        if (e.key !== 'Tab') {
-            return;
+    function clearPiSelect($row) {
+        var $sel = $row.find('.select2-pi-line');
+        if ($sel.hasClass('select2-hidden-accessible')) {
+            $sel.select2('destroy');
         }
+        $sel.empty();
+        initPiLineSelect($sel);
+    }
+
+    function packingFocusables() {
+        return $('#form-packing-create').find('input.packing-tab:visible:not([readonly]):not([disabled]), .select2-selection.packing-tab-s2:visible');
+    }
+
+    function focusField($el) {
+        if ($el.hasClass('select2-selection')) {
+            $el.closest('.select2-container').prev('select.select2-pi-line').select2('open');
+        } else if ($el.hasClass('select2-pi-line')) {
+            $el.select2('open');
+        } else {
+            $el.focus();
+        }
+    }
+
+    function focusNextField($current) {
+        var $focusables = packingFocusables();
+        var $target = $current.hasClass('select2-pi-line') ? $current.next('.select2-container').find('.select2-selection') : $current;
+        var idx = $focusables.index($target);
+        if (idx >= 0 && idx < $focusables.length - 1) {
+            focusField($focusables.eq(idx + 1));
+        } else if (idx === $focusables.length - 1) {
+            $('#btn-add-row').click();
+        }
+    }
+
+    function focusPrevField($current) {
+        var $focusables = packingFocusables();
+        var $target = $current.hasClass('select2-pi-line') ? $current.next('.select2-container').find('.select2-selection') : $current;
+        var idx = $focusables.index($target);
+        if (idx > 0) {
+            focusField($focusables.eq(idx - 1));
+        }
+    }
+
+    $(document).on('keydown', '.select2-container--open .select2-search__field', function(e) {
+        if (e.key !== 'Tab') return;
         e.preventDefault();
         var $select = $('.select2-container--open').prev('select.select2-pi-line');
         $select.select2('close');
@@ -240,15 +233,38 @@
         }, 0);
     });
 
-    $('#detailTable tbody .select2-pi-line').each(function() {
-        initPiLineSelect($(this));
-    });
-
     $('#btn-add-row').on('click', function() {
-        var html = $('#detail-row-tpl').html().trim();
-        var $tr = $(html);
+        rowCounter++;
+        var newRow = `
+        <tr class="detail-row">
+            <td class="text-center row-number">${rowCounter}</td>
+            <td><input type="number" class="form-control form-control-sm packing-tab" name="from[]" min="0" step="1"></td>
+            <td><input type="number" class="form-control form-control-sm packing-tab" name="line_to[]" min="0" step="1"></td>
+            <td>
+                <input type="hidden" name="detail_id[]" value="">
+                <input type="text" class="form-control form-control-sm part-no-input packing-tab" name="part_no[]" required>
+            </td>
+            <td><select class="form-control form-control-sm select2-pi-line packing-tab" name="pi_product_id[]" data-placeholder="พิมพ์เลข PI..."></select></td>
+            <td><input type="text" class="form-control form-control-sm packing-tab" name="cus_part_no[]"></td>
+            <td><input type="text" class="form-control form-control-sm packing-tab" name="description[]"></td>
+            <td><input type="text" class="form-control form-control-sm packing-tab" name="formular_number[]"></td>
+            <td><input type="number" class="form-control form-control-sm packing-tab" name="width[]" min="0" step="0.01"></td>
+            <td><input type="number" class="form-control form-control-sm packing-tab" name="lenght[]" min="0" step="0.01"></td>
+            <td><input type="number" class="form-control form-control-sm packing-tab" name="height[]" min="0" step="0.01"></td>
+            <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_qty[]" value="0" min="0" step="1" required></td>
+            <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_cubic_meter[]" min="0" step="0.01"></td>
+            <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_weight_nw[]" min="0" step="0.01"></td>
+            <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_weight_gw[]" min="0" step="0.01"></td>
+            <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_weight_nt[]" min="0" step="0.01"></td>
+            <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_weight_gt[]" min="0" step="0.01"></td>
+            <td><input type="text" class="form-control form-control-sm packing-tab" name="uom[]"></td>
+            <td><input type="text" class="form-control form-control-sm packing-tab" name="from_co[]"></td>
+            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-remove-row" tabindex="-1"><i class="fa fa-trash"></i></button></td>
+        </tr>`;
+        var $tr = $(newRow);
         $('#detailTable tbody').append($tr);
         initPiLineSelect($tr.find('.select2-pi-line'));
+        updateRowNumbers();
         $tr.find('input.packing-tab').first().focus();
     });
 
@@ -259,13 +275,14 @@
             $sel.select2('destroy');
         }
         $tr.remove();
+        updateRowNumbers();
     });
 
     $('body').on('change', '#detailTable input.part-no-input', function() {
         clearPiSelect($(this).closest('tr'));
     });
 
-    $('body').on('keydown', '#form-packing-edit input.packing-tab', function(e) {
+    $('body').on('keydown', '#form-packing-create input.packing-tab', function(e) {
         if (e.key === 'Tab' && !e.shiftKey) {
             e.preventDefault();
             focusNextField($(this));
@@ -275,14 +292,16 @@
         }
     });
 
-    $('#form-packing-edit').on('submit', function(e) {
+    $('#btn-add-row').click();
+
+    $('#form-packing-create').on('submit', function(e) {
         e.preventDefault();
         var form = $(this);
         var btn = form.find('button[type=submit]');
         loadingButton(btn);
         $.ajax({
             method: "POST",
-            url: url_gb + "/admin/{{ $admin_lang_slash }}PackingForm/{{ $packingForm->id }}",
+            url: url_gb + "/admin/{{ $admin_lang_slash }}PackingForm",
             data: form.serialize(),
             dataType: "json"
         }).done(function(res) {
@@ -299,5 +318,6 @@
             ajaxFail(xhr, form);
         });
     });
+});
 </script>
 @endpush

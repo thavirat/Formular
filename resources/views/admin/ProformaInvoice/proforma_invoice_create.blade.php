@@ -4,19 +4,22 @@
 
 @section('css')
     <style>
-        .product-select-container {
-            width: 200px !important;
-            min-width: 200px !important;
-            max-width: 200px !important;
+        .part-no-col {
+            width: 180px !important;
+            min-width: 180px !important;
         }
 
-        .select2-container--default .select2-selection--single .select2-selection__rendered {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .form-control:focus {
+            border-color: #67bbb9;
+            box-shadow: 0 0 0 0.2rem rgba(103, 187, 185, 0.25);
         }
 
-        /* เพิ่ม CSS สำหรับไอคอนจับลาก */
+        .input-loading {
+            background-color: #f8f9fa;
+            border-color: #ffc107 !important;
+            color: #ffc107;
+        }
+
         .cursor-move {
             cursor: grab;
         }
@@ -186,11 +189,10 @@
                             <div class="row">
                                 <div class="col-12">
                                     <table class="table table-bordered" id="productTable">
-                                        <thead>
+                                        <thead class="bgc-primary-d1 text-white text-90">
                                             <tr>
-                                                <th width="7%" class="text-center">{{ __('ITM') }}</th>
-                                                <th width="15%" class="product-select-container">{{ __('Part No.') }}
-                                                </th>
+                                                <th width="5%" class="text-center">{{ __('ITM') }}</th>
+                                                <th class="part-no-col">{{ __('Part No.') }}</th>
                                                 <th width="10%">{{ __('Drawing') }}</th>
                                                 <th width="10%">{{ __('Cus.Code') }}</th>
                                                 <th>{{ __('Descript') }}</th>
@@ -216,53 +218,31 @@
                                                                 style="width: 50px;">
                                                         </div>
                                                     </td>
-                                                    <td class="product-select-container">
-                                                        <select class="form-control product" name="product[]" required>
-                                                            <option value="{{ $item->product_id }}" selected>
-                                                                {{ $item->part_no }} : {{ $item->detail_eng }}</option>
-                                                        </select>
+                                                    <td>
+                                                        <input type="text" class="form-control part-no-input" name="part_no[]" value="{{ $item->part_no }}" placeholder="Type Part No" autocomplete="off">
+                                                        <input type="hidden" name="product[]" class="product-id" value="{{ $item->product_id }}">
                                                     </td>
-                                                    <td><input type="text" class="form-control text-80"
+                                                    <td><input type="text" class="form-control drawing"
                                                             name="drawing[]" value="{{ $item->drawing }}"></td>
-                                                    <td><input type="text" class="form-control text-80"
+                                                    <td><input type="text" class="form-control customer_code"
                                                             name="customer_code[]" value="{{ $item->cus_code }}"></td>
-                                                    <td><input type="text" class="form-control text-80"
+                                                    <td><input type="text" class="form-control description"
                                                             name="description[]" value="{{ $item->detail_eng }}"></td>
                                                     <td><input type="number" class="form-control qty_order"
                                                             name="qty_order[]" value="{{ $item->qty }}"
-                                                            step="any" readonly></td>
+                                                            step="any" readonly tabindex="-1"></td>
                                                     <td><input type="number" class="form-control qty" name="qty[]"
                                                             value="{{ $item->qty }}" step="any"></td>
                                                     <td><input type="number" class="form-control unit_price"
                                                             name="unit_price[]" value="{{ $item->price_per_item }}"
                                                             step="any"></td>
-                                                    <td><input type="number" class="form-control amount" name="amount[]"
-                                                            value="{{ $item->total_price }}" readonly></td>
+                                                    <td><input type="text" class="form-control amount text-right" name="amount[]"
+                                                            value="{{ $item->total_price }}" readonly tabindex="-1"></td>
                                                     <td class="text-center align-middle"><button type="button"
-                                                            class="btn btn-outline-danger btn-sm removeRow"><i
+                                                            class="btn btn-outline-danger btn-sm removeRow" tabindex="-1"><i
                                                                 class="fa fa-trash"></i></button></td>
                                                 </tr>
                                             @endforeach
-                                            @else
-                                                <tr>
-                                                    <td class="text-center align-middle">
-                                                        <div class="d-flex align-items-center justify-content-center">
-                                                            <i class="fas fa-grip-vertical cursor-move text-muted mr-2" title="Drag to reorder"></i>
-                                                            <input type="number" class="form-control text-center item-seq p-1" name="seq[]" value="1" readonly style="width: 50px;">
-                                                        </div>
-                                                    </td>
-                                                    <td class="product-select-container">
-                                                        <select class="form-control product" name="product[]" required></select>
-                                                    </td>
-                                                    <td><input type="text" class="form-control text-80" name="drawing[]"></td>
-                                                    <td><input type="text" class="form-control text-80" name="customer_code[]"></td>
-                                                    <td><input type="text" class="form-control text-80" name="description[]"></td>
-                                                    <td><input type="number" class="form-control qty_order" name="qty_order[]" value="1" step="any" readonly></td>
-                                                    <td><input type="number" class="form-control qty" name="qty[]" value="1" step="any"></td>
-                                                    <td><input type="number" class="form-control unit_price" name="unit_price[]" value="0" step="any"></td>
-                                                    <td><input type="number" class="form-control amount" name="amount[]" readonly></td>
-                                                    <td class="text-center align-middle"><button type="button" class="btn btn-outline-danger btn-sm removeRow"><i class="fa fa-trash"></i></button></td>
-                                                </tr>
                                             @endif
                                         </tbody>
                                         <tfoot>
@@ -301,27 +281,24 @@
     <script type="text/javascript">
         $(document).ready(function() {
 
-            // --- ฟังก์ชันอัปเดตเลขลำดับ ---
             function updateSequence() {
                 $('#productTable tbody tr').each(function(index) {
                     $(this).find('.item-seq').val(index + 1);
                 });
             }
 
-            // --- เปิดใช้งาน Drag & Drop สำหรับตาราง ---
             $('#productTable tbody').sortable({
-                handle: '.cursor-move', // จับลากได้เฉพาะตรงไอคอน
-                placeholder: "ui-state-highlight", // (ใส่ CSS Class เพิ่มให้เห็นช่องว่างตอนลากได้ถ้าต้องการ)
-                start: function(e, ui) {
-                    // ทำลาย Select2 ชั่วคราวตอนลากเพื่อป้องกัน UI พัง
-                    ui.item.find('.product').select2('destroy');
-                },
+                handle: '.cursor-move',
+                placeholder: "ui-state-highlight",
                 stop: function(e, ui) {
-                    // สร้าง Select2 ใหม่หลังจากวางเสร็จ
-                    initSelect2(ui.item.find('.product'));
-                    // อัปเดตเลขลำดับ
                     updateSequence();
                 }
+            });
+
+            $('#customer_id').select2({
+                placeholder: 'ค้นหาลูกค้า...',
+                allowClear: true,
+                width: '100%'
             });
 
             $('#customer_id').on('change', function() {
@@ -344,126 +321,205 @@
                 }
             });
 
-            function initSelect2(element) {
-                element.select2({
-                    placeholder: 'ค้นหาสินค้า...',
-                    width: 'resolve',
-                    dropdownAutoWidth: false,
-                    containerCssClass: 'fixed-select2',
-                    ajax: {
-                        url: url_gb + "/admin/{{ $admin_lang_slash }}Product/Search",
-                        dataType: 'json',
-                        delay: 250,
-                        transport: function(params, success, failure) {
-                            var customer_id = $('#customer_id').val();
-                            var currency_id = $('#currency_id').val();
-                            if (!customer_id || !currency_id) {
-                                Swal.fire({
-                                    icon: 'warning',
-                                    title: 'กรุณาเลือกคู่ค้าและสกุลเงินก่อน'
-                                });
-                                return false;
-                            }
-                            var $request = $.ajax(params);
-                            $request.then(success);
-                            $request.fail(failure);
-                            return $request;
-                        },
-                        data: function(params) {
-                            return {
-                                q: params.term,
-                                customer_id: $('#customer_id').val(),
-                                currency_id: $('#currency_id').val()
-                            };
-                        },
-                        processResults: function(data) {
-                            return {
-                                results: data.items
-                            };
-                        },
-                        cache: true
-                    }
-                });
-
-                element.on('select2:select', function(e) {
-                    var data = e.params.data;
-                    var row = $(this).closest('tr');
-                    $('#customer_id, #currency_id').attr('readonly', true).css('pointer-events', 'none');
-                    row.find('input[name="drawing[]"]').val(data.drawing);
-                    row.find('input[name="description[]"]').val(data.description);
-                    row.find('input[name="unit_price[]"]').val(data.price);
-                    row.find('input[name="customer_code[]"]').val(data.cus_code);
-                    calculateRow(row);
-                });
-            }
+            $('#currency_id').on('change', function(){
+                $('.show_currency').text($(this).find('option:selected').text());
+            });
 
             $('#addRow').click(function() {
                 var newRow = `
-            <tr>
-                <td class="text-center align-middle">
-                    <div class="d-flex align-items-center justify-content-center">
-                        <i class="fas fa-grip-vertical cursor-move text-muted mr-2" title="Drag to reorder"></i>
-                        <input type="number" class="form-control text-center item-seq p-1" name="seq[]" readonly style="width: 50px;">
-                    </div>
-                </td>
-                <td class="product-select-container"><select class="form-control product" name="product[]" required></select></td>
-                <td><input type="text" class="form-control" name="drawing[]"></td>
-                <td><input type="text" class="form-control" name="customer_code[]"></td>
-                <td><input type="text" class="form-control" name="description[]"></td>
-                <td><input type="number" class="form-control qty_order" name="qty_order[]" value="1" step="any"></td>
-                <td><input type="number" class="form-control qty" name="qty[]" value="1" step="any"></td>
-                <td><input type="number" class="form-control unit_price" name="unit_price[]" value="0" step="any"></td>
-                <td><input type="number" class="form-control amount" name="amount[]" readonly></td>
-                <td class="text-center align-middle"><button type="button" class="btn btn-outline-danger btn-sm removeRow"><i class="fa fa-trash"></i></button></td>
-            </tr>`;
-                var $newRow = $(newRow);
-                $('#productTable tbody').append($newRow);
-                initSelect2($newRow.find('.product'));
+                <tr>
+                    <td class="text-center align-middle">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="fas fa-grip-vertical cursor-move text-muted mr-2" title="Drag to reorder"></i>
+                            <input type="number" class="form-control text-center item-seq p-1" name="seq[]" readonly style="width: 50px;">
+                        </div>
+                    </td>
+                    <td>
+                        <input type="text" class="form-control part-no-input" name="part_no[]" placeholder="Type Part No" autocomplete="off">
+                        <input type="hidden" name="product[]" class="product-id">
+                    </td>
+                    <td><input type="text" class="form-control drawing" name="drawing[]" placeholder="Type Drawing"></td>
+                    <td><input type="text" class="form-control customer_code" name="customer_code[]"></td>
+                    <td><input type="text" class="form-control description" name="description[]"></td>
+                    <td><input type="number" class="form-control qty_order" name="qty_order[]" value="1" step="any" readonly tabindex="-1"></td>
+                    <td><input type="number" class="form-control qty" name="qty[]" value="1" step="any"></td>
+                    <td><input type="number" class="form-control unit_price text-right" name="unit_price[]" value="0.00" step="any" min="0"></td>
+                    <td><input type="text" class="form-control amount text-right" name="amount[]" readonly tabindex="-1"></td>
+                    <td class="text-center align-middle">
+                        <button type="button" class="btn btn-outline-danger btn-sm removeRow" tabindex="-1"><i class="fa fa-trash"></i></button>
+                    </td>
+                </tr>`;
+                $('#productTable tbody').append(newRow);
+                updateSequence();
+                $('#productTable tbody tr:last').find('.part-no-input').focus();
+            });
 
-                // อัปเดตเลขลำดับเมื่อเพิ่มแถวใหม่
+            $('body').on('click', '.removeRow', function() {
+                $(this).closest('tr').remove();
+                calculateGrandTotal();
                 updateSequence();
             });
+
+            $('body').on('blur', '.unit_price', function() {
+                var val = parseFloat($(this).val()) || 0;
+                $(this).val(val.toFixed(2));
+            });
+
+            function focusNextInput(currentRow, currentClass) {
+                var focusOrder = ['part-no-input', 'drawing', 'customer_code', 'description', 'qty', 'unit_price'];
+                var currentIndex = focusOrder.indexOf(currentClass);
+
+                if (currentIndex !== -1 && currentIndex < focusOrder.length - 1) {
+                    currentRow.find('.' + focusOrder[currentIndex + 1]).focus().select();
+                } else {
+                    var nextRow = currentRow.next('tr');
+                    if (nextRow.length > 0) {
+                        nextRow.find('.part-no-input').focus();
+                    } else {
+                        $('#addRow').click();
+                    }
+                }
+            }
+
+            $('body').on('keydown', '.part-no-input, .drawing, .customer_code, .description, .qty, .unit_price', function(e) {
+                if (e.which == 13 || e.which == 9) {
+                    e.preventDefault();
+                    var input = $(this);
+                    var row = input.closest('tr');
+
+                    if (input.hasClass('unit_price')) {
+                        var val = parseFloat(input.val()) || 0;
+                        input.val(val.toFixed(2));
+                    }
+
+                    if (input.hasClass('part-no-input') || input.hasClass('drawing')) {
+                        if (input.hasClass('part-no-input')) {
+                            checkDuplicatePartNo(input);
+                        }
+                        searchProduct(input, row);
+                    } else {
+                        var className = input.attr('class').split(' ').find(c => ['customer_code', 'description', 'qty', 'unit_price'].includes(c));
+                        focusNextInput(row, className);
+                    }
+                }
+            });
+
+            function checkDuplicatePartNo(input) {
+                var currentVal = input.val().trim();
+                var duplicateCount = 0;
+
+                $('.part-no-input').each(function() {
+                    if ($(this).val().trim() === currentVal && currentVal !== "") {
+                        duplicateCount++;
+                    }
+                });
+
+                if (duplicateCount > 1) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'รายการซ้ำ',
+                        text: 'รหัสสินค้า ' + currentVal + ' มีอยู่ในรายการแล้ว',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                }
+            }
+
+            function searchProduct(input, row) {
+                var query = input.val().trim();
+                var isPartNo = input.hasClass('part-no-input');
+                var currentClass = isPartNo ? 'part-no-input' : 'drawing';
+
+                if (isPartNo && query.length < 3) {
+                    focusNextInput(row, currentClass); return;
+                }
+                if (!isPartNo && query.length < 3) {
+                    focusNextInput(row, currentClass); return;
+                }
+
+                var customer_id = $('#customer_id').val();
+                var currency_id = $('#currency_id').val();
+
+                if (!customer_id || !currency_id) {
+                    Swal.fire({ icon: 'error', title: 'ข้อมูลไม่ครบ', text: 'กรุณาเลือก "ลูกค้า" และ "สกุลเงิน" ก่อนเริ่มทำรายการ' });
+                    return false;
+                }
+
+                input.addClass('bg-light text-primary');
+
+                $.ajax({
+                    method: "GET",
+                    url: url_gb + "/admin/{{ $admin_lang_slash }}Product/Search",
+                    dataType: 'json',
+                    data: {
+                        q: query,
+                        customer_id: customer_id,
+                        currency_id: currency_id
+                    }
+                }).done(function(res) {
+                    input.removeClass('bg-light text-primary');
+                    var items = res.items ? res.items : res;
+
+                    if (items && items.length > 0) {
+                        var data = items[0];
+
+                        row.find('.part-no-input').val(data.code);
+                        row.find('.product-id').val(data.id);
+                        row.find('.drawing').val(data.drawing);
+                        row.find('.customer_code').val(data.cus_code);
+                        row.find('.description').val(data.description);
+
+                        var price = parseFloat(data.price) || 0;
+                        row.find('.unit_price').val(price.toFixed(2));
+
+                        $('#customer_id, #currency_id').attr('readonly', true).css('pointer-events', 'none');
+
+                        calculateRow(row);
+                        focusNextInput(row, currentClass);
+                    } else {
+                        Swal.fire({ icon: 'warning', title: 'ไม่พบข้อมูล', text: 'ไม่พบข้อมูล: ' + query });
+                        input.focus().select();
+                    }
+
+                }).fail(function(res) {
+                    input.removeClass('bg-light text-primary');
+                    ajaxFail(res, "");
+                });
+            }
 
             function calculateRow(row) {
                 var qty = parseFloat(row.find('.qty').val()) || 0;
                 var price = parseFloat(row.find('.unit_price').val()) || 0;
-
                 var amount = qty * price;
-                row.find('.amount').val(amount.toFixed(2));
+                row.find('.amount').val(amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
                 calculateGrandTotal();
             }
 
             function calculateGrandTotal() {
                 var grandTotal = 0;
                 $('.amount').each(function() {
-                    grandTotal += parseFloat($(this).val()) || 0;
+                    var val = $(this).val().replace(/,/g, '');
+                    grandTotal += parseFloat(val) || 0;
                 });
-                $('#grand_total').val(grandTotal.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                }));
+                $('#grand_total').val(grandTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
             }
 
             $('body').on('input', '.qty, .unit_price', function() {
-                var row = $(this).closest('tr');
-                calculateRow(row);
+                calculateRow($(this).closest('tr'));
             });
 
-            $('body').on('click', '.removeRow', function() {
-                $(this).closest('tr').remove();
-                calculateGrandTotal();
-                // อัปเดตเลขลำดับเมื่อลบแถว
-                updateSequence();
-            });
+            if ($('#customer_id').val()) {
+                $('#customer_id, #currency_id').attr('readonly', true).css('pointer-events', 'none');
+            }
 
-            // Initialize existing rows
-            $('.product').each(function() {
-                initSelect2($(this));
-            });
-
-            // Initial Calculation & Sequence
             calculateGrandTotal();
             updateSequence();
+
+            @if (!$Quotation || !$Quotation->products || !$Quotation->products->count())
+                $('#addRow').click();
+            @endif
 
             $('body').on('submit', '#form-pi', function(e) {
                 e.preventDefault();

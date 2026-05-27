@@ -103,9 +103,14 @@ class PackingListImportService
             ];
         }
 
+        $oldAffectedPiProductIds = [];
         if ($replacePackingFormId) {
             $old = PackingForm::find($replacePackingFormId);
             if ($old) {
+                $oldAffectedPiProductIds = PackingFormDetail::where('packing_form_id', $old->id)
+                    ->whereNotNull('pi_product_id')
+                    ->pluck('pi_product_id')
+                    ->toArray();
                 PackingFormDetail::where('packing_form_id', $old->id)->delete();
                 $old->delete();
             }
@@ -156,7 +161,7 @@ class PackingListImportService
             return ['status' => 0, 'title' => 'ไม่มีข้อมูล', 'content' => 'ไม่พบแถวข้อมูล (คอลัมน์ D/E ว่างทั้งแผ่น)'];
         }
 
-        return DB::transaction(function () use ($rowsPayload, $sha256, $originalName, $warnings, $forceNew, $sheet) {
+        return DB::transaction(function () use ($rowsPayload, $sha256, $originalName, $warnings, $forceNew, $sheet, $oldAffectedPiProductIds) {
             $yearMonth = date('ym');
             $last = PackingForm::where('doc_no', 'like', 'PL'.$yearMonth.'%')
                 ->orderByDesc('run_no')
@@ -213,6 +218,13 @@ class PackingListImportService
             }
 
             $form->save();
+
+            $newPiProductIds = PackingFormDetail::where('packing_form_id', $form->id)
+                ->whereNotNull('pi_product_id')
+                ->pluck('pi_product_id')
+                ->toArray();
+
+            $this->recalcProducedQty(array_merge($oldAffectedPiProductIds, $newPiProductIds));
 
             return [
                 'status' => 1,
@@ -301,14 +313,15 @@ class PackingListImportService
             return null;
         }
 
-        $id = DB::table('proforma_invoice_products')
-            ->leftJoin('products', 'proforma_invoice_products.product_id', '=', 'products.id')
-            ->where('proforma_invoice_products.pi_id', $pi->id)
+        $id = ProformaInvoiceProduct::query()
+            ->where('pi_id', $pi->id)
             ->where(function ($q) use ($partNo) {
-                $q->whereRaw('TRIM(proforma_invoice_products.part_no) = ?', [$partNo])
-                    ->orWhereRaw('TRIM(products.code) = ?', [$partNo]);
+                $q->whereRaw('TRIM(part_no) = ?', [$partNo])
+                    ->orWhereHas('product', function ($productQuery) use ($partNo) {
+                        $productQuery->whereRaw('TRIM(code) = ?', [$partNo]);
+                    });
             })
-            ->value('proforma_invoice_products.id');
+            ->value('id');
 
         return $id ? (int) $id : null;
     }
@@ -347,5 +360,18 @@ class PackingListImportService
         }
 
         return $s;
+    }
+
+    private function recalcProducedQty(array $piProductIds): void
+    {
+        $ids = array_filter(array_unique(array_map('intval', $piProductIds)));
+        if (empty($ids)) {
+            return;
+        }
+
+        foreach ($ids as $pipId) {
+            $sum = (int) PackingFormDetail::where('pi_product_id', $pipId)->sum('qty');
+            ProformaInvoiceProduct::where('id', $pipId)->update(['produced_qty' => $sum]);
+        }
     }
 }

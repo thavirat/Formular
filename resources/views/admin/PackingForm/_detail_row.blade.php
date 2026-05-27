@@ -15,13 +15,15 @@
     <td><input type="number" class="form-control form-control-sm packing-tab" name="line_to[]" value="{{ $detail?->to }}" min="0" step="1"></td>
     <td>
         <input type="hidden" name="detail_id[]" value="{{ $detail?->id }}">
+        <input type="text" class="form-control form-control-sm part-no-input packing-tab" name="part_no[]" value="{{ $detail?->part_no }}" required>
+    </td>
+    <td>
         <select class="form-control form-control-sm select2-pi-line packing-tab" name="pi_product_id[]" data-placeholder="พิมพ์เลข PI...">
             @if($detail?->pi_product_id)
                 <option value="{{ (int) $detail->pi_product_id }}" selected>{{ e($piLabel) }}</option>
             @endif
         </select>
     </td>
-    <td><input type="text" class="form-control form-control-sm part-no-input packing-tab" name="part_no[]" value="{{ $detail?->part_no }}" required></td>
     <td><input type="text" class="form-control form-control-sm packing-tab" name="cus_part_no[]" value="{{ $detail?->cus_part_no }}"></td>
     <td><input type="text" class="form-control form-control-sm packing-tab" name="description[]" value="{{ $detail?->description }}"></td>
     <td><input type="text" class="form-control form-control-sm packing-tab" name="formular_number[]" value="{{ $detail?->formular_number }}"></td>
