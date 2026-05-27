@@ -108,6 +108,7 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::get('/Quotation/{id}/cube', 'Admin\QuotationController@view_cube_pdf');
                 Route::get('/Quotation/ExportExcel', 'Admin\QuotationController@export_excel');
                 Route::get('/Quotation/ExportPrint', 'Admin\QuotationController@export_print');
+                Route::get('/Quotation/SuggestDocNo', 'Admin\QuotationController@suggestDocNo');
                 Route::resource('/Quotation', Admin\QuotationController::class);
 
                 Route::get('/CustomerLevel/ExportProduct', 'Admin\CustomerLevelController@export_product');
@@ -179,6 +180,7 @@ Route::middleware('authAdmin:admin')->group(function () {
     Route::get('/ProformaInvoice/{id}/ExportPackingList', 'Admin\ProformaInvoiceController@export_packing_list');
     Route::get('/ProformaInvoice/OutstandingReport', 'Admin\ProformaInvoiceController@outstandingReport');
     Route::post('/ProformaInvoice/OutstandingReport/Lists', 'Admin\ProformaInvoiceController@outstandingReportLists');
+    Route::get('/ProformaInvoice/SuggestDocNo', 'Admin\ProformaInvoiceController@suggestDocNo');
     Route::resource('/ProformaInvoice', Admin\ProformaInvoiceController::class);
 
     Route::get('/FactoryPayment', 'Admin\FactoryPaymentController@index');

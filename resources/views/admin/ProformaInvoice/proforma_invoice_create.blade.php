@@ -64,7 +64,15 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-3"></div>
+                                <div class="col-3">
+                                    <div class="form-group">
+                                        <label for="doc_no">{{ __('Document No.') }} <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" name="doc_no" id="doc_no" class="form-control"
+                                            value="{{ $suggested_doc_no ?? '' }}" autocomplete="off" required>
+                                        <small class="text-muted">{{ __('Auto-generated, you can edit') }}</small>
+                                    </div>
+                                </div>
                                 <div class="col-3">
                                     <div class="form-group">
                                         <label for="ship_date">{{ __('Ship Date') }} <span
@@ -513,6 +521,25 @@
             if ($('#customer_id').val()) {
                 $('#customer_id, #currency_id').attr('readonly', true).css('pointer-events', 'none');
             }
+
+            var docNoManual = false;
+            $('#doc_no').on('input', function() {
+                docNoManual = true;
+            });
+
+            function refreshSuggestedDocNo() {
+                if (docNoManual) {
+                    return;
+                }
+                $.get(url_gb + "/admin/ProformaInvoice/SuggestDocNo", { doc_date: $('#doc_date').val() })
+                    .done(function(res) {
+                        if (res.status === 1 && res.doc_no) {
+                            $('#doc_no').val(res.doc_no);
+                        }
+                    });
+            }
+
+            $('body').on('change', '#doc_date', refreshSuggestedDocNo);
 
             calculateGrandTotal();
             updateSequence();

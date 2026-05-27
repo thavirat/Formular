@@ -68,7 +68,25 @@ class QuotationController extends AdminController
         $data['Incoterms'] = Incoterm::orderBy('code')->get();
         $data['Currencies'] = Currency::orderBy('name')->get();
         $data['CreditPayments'] = CreditPayment::orderBy('name')->get();
+        $data['suggested_doc_no'] = $this->suggestQuotationDocNo(date('Y-m-d'))['doc_no'];
+
         return view('admin.Quotation.quotation_create',$data);
+    }
+
+    public function suggestDocNo(Request $request)
+    {
+        $permission = Help::CheckPermissionMenu($this->current_menu, 'c');
+        if (!$permission) {
+            return response()->json(['status' => 0, 'title' => 'ไม่มีสิทธิ์', 'content' => 'Permission denied'], 403);
+        }
+
+        $suggested = $this->suggestQuotationDocNo($request->query('doc_date'));
+
+        return response()->json([
+            'status' => 1,
+            'doc_no' => $suggested['doc_no'],
+            'run_no' => $suggested['run_no'],
+        ]);
     }
 
     /**
@@ -86,6 +104,7 @@ class QuotationController extends AdminController
 
         $validator = Validator::make($request->all(), [
             'customer_id' => 'required',
+            'doc_no' => 'required|string|max:50|unique:quotations,doc_no',
             'product' => 'required|array',
         ]);
 
@@ -120,9 +139,9 @@ class QuotationController extends AdminController
             $discount_amounts = $request->input('disc_amount');   // ชื่อเดียวกับที่ตั้งในหน้า Blade
 
             // --- จัดการเลขที่เอกสาร ---
-            $check = Quotation::where('doc_date' , '>=' , date("Y-m-01",strtotime($doc_date)))->where('doc_date' , '<=' , date("Y-m-t",strtotime($doc_date)))->orderBy('run_no' , 'desc')->first();
-            $run_no = $check ? $check->run_no + 1 : 1;
-            $doc_no = 'QT-'.date('ym', strtotime($doc_date)).sprintf('%03d' , $run_no);
+            $doc_no = trim((string) $request->input('doc_no'));
+            $suggested = $this->suggestQuotationDocNo($doc_date);
+            $run_no = $suggested['run_no'];
 
             DB::beginTransaction();
             try {
@@ -1055,6 +1074,22 @@ class QuotationController extends AdminController
         }
 
         return $out;
+    }
+
+    /**
+     * @return array{run_no: int, doc_no: string}
+     */
+    private function suggestQuotationDocNo(?string $docDate): array
+    {
+        $docDate = ($docDate && strtotime($docDate)) ? $docDate : date('Y-m-d');
+        $check = Quotation::where('doc_date', '>=', date('Y-m-01', strtotime($docDate)))
+            ->where('doc_date', '<=', date('Y-m-t', strtotime($docDate)))
+            ->orderBy('run_no', 'desc')
+            ->first();
+        $run_no = $check ? ((int) $check->run_no) + 1 : 1;
+        $doc_no = 'QT-'.date('ym', strtotime($docDate)).sprintf('%03d', $run_no);
+
+        return ['run_no' => $run_no, 'doc_no' => $doc_no];
     }
 
     private function parseExcelDateValue($value): ?string

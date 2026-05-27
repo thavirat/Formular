@@ -82,6 +82,7 @@ class ProformaInvoiceController extends AdminController
         $data['CreditPayments'] = CreditPayment::orderBy('name')->get();
         $data['admin_lang_slash'] = $this->adminLangSlash($request);
         $data['default_currency_symbol'] = Currency::orderBy('name')->value('symbol') ?? '';
+        $data['suggested_doc_no'] = $this->suggestProformaInvoiceDocNo(date('Y-m-d'))['doc_no'];
 
         $id = $request->query('quotation_id');
         $data['Quotation'] = null;
@@ -112,6 +113,22 @@ class ProformaInvoiceController extends AdminController
         return view('admin.ProformaInvoice.proforma_invoice_create', $data);
     }
 
+    public function suggestDocNo(Request $request)
+    {
+        $permission = Help::CheckPermissionMenu($this->current_menu, 'c');
+        if (!$permission) {
+            return response()->json(['status' => 0, 'title' => 'ไม่มีสิทธิ์', 'content' => 'Permission denied'], 403);
+        }
+
+        $suggested = $this->suggestProformaInvoiceDocNo($request->query('doc_date'));
+
+        return response()->json([
+            'status' => 1,
+            'doc_no' => $suggested['doc_no'],
+            'run_no' => $suggested['run_no'],
+        ]);
+    }
+
     /**
      * Store a newly created resource in storage.
      *
@@ -120,16 +137,27 @@ class ProformaInvoiceController extends AdminController
      */
     public function store(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'customer_id' => 'required',
+            'doc_no' => 'required|string|max:50|unique:proforma_invoices,doc_no',
+            'doc_date' => 'required',
+            'product' => 'required|array',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 0,
+                'title' => 'เกิดข้อผิดพลาด',
+                'content' => $validator->errors()->first(),
+            ]);
+        }
+
         DB::beginTransaction();
 
         try {
-            $date_now = date('Y-m-d');
-            $year_month = date('ym');
-            $last_run = ProformaInvoice::where('doc_no', 'like', "PI$year_month%")
-                ->orderBy('run_no', 'desc')
-                ->first();
-            $run_no = $last_run ? $last_run->run_no + 1 : 1;
-            $doc_no = "PI" . $year_month . str_pad($run_no, 4, '0', STR_PAD_LEFT);
+            $doc_no = trim((string) $request->input('doc_no'));
+            $suggested = $this->suggestProformaInvoiceDocNo($request->input('doc_date'));
+            $run_no = $suggested['run_no'];
 
             $quotationId = $request->input('quotation_id');
             $quotationId = ($quotationId === '' || $quotationId === null) ? null : (int) $quotationId;
@@ -1054,5 +1082,21 @@ class ProformaInvoiceController extends AdminController
             ->addIndexColumn()
             ->rawColumns(['remaining', 'progress'])
             ->make(true);
+    }
+
+    /**
+     * @return array{run_no: int, doc_no: string}
+     */
+    private function suggestProformaInvoiceDocNo(?string $docDate): array
+    {
+        $docDate = ($docDate && strtotime($docDate)) ? $docDate : date('Y-m-d');
+        $year_month = date('ym', strtotime($docDate));
+        $last_run = ProformaInvoice::where('doc_no', 'like', "PI{$year_month}%")
+            ->orderBy('run_no', 'desc')
+            ->first();
+        $run_no = $last_run ? ((int) $last_run->run_no) + 1 : 1;
+        $doc_no = 'PI'.$year_month.str_pad((string) $run_no, 4, '0', STR_PAD_LEFT);
+
+        return ['run_no' => $run_no, 'doc_no' => $doc_no];
     }
 }
