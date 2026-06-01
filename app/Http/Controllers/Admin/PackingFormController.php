@@ -194,6 +194,7 @@ class PackingFormController extends AdminController
             },
             'details.piProduct.pi.currency',
             'details.piProduct.product.unitProduct',
+            'details.piProduct.product.category',
         ])->findOrFail($id);
 
         $view = $variant === 'accounting'
@@ -206,7 +207,8 @@ class PackingFormController extends AdminController
             'format' => 'A4',
             'margin_left' => 8,
             'margin_right' => 8,
-            'margin_top' => 8,
+            'margin_top' => 50,   // เว้นบนให้หัวเอกสารที่ซ้ำทุกหน้า
+            'margin_header' => 5,
             'margin_bottom' => 10,
         ]);
 
@@ -252,6 +254,7 @@ class PackingFormController extends AdminController
             'per_vessel' => 'nullable|string|max:255',
             'lc_no' => 'nullable|string|max:100',
             'issued_by' => 'nullable|string|max:255',
+            'marks' => 'nullable|string',
             'pkg' => 'nullable|integer|min:0',
             'qty' => 'nullable|integer|min:0',
             'cubic_meter' => 'nullable|numeric',
@@ -297,6 +300,7 @@ class PackingFormController extends AdminController
             $form->per_vessel = $request->input('per_vessel');
             $form->lc_no = $request->input('lc_no');
             $form->issued_by = $request->input('issued_by');
+            $form->marks = $request->input('marks');
             $form->pkg = $request->filled('pkg') ? (int) $request->input('pkg') : null;
             $form->qty = (int) ($request->input('qty') ?? 0);
             $form->cubic_meter = $this->nullableDecimalInput($request->input('cubic_meter'));
@@ -415,6 +419,7 @@ class PackingFormController extends AdminController
             'per_vessel' => 'nullable|string|max:255',
             'lc_no' => 'nullable|string|max:100',
             'issued_by' => 'nullable|string|max:255',
+            'marks' => 'nullable|string',
             'pkg' => 'nullable|integer|min:0',
             'qty' => 'nullable|integer|min:0',
             'cubic_meter' => 'nullable|numeric',
@@ -459,6 +464,7 @@ class PackingFormController extends AdminController
             $form->per_vessel = $request->input('per_vessel');
             $form->lc_no = $request->input('lc_no');
             $form->issued_by = $request->input('issued_by');
+            $form->marks = $request->input('marks');
             $form->pkg = $request->filled('pkg') ? (int) $request->input('pkg') : null;
             $form->qty = (int) ($request->input('qty') ?? 0);
             $form->cubic_meter = $this->nullableDecimalInput($request->input('cubic_meter'));

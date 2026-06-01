@@ -95,6 +95,34 @@
             $sumDetailGw += (float) ($line->weight_gw ?? 0);
         }
     }
+
+    // จัดกลุ่มรายการตามหมวดสินค้า (Product Category) — คงลำดับเดิมภายในกลุ่ม
+    $groups = [];
+    foreach ($packingForm->details as $line) {
+        $cat = $line->piProduct?->product?->category?->name_en
+            ?: ($line->piProduct?->product?->category?->name ?? '');
+        $key = $cat !== '' ? $cat : '__NONE__';
+        $groups[$key][] = $line;
+    }
+
+    // ยอดรวมเงิน (สำหรับ Invoice)
+    $sumAmount = 0.0;
+    $curSymbol = '';
+    if ($isAccounting) {
+        foreach ($packingForm->details as $line) {
+            $pip = $line->piProduct;
+            if ($curSymbol === '') {
+                $curSymbol = $pip?->pi?->currency?->symbol ?? '';
+            }
+            $amt = $pip?->total_price;
+            if (($amt === null || $amt === '') && $pip?->price_per_item && $line->qty) {
+                $amt = (float) $pip->price_per_item * (float) $line->qty;
+            }
+            $sumAmount += (float) $amt;
+        }
+    }
+
+    $docTitle = $isAccounting ? 'INVOICE' : 'PACKING LIST';
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -102,7 +130,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>PACKING LIST {{ $packingForm->doc_no }}</title>
     <style>
-        @page { margin: 10mm 8mm 12mm 8mm; }
+        @page { header: html_plheader; }
         body {
             font-family: 'garuda', sans-serif;
             font-size: 10px;
@@ -110,6 +138,9 @@
             margin: 0;
             padding: 0;
         }
+        .doc-title { font-size: 15px; font-weight: bold; text-align: center; }
+        .marks-block { font-weight: bold; margin: 4px 0 6px 0; line-height: 1.4; }
+        .items .cat-row td { font-weight: bold; text-align: left; background: #f1f1f1; }
         .header-top {
             width: 100%;
             border-collapse: collapse;
@@ -239,7 +270,8 @@
 </head>
 <body>
 
-<table width="100%" class="header-top" cellpadding="0" cellspacing="0" style="margin-bottom: 10px;">
+<htmlpageheader name="plheader">
+<table width="100%" class="header-top" cellpadding="0" cellspacing="0" style="margin-bottom: 6px;">
     <tr>
         @if($logo)
         <td class="col-logo" width="50" valign="top">
@@ -255,6 +287,13 @@
             TEL. : 063-525-2242<br>
             FAX. : -
         </td>
+    </tr>
+</table>
+
+<table width="100%" style="margin-bottom:4px;">
+    <tr>
+        <td width="78%" class="doc-title">{{ $docTitle }}</td>
+        <td width="22%" class="text-right">PAGE {PAGENO} / {nbpg}</td>
     </tr>
 </table>
 
@@ -306,6 +345,11 @@
         </td>
     </tr>
 </table>
+</htmlpageheader>
+
+@if(trim((string) $packingForm->marks) !== '')
+<div class="marks-block">{!! nl2br(e($packingForm->marks)) !!}</div>
+@endif
 
 <table class="items{{ !$isAccounting && count($qtyByUom) > 0 ? ' items-has-foot' : '' }}">
     <thead>
@@ -329,10 +373,15 @@
         @endif
     </thead>
     <tbody>
-        @forelse($packingForm->details as $k => $line)
-            @php($price = $linePricing($line))
+        @php $k = 0; @endphp
+        @forelse($groups as $catKey => $catLines)
+            @if($catKey !== '__NONE__')
+            <tr class="cat-row"><td colspan="{{ $isAccounting ? 5 : 7 }}">{{ $catKey }}</td></tr>
+            @endif
+            @foreach($catLines as $line)
+            @php($price = $linePricing($line)) @php($k++)
             <tr>
-                <td align="center">{{ $isAccounting ? ($k + 1) : $markNo($line) }}</td>
+                <td align="center">{{ $isAccounting ? $k : $markNo($line) }}</td>
                 <td>
                     @if($isAccounting)
                         {{ trim(($line->part_no ?? '').' '.($line->description ?? '')) }}
@@ -363,6 +412,7 @@
                 <td class="text-right">{{ $fmt($line->weight_gw) }}</td>
                 @endif
             </tr>
+            @endforeach
         @empty
             <tr>
                 <td colspan="{{ $isAccounting ? 5 : 7 }}" class="text-center">ไม่มีรายการ</td>
@@ -389,6 +439,17 @@
     @endif
 </table>
 
+@if($isAccounting)
+<table width="100%" style="margin-top:6px;">
+    <tr>
+        <td class="text-bold">
+            SAY {{ \App\Help::numberToWords($sumAmount, ($curSymbol === 'USD' ? 'US DOLLARS' : strtoupper($curSymbol ?: 'DOLLARS'))) }} ONLY.
+        </td>
+        <td width="22%" class="text-right text-bold">TOTAL</td>
+        <td width="16%" class="text-right text-bold">{{ $curSymbol }} {{ $fmt($sumAmount) }}</td>
+    </tr>
+</table>
+@else
 <table class="totals">
     <tr>
         <td width="14%" class="text-bold text-center">PKG</td>
@@ -409,6 +470,7 @@
         <td class="text-center">{{ $fmtInt($packingForm->qty) }}</td>
     </tr>
 </table>
+@endif
 
 </body>
 </html>

@@ -111,6 +111,14 @@
             </div>
         </div>
     </div>
+    <div class="row mt-2">
+        <div class="col-md-12">
+            <div class="form-group mb-0">
+                <label class="text-90">Marks &amp; No. (พิมพ์ได้หลายบรรทัด แสดงหัวตาราง Invoice/Packing List)</label>
+                <textarea name="marks" class="form-control form-control-sm packing-tab" rows="2" placeholder="DHANYA EX-477  2,147 CARTONS&#10;EX-478  804 CARTONS">{{ $packingForm->marks }}</textarea>
+            </div>
+        </div>
+    </div>
 </div>
 
 <h6 class="text-secondary mb-2">ยอดรวมท้ายเอกสาร</h6>
