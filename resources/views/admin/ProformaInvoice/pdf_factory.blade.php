@@ -1,6 +1,13 @@
 @php
     use App\Help;
 
+    /* ---------- โลโก้ (ดึงจาก Setting เดิม) ---------- */
+    $logo = null;
+    if (isset($settings['logo'])) {
+        $logo = json_decode($settings['logo']);
+        $logo = (is_array($logo) && count($logo) > 0 ? $logo[0] : null);
+    }
+
     /* ---------- เตรียมข้อมูล ---------- */
 
     // สกุลเงินที่โชว์ในคอลัมน์ เช่น (USD)
@@ -87,6 +94,9 @@
     <table width="100%" style="border:none;">
         <tr>
             <td width="75%" class="text-center" style="border:none;">
+                @if ($logo)
+                    <img src="{{ asset('uploads/SettingSystem/'.$logo) }}" height="38" style="vertical-align:middle;">
+                @endif
                 <span class="company-name">FORMULA INTERTRADE CO.,LTD.</span>
             </td>
             <td width="25%" style="border:none; font-size:11px;">

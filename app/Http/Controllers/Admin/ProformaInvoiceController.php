@@ -837,7 +837,7 @@ class ProformaInvoiceController extends AdminController
                     'unit_products.name as unit_name'
                 )
                 ->orderBy('proforma_invoice_products.seq', 'asc');
-        }, 'customer'])
+        }, 'customer', 'createdBy', 'creditPayment', 'currency'])
             ->leftJoin('customers', 'proforma_invoices.customer_id', '=', 'customers.id')
             ->select('proforma_invoices.*', 'customers.company_name as customer_name')
             ->findOrFail($id);
