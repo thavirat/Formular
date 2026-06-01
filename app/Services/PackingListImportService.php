@@ -13,20 +13,21 @@ use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 /**
- * นำเข้า Packing list จาก Excel (รูปแบบ SANDEN)
+ * นำเข้า Packing list จาก Excel (รูปแบบ SANDEN / EXPORT PACKING FORM)
  *
  * หัวเอกสาร → tb_packing_forms:
  * - D2=To, D3=customer_name, D4=country, A7=doc_date
  * - M8=pkg, O8=weight_nw, P8=weight_gw, Q8=weight_nt, R8=weight_gt, S8=cubic_meter, T8=qty
  *
- * รายการ → tb_packing_form_details เริ่มแถว 12:
- * - A=ลำดับ/กล่อง, B,C=from/to, D=เลขที่ PI, E=Part no
- * - F–S = cus part, desc, formular, W, L, H, qty, CBM, NW(O), GW, NT, GT, UOM
- * - V = from_co
+ * รายการ → tb_packing_form_details (ตรวจหาแถวเริ่มข้อมูลอัตโนมัติ):
+ * - A=ลำดับ, B=From, C=To, D=เลขอ้างอิง PI/FA, E=Part no, F=Cust.Part, G=Desc, H=เลขที่สูตร
+ * - I=กว้าง, J=ยาว, K=สูง, L=จุ/กล่อง(ไม่ใช้), M=PKG, N=UOM(กล่อง), O=NW, P=GW, Q=NT, R=GT
+ * - S=CBM(M3), T=QTY(รวมชิ้น), U=UOM(ชิ้น), V=From Co.
  */
 class PackingListImportService
 {
-    public const FIRST_DATA_ROW = 12;
+    /** ใช้เป็น fallback เท่านั้น — ปกติจะตรวจหาแถวเริ่มข้อมูลอัตโนมัติ */
+    public const FIRST_DATA_ROW = 11;
 
     public const COL_PKG_MARKER = 0;
 
@@ -50,9 +51,11 @@ class PackingListImportService
 
     public const COL_HEIGHT = 10;
 
-    public const COL_QTY = 11;
+    /** คอลัมน์ T (index 19) = QTY รวมชิ้นจริง (ไม่ใช่ L=จุ/กล่อง) */
+    public const COL_QTY = 19;
 
-    public const COL_CBM = 12;
+    /** คอลัมน์ S (index 18) = M3/CBM (ไม่ใช่ M=PKG) */
+    public const COL_CBM = 18;
 
     /** คอลัมน์ O (index 14) */
     public const COL_NW = 14;
@@ -63,7 +66,8 @@ class PackingListImportService
 
     public const COL_GT = 17;
 
-    public const COL_UOM = 18;
+    /** คอลัมน์ U (index 20) = UOM ระดับชิ้น (PCS/UNITS) */
+    public const COL_UOM = 20;
 
     /** คอลัมน์ V (index 21) */
     public const COL_FROM_CO = 21;
@@ -127,8 +131,10 @@ class PackingListImportService
         $warnings = [];
         $seenLineKeys = [];
 
+        $firstDataRow = $this->detectFirstDataRow($sheet, $highestRow);
+
         $rowsPayload = [];
-        for ($r = self::FIRST_DATA_ROW; $r <= $highestRow; $r++) {
+        for ($r = $firstDataRow; $r <= $highestRow; $r++) {
             $row = [];
             for ($c = 1; $c <= 22; $c++) {
                 $row[] = $sheet->getCellByColumnAndRow($c, $r)->getFormattedValue();
@@ -299,15 +305,54 @@ class PackingListImportService
             || str_contains($ud, 'PI') && str_contains($ue, 'PART');
     }
 
+    /**
+     * ตรวจหาแถวแรกของข้อมูล โดยมองหาแถวที่คอลัมน์ E (Part No) มีรูปแบบรหัสสินค้า
+     * เช่น 9200-0226-00 — กันกรณีหัวตารางอยู่คนละแถว (บางไฟล์เริ่มแถว 11 บางไฟล์ 12)
+     */
+    private function detectFirstDataRow(Worksheet $sheet, int $highestRow): int
+    {
+        $limit = min($highestRow, 40);
+        for ($r = 1; $r <= $limit; $r++) {
+            $part = $this->str($sheet->getCellByColumnAndRow(self::COL_PART + 1, $r)->getValue());
+            if ($part !== '' && preg_match('/\d{3,}\s*-\s*\d/', $part)) {
+                return $r;
+            }
+        }
+
+        return self::FIRST_DATA_ROW;
+    }
+
+    /**
+     * หา PI จากเลขอ้างอิงในไฟล์ รองรับทั้งแบบเต็มและมี prefix/ขีด/ช่องว่าง
+     * เช่น "FA-25120564", "PI-2512 0564", "PI25120564" → จับกับ proforma_invoices.doc_no
+     */
+    private function resolvePi(string $docNo): ?ProformaInvoice
+    {
+        $docNo = trim($docNo);
+        if ($docNo === '') {
+            return null;
+        }
+        $digits = preg_replace('/\D/', '', $docNo);
+
+        return ProformaInvoice::query()
+            ->where(function ($q) use ($docNo, $digits) {
+                $q->whereRaw('TRIM(doc_no) = ?', [$docNo]);
+                if ($digits !== '') {
+                    // FA-25120564 → 25120564 → PI25120564 ; หรือ doc_no ที่ลงท้ายด้วยเลขชุดนี้
+                    $q->orWhere('doc_no', 'PI'.$digits)
+                        ->orWhereRaw("REPLACE(REPLACE(doc_no, '-', ''), ' ', '') LIKE ?", ['%'.$digits]);
+                }
+            })
+            ->first();
+    }
+
     private function resolvePiProductId(string $docNo, string $partNo): ?int
     {
         if ($docNo === '' || $partNo === '') {
             return null;
         }
 
-        $pi = ProformaInvoice::query()
-            ->whereRaw('TRIM(doc_no) = ?', [$docNo])
-            ->first();
+        $pi = $this->resolvePi($docNo);
 
         if (!$pi) {
             return null;
