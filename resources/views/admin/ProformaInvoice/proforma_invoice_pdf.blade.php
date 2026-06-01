@@ -19,7 +19,7 @@
     <title>EXPORT ORDER FORM {{ $pi->doc_no }}</title>
     <style>
         @page {
-            margin: 96mm 7mm 8mm 7mm;   /* เว้นบนไว้ให้หัวเอกสาร (กล่องข้อมูล+เครดิต) ที่ซ้ำทุกหน้า */
+            margin: 80mm 7mm 8mm 7mm;   /* เว้นบนไว้ให้หัวเอกสาร (กล่องข้อมูล) ที่ซ้ำทุกหน้า */
             header: html_faheader;
         }
 
@@ -104,22 +104,6 @@
         <tr><td><span class="bold">PURCHASE ORDER NO. :</span> {{ $pi->customer_po }}</td></tr>
         <tr><td><span class="bold">Priority :</span></td></tr>
         <tr><td style="height:22px;"><span class="bold">Remarks :</span></td></tr>
-    </table>
-
-    {{-- กล่องวงเงินเครดิต --}}
-    <table class="box" style="margin-top:-1px;">
-        <tr>
-            <td width="50%"><span class="bold">- CUSTOMER CREDIT LIMIT AMOUNT :</span> {{ $cur }}&nbsp;&nbsp;0.00 <span class="bold">DAYS :</span></td>
-            <td width="50%"><span class="bold">- THIS ORDER AMOUNT :</span>&nbsp;&nbsp;{{ $cur }}&nbsp;&nbsp;{{ number_format($pi->total, 2) }}</td>
-        </tr>
-        <tr>
-            <td><span class="bold">- USAGE OF CREDIT LIMIT :</span>&nbsp;&nbsp;{{ $cur }}&nbsp;&nbsp;0.00</td>
-            <td><span class="bold">- ORDER YEAR TO THIS ORDER :</span> {{ $cur }}&nbsp;&nbsp;0.00&nbsp;&nbsp;<span class="bold">No.</span></td>
-        </tr>
-        <tr>
-            <td><span class="bold">- BALANCE OF CREDIT LIMIT :</span>&nbsp;&nbsp;{{ $cur }}&nbsp;&nbsp;0.00</td>
-            <td><span class="bold">- LAST YEAR ORDER :</span>&nbsp;&nbsp;{{ $cur }}&nbsp;&nbsp;0.00</td>
-        </tr>
     </table>
 </htmlpageheader>
 
