@@ -300,8 +300,7 @@
 <table class="header-grid">
     <tr>
         <td width="55%">
-            <span class="lbl">BY order and for account of :</span>
-            {{ $packingForm->place_of_issue ?: 'Bangkok' }}<br>
+            <span class="lbl">By order and for account of :</span><br>
             <span class="text-bold">{{ $packingForm->customer_name ?: '-' }}</span><br>
             @if($packingForm->customer_address)
                 {!! nl2br(e($packingForm->customer_address)) !!}<br>
@@ -318,7 +317,11 @@
         <td width="45%">
             <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                    <td class="lbl" width="38%">Invoice No.</td>
+                    <td class="lbl" width="38%">{{ $packingForm->place_of_issue ?: 'Bangkok' }}</td>
+                    <td>{{ $packingForm->doc_date ? $packingForm->doc_date->format('d/m/Y') : '' }}</td>
+                </tr>
+                <tr>
+                    <td class="lbl">Invoice No.</td>
                     <td>{{ $packingForm->invoice_no ?: $packingForm->doc_no ?: '-' }}</td>
                 </tr>
                 <tr>

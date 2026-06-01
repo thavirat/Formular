@@ -64,8 +64,8 @@ class PackingFormController extends AdminController
                 $d = Help::CheckPermissionMenu($this->current_menu, 'd');
                 $r = Help::CheckPermissionMenu($this->current_menu, 'r');
                 if ($r) {
-                    $str .= '<a href="'.url('admin/'.$lang.'/PackingForm/'.$rec->id.'/pdf/customer').'" class="btn btn-xs btn-info" title="PL ของลูกค้า" target="_blank"><i class="fa fa-file-pdf"></i></a> ';
-                    $str .= '<a href="'.url('admin/'.$lang.'/PackingForm/'.$rec->id.'/pdf/accounting').'" class="btn btn-xs btn-secondary" title="PL ของบัญชี" target="_blank"><i class="fa fa-file-pdf"></i></a> ';
+                    $str .= '<a href="'.url('admin/'.$lang.'/PackingForm/'.$rec->id.'/pdf/customer').'" class="btn btn-xs btn-info" title="Packing List" target="_blank"><i class="fa fa-box"></i> PL</a> ';
+                    $str .= '<a href="'.url('admin/'.$lang.'/PackingForm/'.$rec->id.'/pdf/accounting').'" class="btn btn-xs btn-success" title="Invoice" target="_blank"><i class="fa fa-file-invoice-dollar"></i> INV</a> ';
                 }
                 if ($u) {
                     $str .= '<a href="'.url('admin/'.$lang.'/PackingForm/'.$rec->id.'/edit').'" class="btn btn-xs btn-warning" title="แก้ไข"><i class="fa fa-edit"></i></a> ';
@@ -212,8 +212,8 @@ class PackingFormController extends AdminController
             'margin_bottom' => 10,
         ]);
 
-        $suffix = $variant === 'accounting' ? '_accounting' : '_customer';
-        $filename = ($packingForm->doc_no ?: 'PackingList').$suffix.'_'.date('Ymd').'.pdf';
+        $suffix = $variant === 'accounting' ? '_Invoice' : '_PackingList';
+        $filename = ($packingForm->doc_no ?: 'Doc').$suffix.'_'.date('Ymd').'.pdf';
 
         return $pdf->stream($filename);
     }
