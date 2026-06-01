@@ -800,30 +800,21 @@ class ProformaInvoiceController extends AdminController
     public function pdfFactory(Request $request)
     {
         $id = $request->input('pi_id');
-        $pi = ProformaInvoice::with(['Products' => function ($q) {}])->findOrFail($id);
+        $pi = ProformaInvoice::with([
+            'Products' => function ($q) {
+                $q->orderBy('seq');
+            },
+            'Products.product.category',
+            'Products.product.unitProduct',
+            'currency',
+            'incoterm',
+            'creditPayment',
+            'createdBy',
+        ])->findOrFail($id);
 
-        $data = [
-            'pi' => $pi,
-            'doc_no' => $pi->doc_no,
-            'shipping_marks' => [
-                'customer' => $pi->company_name,
-                'destination' => 'AUSTRALIA',
-                'container' => 'C/NO.1-UP',
-            ],
-            'remarks' => [
-                '1. CDS,PFC, CO,LM บรรจุกล่องแบบ "A" และไม่ต้องติดสติ๊กเกอร์ FORMULA',
-                '2. CDS,PFC ทุกรายการ พิมพ์ JAY AIR ตามแบบที่วางไว้บนกล่อง',
-                '3. ทุกรายการให้ติดสติ๊กเกอร์ JAY AIR พิมพ์ PART NO. และบาร์โค้ดลูกค้า',
-                '4. PFC ทุกรุ่นที่เป็นสี BRONZE ไม่ต้องทำการพ่นสี',
-                '5. สินค้าตู้แอร์ใช้กล่องแบบ "N"',
-            ],
-            'sale_rep' => $pi->creator->name ?? 'PATRAPRON YARACH'
-        ];
+        $pdf = \PDF::loadView('admin.ProformaInvoice.pdf_factory', ['pi' => $pi]);
 
-
-        $pdf = \PDF::loadView('admin.ProformaInvoice.pdf_factory', $data);
-
-        return $pdf->stream($pi->doc_no . '_factory.pdf');
+        return $pdf->stream($pi->doc_no . '.pdf');
     }
 
     public function factory_accept($id)

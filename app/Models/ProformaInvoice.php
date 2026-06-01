@@ -30,4 +30,14 @@ class ProformaInvoice extends Model
     {
         return $this->belongsTo(Currency::class, 'currency_id');
     }
+
+    public function incoterm()
+    {
+        return $this->belongsTo(Incoterm::class, 'incoterm_id');
+    }
+
+    public function creditPayment()
+    {
+        return $this->belongsTo(CreditPayment::class, 'credit_payment_id');
+    }
 }
