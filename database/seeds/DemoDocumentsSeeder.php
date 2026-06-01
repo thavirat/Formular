@@ -126,7 +126,8 @@ class DemoDocumentsSeeder extends Seeder
         ) {
             $stamp = $now->format('ymdHis');
 
-            // 10 ใบเสนอราคา
+            // 10 ใบเสนอราคา (เก็บ id + ลูกค้าไว้ผูกกับ PI ทีหลัง)
+            $quotationRefs = [];
             for ($i = 1; $i <= 10; $i++) {
                 $cust = $customers->random();
                 $qid = DB::table('quotations')->insertGetId([
@@ -161,13 +162,16 @@ class DemoDocumentsSeeder extends Seeder
                 }
                 DB::table('quotations')->where('id', $qid)
                     ->update(['subtotal' => $subtotal, 'total' => $subtotal]);
+
+                $quotationRefs[] = ['id' => $qid, 'cust' => $cust];
             }
 
-            // 10 Proforma Invoice
+            // 10 Proforma Invoice (ผูกกับใบเสนอราคาใบที่ i + ใช้ลูกค้าเดียวกัน)
             for ($i = 1; $i <= 10; $i++) {
-                $cust = $customers->random();
+                $ref  = $quotationRefs[$i - 1];
+                $cust = $ref['cust'];
                 $piid = DB::table('proforma_invoices')->insertGetId([
-                    'quotation_id' => null, // FK ใน schema ผูกไป admin_users (บั๊กเดิม) จึงเว้น null
+                    'quotation_id' => $ref['id'], // ผูกกับใบเสนอราคา (FK แก้แล้วให้ชี้ไป quotations)
                     'status_id' => $piStatusId, 'customer_id' => $cust->id,
                     'incoterm_id' => $incotermId, 'currency_id' => $currencyId,
                     'credit_payment_id' => $creditPaymentId,
