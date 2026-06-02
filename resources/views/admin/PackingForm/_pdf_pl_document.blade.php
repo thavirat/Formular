@@ -350,26 +350,22 @@
 </table>
 </htmlpageheader>
 
-@if(trim((string) $packingForm->marks) !== '')
-<div class="marks-block">{!! nl2br(e($packingForm->marks)) !!}</div>
-@endif
-
 <table class="items{{ !$isAccounting && count($qtyByUom) > 0 ? ' items-has-foot' : '' }}">
     <thead>
         @if($isAccounting)
         <tr>
-            <th width="5%">Mark&amp;No.</th>
+            <th width="12%">Mark&amp;No.</th>
             <th>DESCRIPTIONS</th>
-            <th width="14%">QUANTITY</th>
-            <th width="10%">UNIT PRICE</th>
-            <th width="14%">AMOUNT</th>
+            <th width="12%">QUANTITY</th>
+            <th width="13%">UNIT PRICE</th>
+            <th width="13%">AMOUNT</th>
         </tr>
         @else
         <tr>
-            <th width="8%">Mark&amp;No.</th>
+            <th width="12%">Mark&amp;No.</th>
             <th>DESCRIPTIONS</th>
-            <th colspan="2" width="16%">QUANTITY</th>
-            <th width="10%">TOTAL QTY.</th>
+            <th colspan="2" width="15%">QUANTITY</th>
+            <th width="9%">TOTAL QTY.</th>
             <th width="10%">N.W.(KGS.)</th>
             <th width="10%">G.W.(KGS.)</th>
         </tr>
@@ -377,6 +373,14 @@
     </thead>
     <tbody>
         @php $k = 0; @endphp
+        @if(trim((string) $packingForm->marks) !== '' || $packingForm->pkg)
+        <tr>
+            <td style="vertical-align:top; font-weight:bold;">{!! nl2br(e(trim((string) $packingForm->marks))) !!}</td>
+            <td colspan="{{ $isAccounting ? 4 : 6 }}" style="vertical-align:bottom;">
+                @if($packingForm->pkg)(TOTAL NO. OF PACKAGES : {{ number_format($packingForm->pkg) }} CARTONS)@endif
+            </td>
+        </tr>
+        @endif
         @forelse($groups as $catKey => $catLines)
             @if($catKey !== '__NONE__')
             <tr class="cat-row"><td colspan="{{ $isAccounting ? 5 : 7 }}">{{ $catKey }}</td></tr>
@@ -397,12 +401,12 @@
                 <td>
                     <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
-                            <td width="50%">{{ $price['symbol'] }}</td>
-                            <td class="text-right">{{ $price['unit_price'] }}</td>
+                            <td width="32%">{{ $price['symbol'] }}</td>
+                            <td class="text-right" style="white-space:nowrap;">{{ $price['unit_price'] }}</td>
                         </tr>
                     </table>
                 </td>
-                <td class="text-right">{{ $price['amount'] }}</td>
+                <td class="text-right" style="white-space:nowrap;">{{ $price['amount'] }}</td>
                 @else
                 <td class="text-right col-qty-num" width="8%">
                     @if($line->qty !== null && $line->qty !== '')
