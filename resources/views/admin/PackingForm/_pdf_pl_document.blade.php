@@ -191,14 +191,10 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 9px;
-            border-bottom: 1px solid #000;
         }
         .items th,
         .items td {
-            border-top: none;
-            border-bottom: none;
-            border-right: none;
-            border-left: 1px solid #000;
+            border: 1px solid #000;
             vertical-align: top;
         }
         .items th {
@@ -209,33 +205,15 @@
         .items td {
             padding: 3px 3px;
         }
-        .items tr > th:last-child,
-        .items tr > td:last-child {
-            border-right: 1px solid #000;
+        /* ตารางซ้อนในเซลล์ (เช่น UNIT PRICE) ไม่ต้องมีเส้น */
+        .items td table td,
+        .items td table th {
+            border: none !important;
+            padding: 0;
         }
-        /* เส้นแนวนอน: หัวตาราง, ก่อน–หลังสรุป, ปิดท้ายตาราง (ไม่แบ่งทุกแถวรายการ) */
-        .items thead th {
-            border-top: 1px solid #000;
-            border-bottom: 1px solid #000;
-        }
-        .items tbody tr:last-child > td {
-            border-bottom: 1px solid #000;
-        }
-        .items.items-has-foot tbody tr:last-child > td {
-            border-bottom: none;
-        }
-        .items > tfoot > tr.row-qty-summary > td {
-            border-top: 1px solid #000 !important;
-            border-bottom: 1px solid #000 !important;
-        }
-        .items > tfoot > tr:last-child > td {
-            border-top: 1px solid #000 !important;
-            border-bottom: 1px solid #000 !important;
-        }
-        /* คอลัมน์ย่อย QUANTITY (จำนวน | หน่วย) ไม่มีเส้นแบ่งกลาง */
-        .items .col-qty-uom {
-            border-left: none;
-        }
+        /* คอลัมน์ย่อย QUANTITY (จำนวน | หน่วย) รวมเป็นช่องเดียว ไม่มีเส้นแบ่งกลาง */
+        .items .col-qty-num { border-right: none; }
+        .items .col-qty-uom { border-left: none; }
         .items tfoot td {
             font-weight: bold;
         }

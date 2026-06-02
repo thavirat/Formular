@@ -207,7 +207,7 @@ class PackingFormController extends AdminController
             'format' => 'A4',
             'margin_left' => 8,
             'margin_right' => 8,
-            'margin_top' => 50,   // เว้นบนให้หัวเอกสารที่ซ้ำทุกหน้า
+            'margin_top' => 60,   // เว้นบนให้หัวเอกสารที่ซ้ำทุกหน้า (กันบรรทัด Issued by ล้นทับตาราง)
             'margin_header' => 5,
             'margin_bottom' => 10,
         ]);
