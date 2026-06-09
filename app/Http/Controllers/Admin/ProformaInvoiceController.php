@@ -271,7 +271,7 @@ class ProformaInvoiceController extends AdminController
         $data['CreditPayments'] = CreditPayment::orderBy('name')->get();
 
         // ดึงข้อมูล Proforma Invoice พร้อม Products ที่เรียงตาม seq
-        $data['ProformaInvoice'] = ProformaInvoice::with(['Products' => function ($q) {
+        $data['ProformaInvoice'] = ProformaInvoice::with(['products' => function ($q) {
             $q->leftJoin('products', 'proforma_invoice_products.product_id', '=', 'products.id')
                 ->select(
                     'proforma_invoice_products.*',
