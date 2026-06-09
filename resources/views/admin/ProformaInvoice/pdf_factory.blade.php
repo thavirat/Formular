@@ -161,7 +161,7 @@
                 @php $itm++; @endphp
                 <tr>
                     <td class="text-center">{{ $itm }}</td>
-                    <td>{{ $item->part_no }}</td>
+                    <td>{{ $item->part_no ?: optional($item->product)->code }}</td>
                     <td>{{ $item->detail_eng }}</td>
                     <td class="text-center">{{ $item->drawing }}</td>
                     <td class="text-center">{{ $item->cus_code }}</td>
