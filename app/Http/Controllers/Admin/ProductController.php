@@ -345,6 +345,119 @@ class ProductController extends AdminController
         }
     }
 
+    /**
+     * นำเข้า มิติ (ProdWide/ProdLong/ProdHigh/ProdWeight) จากไฟล์ Excel แล้วคำนวณ cube
+     * - อ่านไฟล์จาก: storage/app/imports/product_dimensions.xlsx (ชีท "All in")
+     * - จับคู่ด้วย code = ProdID (เช็คซ้ำจาก ProdID), อัปเดตเฉพาะแถวที่มี W/L/H ครบ
+     * - cube = (width * length * height) / 1,000,000,000 (มม. -> ลบ.ม. ตาม convention ของระบบ)
+     * URL: /admin/{lang}/Product/ImportDimensions
+     */
+    public function import_dimensions(Request $request)
+    {
+        // เช็คสิทธิ์: ต้องมีสิทธิ์ "แก้ไข (u)" ของเมนู Product เพราะเป็นการอัปเดตข้อมูลสินค้า
+        if (!Help::CheckPermissionMenu($this->current_menu, 'u')) {
+            return redirect('/admin/PermissionDenined');
+        }
+
+        @set_time_limit(0);
+        @ini_set('memory_limit', '1024M');
+
+        $dir  = storage_path('app/imports');
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0775, true); // สร้างโฟลเดอร์ให้อัตโนมัติ จะได้นำไฟล์มาวางได้
+        }
+        $path = $dir . DIRECTORY_SEPARATOR . 'product_dimensions.xlsx';
+        if (!is_file($path)) {
+            return response()->json([
+                'status'  => 0,
+                'title'   => 'ไม่พบไฟล์',
+                'content' => 'กรุณาวางไฟล์ไว้ที่ storage/app/imports/product_dimensions.xlsx แล้วเรียกลิงก์นี้อีกครั้ง',
+            ], 404);
+        }
+
+        try {
+            // ขยายความละเอียดคอลัมน์ cube ครั้งเดียว (decimal(10,2) จะปัดค่าเล็ก ๆ เป็น 0.00)
+            // ใช้ raw SQL เพื่อเลี่ยง table prefix (tb_) ที่จะถูกเติมให้ information_schema.columns โดยอัตโนมัติ
+            $col = DB::select(
+                'SELECT NUMERIC_SCALE AS s FROM information_schema.columns
+                 WHERE table_schema = ? AND table_name = ? AND column_name = ? LIMIT 1',
+                [DB::getDatabaseName(), 'tb_products', 'cube']
+            );
+            $scale = $col[0]->s ?? 0;
+            if ((int) $scale < 6) {
+                DB::statement('ALTER TABLE tb_products MODIFY cube decimal(12,6) NULL DEFAULT 0.000000');
+            }
+
+            // อ่าน Excel (อ่านเฉพาะข้อมูล ไม่อ่านสูตร/สไตล์ เพื่อความเร็ว)
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($path);
+            $reader->setReadDataOnly(true);
+            $spreadsheet = $reader->load($path);
+            $sheet = $spreadsheet->getSheetByName('All in') ?: $spreadsheet->getActiveSheet();
+            $rows  = $sheet->toArray(null, true, false, false); // 0-indexed arrays
+
+            $updated = 0;
+            $skipped = 0;
+            $notFound = 0;
+
+            DB::beginTransaction();
+            foreach ($rows as $i => $r) {
+                if ($i === 0) {
+                    continue; // header
+                }
+                $code = isset($r[9]) ? trim((string) $r[9]) : '';
+                if ($code === '' || strtoupper($code) === 'NULL') {
+                    continue;
+                }
+
+                $w = is_numeric($r[14] ?? null) ? (float) $r[14] : null; // ProdWide
+                $l = is_numeric($r[15] ?? null) ? (float) $r[15] : null; // ProdLong
+                $h = is_numeric($r[16] ?? null) ? (float) $r[16] : null; // ProdHigh
+                $wt = is_numeric($r[17] ?? null) ? (float) $r[17] : 0;   // ProdWeight
+
+                // อัปเดตเฉพาะแถวที่มีมิติครบ (>0) เพื่อไม่ทับข้อมูลเดิมด้วย 0
+                if ($w === null || $l === null || $h === null || $w <= 0 || $l <= 0 || $h <= 0) {
+                    $skipped++;
+                    continue;
+                }
+
+                $cube = round($w * $l * $h / 1000000000, 6);
+
+                $affected = DB::table('products')
+                    ->where('code', $code)
+                    ->update([
+                        'width'  => $w,
+                        'length' => $l,
+                        'height' => $h,
+                        'weight' => $wt,
+                        'cube'   => $cube,
+                    ]);
+
+                if ($affected > 0) {
+                    $updated++;
+                } else {
+                    $notFound++;
+                }
+            }
+            DB::commit();
+
+            return response()->json([
+                'status'  => 1,
+                'title'   => 'สำเร็จ',
+                'content' => "อัปเดต {$updated} รายการ | ข้าม (ไม่มีมิติ) {$skipped} | ไม่พบ code ตรงกัน {$notFound}",
+                'summary' => compact('updated', 'skipped', 'notFound'),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status'    => 0,
+                'title'     => 'เกิดข้อผิดพลาด',
+                'message'   => $e->getMessage(),
+                'file'      => $e->getFile(),
+                'line'      => $e->getLine(),
+            ], 500);
+        }
+    }
+
     public function Search(Request $request) {
         $q = $request->input('q');
         $customer_id = $request->input('customer_id');
