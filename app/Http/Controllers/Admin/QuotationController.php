@@ -615,6 +615,11 @@ class QuotationController extends AdminController
             $q->select(
                 'quotation_products.*'
                 , 'products.code as part_no'
+                , 'products.name_en as product_name'
+                , 'products.width'
+                , 'products.length'
+                , 'products.height'
+                , 'products.cube'
             );
         }])
         ->leftJoin('currencies' , 'quotations.currency_id', '=', 'currencies.id')
