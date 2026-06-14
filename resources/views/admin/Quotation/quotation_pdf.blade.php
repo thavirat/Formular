@@ -300,20 +300,20 @@
     </table>
 
     <div class="page-break"></div>
-    <div class="cube-title">ใบสรุปจำนวนคิว</div>
+    <div class="cube-title">Summary of CBM Volume by Order</div>
     @php $grandCube = 0; @endphp
     <table class="cube-table">
         <thead>
             <tr>
                 <th width="30">ITM.</th>
-                <th width="120">รหัสสินค้า</th>
-                <th>ชื่อสินค้า</th>
-                <th width="58">กว้าง</th>
-                <th width="58">ยาว</th>
-                <th width="58">สูง</th>
-                <th width="60">Qty/Item</th>
+                <th width="120">Part No.</th>
+                <th>Description</th>
+                <th width="58">W</th>
+                <th width="58">L</th>
+                <th width="58">H</th>
+                <th width="60">Qty/Carton</th>
                 <th width="45">Qty</th>
-                <th width="70">คิว</th>
+                <th width="70">CBM</th>
             </tr>
         </thead>
         <tbody>
@@ -322,13 +322,11 @@
                     $width = (float) ($product->width ?? 0);
                     $length = (float) ($product->length ?? 0);
                     $height = (float) ($product->height ?? 0);
-                    $qtyPerItem = (float) ($product->qty_per_item ?? 1);
                     $qty = (float) ($product->qty ?? 0);
-                    $cubePerUnit = (float) ($product->cube ?? 0);
-                    $cubeFromDimension = ($width * $length * $height) / 1000000000;
-                    $lineCube = $cubePerUnit > 0
-                        ? ($cubePerUnit * $qty * $qtyPerItem)
-                        : ($cubeFromDimension * $qty * $qtyPerItem);
+                    $content = (float) ($product->content ?? 0);
+                    // คิว(CBM) = (กว้าง*ยาว*สูง หน่วยมม. -> ลบ.ม.) * จำนวนสั่งซื้อ / CONTENT(จำนวนต่อลัง)
+                    $cartonVolume = ($width * $length * $height) / 1000000000;
+                    $lineCube = $content > 0 ? ($cartonVolume * $qty / $content) : 0;
                     $grandCube += $lineCube;
                 @endphp
                 <tr>
@@ -338,19 +336,19 @@
                     <td class="text-right">{{ number_format($width, 2) }}</td>
                     <td class="text-right">{{ number_format($length, 2) }}</td>
                     <td class="text-right">{{ number_format($height, 2) }}</td>
-                    <td class="text-right">{{ number_format($qtyPerItem, 2) }}</td>
+                    <td class="text-center">{{ $content > 0 ? number_format($content, 0) : '-' }}</td>
                     <td class="text-right">{{ number_format($qty, 0) }}</td>
                     <td class="text-right">{{ number_format($lineCube, 4) }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" class="text-center">ไม่พบรายการสินค้า</td>
+                    <td colspan="9" class="text-center">No products found</td>
                 </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr style="background:#f7f7f7;">
-                <td colspan="8" class="text-right text-bold">คิวรวม</td>
+                <td colspan="8" class="text-right text-bold">Total Volume (CBM)</td>
                 <td class="text-right text-bold">{{ number_format($grandCube, 4) }}</td>
             </tr>
         </tfoot>

@@ -50,26 +50,26 @@
     </style>
 </head>
 <body>
-    <div class="title">ใบสรุปจำนวนคิว</div>
+    <div class="title">Summary of CBM Volume by Order</div>
     <div class="subtitle">Quotation No. {{ $Quotation->doc_no }}</div>
 
     <div class="meta">
-        วันที่เอกสาร: {{ $Quotation->doc_date ? date('d/m/Y', strtotime($Quotation->doc_date)) : '-' }}
+        Document Date: {{ $Quotation->doc_date ? date('d/m/Y', strtotime($Quotation->doc_date)) : '-' }}
     </div>
 
     @php $grandCube = 0; @endphp
     <table>
         <thead>
             <tr>
-                <th width="40">ลำดับ</th>
-                <th width="130">รหัสสินค้า</th>
-                <th>ชื่อสินค้า</th>
-                <th width="65">กว้าง</th>
-                <th width="65">ยาว</th>
-                <th width="65">สูง</th>
-                <th width="70">Qty/Item</th>
+                <th width="40">ITM.</th>
+                <th width="130">Part No.</th>
+                <th>Description</th>
+                <th width="65">W</th>
+                <th width="65">L</th>
+                <th width="65">H</th>
+                <th width="70">Qty/Carton</th>
                 <th width="55">Qty</th>
-                <th width="85">คิว</th>
+                <th width="85">CBM</th>
             </tr>
         </thead>
         <tbody>
@@ -78,14 +78,11 @@
                     $width = (float) ($product->width ?? 0);
                     $length = (float) ($product->length ?? 0);
                     $height = (float) ($product->height ?? 0);
-                    $qtyPerItem = (float) ($product->qty_per_item ?? 1);
                     $qty = (float) ($product->qty ?? 0);
-                    $cubePerUnit = (float) ($product->cube ?? 0);
-                    // width/length/height เก็บเป็นมิลลิเมตร จึงแปลงเป็นลูกบาศก์เมตรก่อน
-                    $cubeFromDimension = ($width * $length * $height) / 1000000000;
-                    $lineCube = $cubePerUnit > 0
-                        ? ($cubePerUnit * $qty * $qtyPerItem)
-                        : ($cubeFromDimension * $qty * $qtyPerItem);
+                    $content = (float) ($product->content ?? 0);
+                    // คิว(CBM) = (กว้าง*ยาว*สูง หน่วยมม. -> ลบ.ม.) * จำนวนสั่งซื้อ / CONTENT(จำนวนต่อลัง)
+                    $cartonVolume = ($width * $length * $height) / 1000000000;
+                    $lineCube = $content > 0 ? ($cartonVolume * $qty / $content) : 0;
                     $grandCube += $lineCube;
                 @endphp
                 <tr>
@@ -95,19 +92,19 @@
                     <td class="text-right">{{ number_format($width, 2) }}</td>
                     <td class="text-right">{{ number_format($length, 2) }}</td>
                     <td class="text-right">{{ number_format($height, 2) }}</td>
-                    <td class="text-right">{{ number_format($qtyPerItem, 2) }}</td>
+                    <td class="text-center">{{ $content > 0 ? number_format($content, 0) : '-' }}</td>
                     <td class="text-right">{{ number_format($qty, 0) }}</td>
                     <td class="text-right">{{ number_format($lineCube, 4) }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" class="text-center">ไม่พบรายการสินค้า</td>
+                    <td colspan="9" class="text-center">No products found</td>
                 </tr>
             @endforelse
         </tbody>
         <tfoot class="tfoot">
             <tr>
-                <td colspan="8" class="text-right">คิวรวม</td>
+                <td colspan="8" class="text-right">Total Volume (CBM)</td>
                 <td class="text-right">{{ number_format($grandCube, 4) }}</td>
             </tr>
         </tfoot>

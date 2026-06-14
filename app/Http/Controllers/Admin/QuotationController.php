@@ -256,6 +256,7 @@ class QuotationController extends AdminController
                 , 'products.length'
                 , 'products.height'
                 , 'products.cube'
+                , 'products.content'
             );
         }])
         ->leftJoin('currencies' , 'quotations.currency_id', '=', 'currencies.id')
@@ -620,6 +621,7 @@ class QuotationController extends AdminController
                 , 'products.length'
                 , 'products.height'
                 , 'products.cube'
+                , 'products.content'
             );
         }])
         ->leftJoin('currencies' , 'quotations.currency_id', '=', 'currencies.id')
@@ -654,7 +656,8 @@ class QuotationController extends AdminController
                 'products.width',
                 'products.length',
                 'products.height',
-                'products.cube'
+                'products.cube',
+                'products.content'
             );
         }])
         ->select('quotations.*')

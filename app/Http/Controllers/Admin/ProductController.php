@@ -458,6 +458,122 @@ class ProductController extends AdminController
         }
     }
 
+    /**
+     * นำเข้า CONTENT (จำนวนต่อลัง) คอลัมน์ T จากไฟล์ Packing List Master เก็บลงคอลัมน์ products.content
+     * - อ่านไฟล์จาก: storage/app/imports/product_content.xls (หรือ .xlsx)
+     * - จับคู่ด้วย code = คอลัมน์ A (PART-NO_FOEMULA)  | ค่าที่นำเข้า = คอลัมน์ T (index 19)
+     * - ถ้า part no ซ้ำ จะใช้ค่า content ที่มากที่สุด (>0)
+     * - คิว (ใช้ตอนแสดงผลใบเสนอราคา) = (width * length * height / 1e9) * จำนวนสั่งซื้อ / content
+     * URL: /admin/{lang}/Product/ImportContent
+     */
+    public function import_content(Request $request)
+    {
+        // เช็คสิทธิ์: ต้องมีสิทธิ์ "แก้ไข (u)" ของเมนู Product
+        if (!Help::CheckPermissionMenu($this->current_menu, 'u')) {
+            return redirect('/admin/PermissionDenined');
+        }
+
+        @set_time_limit(0);
+        @ini_set('memory_limit', '1024M');
+
+        $dir = storage_path('app/imports');
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0775, true);
+        }
+        // รองรับทั้ง .xls และ .xlsx
+        $path = null;
+        foreach (['product_content.xls', 'product_content.xlsx'] as $name) {
+            if (is_file($dir . DIRECTORY_SEPARATOR . $name)) {
+                $path = $dir . DIRECTORY_SEPARATOR . $name;
+                break;
+            }
+        }
+        if ($path === null) {
+            return response()->json([
+                'status'  => 0,
+                'title'   => 'ไม่พบไฟล์',
+                'content' => 'กรุณาวางไฟล์ไว้ที่ storage/app/imports/product_content.xls (หรือ .xlsx) แล้วเรียกลิงก์นี้อีกครั้ง',
+            ], 404);
+        }
+
+        try {
+            // เพิ่มคอลัมน์ content ให้อัตโนมัติถ้ายังไม่มี (เลี่ยง prefix ด้วย raw SQL)
+            $exists = DB::select(
+                'SELECT 1 AS x FROM information_schema.columns
+                 WHERE table_schema = ? AND table_name = ? AND column_name = ? LIMIT 1',
+                [DB::getDatabaseName(), 'tb_products', 'content']
+            );
+            if (empty($exists)) {
+                DB::statement('ALTER TABLE tb_products ADD COLUMN content decimal(10,2) NULL DEFAULT 0 AFTER cube');
+            }
+
+            // อ่าน Excel
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($path);
+            $reader->setReadDataOnly(true);
+            $spreadsheet = $reader->load($path);
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows  = $sheet->toArray(null, true, false, false); // 0-indexed
+
+            // รวมค่าตาม code -> เก็บ content มากสุด (กรณี part no ซ้ำ)
+            $byCode = [];
+            foreach ($rows as $i => $r) {
+                if ($i < 2) {
+                    continue; // row 0 = เลขคอลัมน์, row 1 = หัวตาราง
+                }
+                $code = isset($r[0]) ? trim((string) $r[0]) : '';
+                if ($code === '' || strtoupper($code) === 'NULL') {
+                    continue;
+                }
+                $raw = $r[19] ?? null; // คอลัมน์ T
+                if (is_string($raw)) {
+                    $raw = str_replace(',', '', trim($raw));
+                }
+                if (!is_numeric($raw)) {
+                    continue;
+                }
+                $t = (float) $raw;
+                if ($t <= 0) {
+                    continue;
+                }
+                if (!isset($byCode[$code]) || $t > $byCode[$code]) {
+                    $byCode[$code] = $t;
+                }
+            }
+
+            $updated = 0;
+            $notFound = 0;
+
+            DB::beginTransaction();
+            foreach ($byCode as $code => $content) {
+                $affected = DB::table('products')
+                    ->where('code', $code)
+                    ->update(['content' => $content]);
+                if ($affected > 0) {
+                    $updated++;
+                } else {
+                    $notFound++;
+                }
+            }
+            DB::commit();
+
+            return response()->json([
+                'status'  => 1,
+                'title'   => 'สำเร็จ',
+                'content' => "อัปเดต content {$updated} รายการ | ไม่พบ code ตรงกัน {$notFound} | รวม code มีค่า T " . count($byCode),
+                'summary' => ['updated' => $updated, 'notFound' => $notFound, 'codes_with_T' => count($byCode)],
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status'  => 0,
+                'title'   => 'เกิดข้อผิดพลาด',
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+            ], 500);
+        }
+    }
+
     public function Search(Request $request) {
         $q = $request->input('q');
         $customer_id = $request->input('customer_id');

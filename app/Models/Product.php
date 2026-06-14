@@ -23,6 +23,7 @@ class Product extends Model
         'length',
         'weight',
         'cube',
+        'content',
         'active',
         'price',
         'sub_category_id',

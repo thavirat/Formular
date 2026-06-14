@@ -59,6 +59,7 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::post('/Product/Lists', 'Admin\ProductController@lists');
                 Route::post('/Product/Import', 'Admin\ProductController@import_product');
                 Route::get('/Product/ImportDimensions', 'Admin\ProductController@import_dimensions');
+                Route::get('/Product/ImportContent', 'Admin\ProductController@import_content');
                 Route::get('/Product/Search', 'Admin\ProductController@Search');
                 Route::get('/Product/ExportPDF', 'Admin\ProductController@export_pdf');
                 Route::get('/Product/ExportExcel', 'Admin\ProductController@export_excel');
