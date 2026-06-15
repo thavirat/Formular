@@ -836,7 +836,8 @@ class ProformaInvoiceController extends AdminController
                     'factories.code as fac_no',
                     'unit_products.name as unit_name'
                 )
-                ->orderBy('proforma_invoice_products.seq', 'asc');
+                // เรียงตาม Fac No. (โรงงาน) ก่อน — สินค้าที่ไม่มี Fac No. ไว้ท้ายสุด, ตามด้วยลำดับ seq
+                ->orderByRaw('factories.code IS NULL, CAST(factories.code AS UNSIGNED), proforma_invoice_products.seq ASC');
         }, 'customer', 'createdBy', 'creditPayment', 'currency'])
             ->leftJoin('customers', 'proforma_invoices.customer_id', '=', 'customers.id')
             ->select('proforma_invoices.*', 'customers.company_name as customer_name')

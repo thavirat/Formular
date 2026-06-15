@@ -459,6 +459,125 @@ class ProductController extends AdminController
     }
 
     /**
+     * นำเข้าโรงงาน (Fac No.) จากไฟล์ Master
+     * - Type_Master.xlsx : GoodTypeID, GoodTypeCode(=Fac No.), GoodTypeName, GoodTypeNameEng
+     *   -> upsert ลงตาราง factories (code = GoodTypeCode)  (idempotent ตาม code)
+     * - Prod_Master.xlsx : GoodCode(=products.code), GoodTypeID(link -> Type_Master)
+     *   -> ตั้งค่า products.factory_id ตาม factory ที่ผูกกับ GoodTypeID (จับคู่ด้วย code)
+     * อ่านไฟล์จาก: database/imports/masters/  (ติดไปกับโปรเจ็ค ใช้บน production ได้เลย)
+     * URL: /admin/{lang}/Product/ImportFactories
+     */
+    public function import_factories(Request $request)
+    {
+        if (!Help::CheckPermissionMenu($this->current_menu, 'u')) {
+            return redirect('/admin/PermissionDenined');
+        }
+
+        @set_time_limit(0);
+        @ini_set('memory_limit', '1024M');
+
+        $typePath = database_path('imports/masters/Type_Master.xlsx');
+        $prodPath = database_path('imports/masters/Prod_Master.xlsx');
+        foreach (['Type_Master.xlsx' => $typePath, 'Prod_Master.xlsx' => $prodPath] as $name => $p) {
+            if (!is_file($p)) {
+                return response()->json([
+                    'status'  => 0,
+                    'title'   => 'ไม่พบไฟล์',
+                    'content' => "ไม่พบไฟล์ {$name} ที่ database/imports/masters/",
+                ], 404);
+            }
+        }
+
+        try {
+            // ---------- 1) Type_Master -> factories ----------
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($typePath);
+            $reader->setReadDataOnly(true);
+            $typeRows = $reader->load($typePath)->getActiveSheet()->toArray(null, true, false, false);
+
+            // GoodTypeID => factory.id
+            $factoryIdByType = [];
+            $factoriesUpserted = 0;
+
+            DB::beginTransaction();
+            foreach ($typeRows as $i => $r) {
+                if ($i === 0) {
+                    continue; // header
+                }
+                $typeId = $r[0] ?? null;                                   // GoodTypeID
+                $facCode = isset($r[1]) ? trim((string) $r[1]) : '';       // GoodTypeCode = Fac No.
+                if ($typeId === null || $typeId === '' || $facCode === '') {
+                    continue;
+                }
+                $nameEng = isset($r[3]) && trim((string) $r[3]) !== '' && strtoupper((string) $r[3]) !== 'NULL' ? trim((string) $r[3]) : null;
+                $nameTh  = isset($r[2]) && trim((string) $r[2]) !== '' && strtoupper((string) $r[2]) !== 'NULL' ? trim((string) $r[2]) : null;
+                $facName = $nameEng ?: $nameTh;
+
+                // upsert by code (idempotent)
+                $existing = DB::table('factories')->where('code', $facCode)->first();
+                if ($existing) {
+                    DB::table('factories')->where('id', $existing->id)->update(['name' => $facName, 'updated_at' => now()]);
+                    $facId = $existing->id;
+                } else {
+                    $facId = DB::table('factories')->insertGetId([
+                        'code' => $facCode, 'name' => $facName,
+                        'created_at' => now(), 'updated_at' => now(),
+                    ]);
+                }
+                $factoryIdByType[(string) $typeId] = $facId;
+                $factoriesUpserted++;
+            }
+
+            // ---------- 2) Prod_Master -> products.factory_id ----------
+            $reader2 = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($prodPath);
+            $reader2->setReadDataOnly(true);
+            $prodRows = $reader2->load($prodPath)->getActiveSheet()->toArray(null, true, false, false);
+
+            $updated = 0; $notFound = 0; $noType = 0;
+            foreach ($prodRows as $i => $r) {
+                if ($i === 0) {
+                    continue;
+                }
+                $code = isset($r[0]) ? trim((string) $r[0]) : '';          // GoodCode
+                if ($code === '' || strtoupper($code) === 'NULL') {
+                    continue;
+                }
+                $typeId = $r[5] ?? null;                                    // GoodTypeID
+                if ($typeId === null || $typeId === '' || strtoupper((string) $typeId) === 'NULL') {
+                    $noType++;
+                    continue;
+                }
+                $facId = $factoryIdByType[(string) $typeId] ?? null;
+                if ($facId === null) {
+                    continue; // GoodTypeID ที่ไม่มีใน Type_Master
+                }
+                $affected = DB::table('products')->where('code', $code)->update(['factory_id' => $facId]);
+                if ($affected > 0) {
+                    $updated++;
+                } else {
+                    $notFound++;
+                }
+            }
+            DB::commit();
+
+            return response()->json([
+                'status'  => 1,
+                'title'   => 'สำเร็จ',
+                'content' => "factories: {$factoriesUpserted} | ตั้งค่า factory_id ให้สินค้า {$updated} | ไม่พบ code {$notFound} | สินค้าไม่มี GoodTypeID {$noType}",
+                'summary' => compact('factoriesUpserted', 'updated', 'notFound', 'noType'),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status'  => 0,
+                'title'   => 'เกิดข้อผิดพลาด',
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+            ], 500);
+        }
+    }
+
+    /**
      * นำเข้า CONTENT (จำนวนต่อลัง) คอลัมน์ T จากไฟล์ Packing List Master เก็บลงคอลัมน์ products.content
      * - อ่านไฟล์จาก: storage/app/imports/product_content.xls (หรือ .xlsx)
      * - จับคู่ด้วย code = คอลัมน์ A (PART-NO_FOEMULA)  | ค่าที่นำเข้า = คอลัมน์ T (index 19)

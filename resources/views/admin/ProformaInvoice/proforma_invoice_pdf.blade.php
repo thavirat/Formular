@@ -123,7 +123,7 @@
     <tbody>
         @forelse($pi->products as $i => $item)
             <tr>
-                <td class="text-center">{{ $item->seq ?: ($i + 1) }}</td>
+                <td class="text-center">{{ $i + 1 }}</td>
                 <td class="text-center">{{ $item->fac_no }}</td>
                 <td class="text-center bold">{{ number_format($item->qty, 0) }} {{ $item->unit_name ?: 'PCS' }}</td>
                 <td class="text-center">{{ $item->part_no }}</td>
