@@ -820,7 +820,8 @@ class ProformaInvoiceController extends AdminController
     public function factory_accept($id)
     {
         // ดึงข้อมูล PI แบบเดียวกับหน้า Show
-        $data['ProformaInvoice'] = ProformaInvoice::with(['products' => function ($q) {
+        $pfx = DB::getTablePrefix(); // raw expression ไม่ถูกเติม prefix อัตโนมัติ ต้องใส่เอง
+        $data['ProformaInvoice'] = ProformaInvoice::with(['products' => function ($q) use ($pfx) {
             $q->leftJoin('products', 'proforma_invoice_products.product_id', '=', 'products.id')
                 ->leftJoin('factories', 'products.factory_id', '=', 'factories.id')
                 ->leftJoin('unit_products', 'products.unit_id', '=', 'unit_products.id')
@@ -837,7 +838,7 @@ class ProformaInvoiceController extends AdminController
                     'unit_products.name as unit_name'
                 )
                 // เรียงตาม Fac No. (โรงงาน) ก่อน — สินค้าที่ไม่มี Fac No. ไว้ท้ายสุด, ตามด้วยลำดับ seq
-                ->orderByRaw('factories.code IS NULL, CAST(factories.code AS UNSIGNED), proforma_invoice_products.seq ASC');
+                ->orderByRaw("{$pfx}factories.code IS NULL, CAST({$pfx}factories.code AS UNSIGNED), {$pfx}proforma_invoice_products.seq ASC");
         }, 'customer', 'createdBy', 'creditPayment', 'currency'])
             ->leftJoin('customers', 'proforma_invoices.customer_id', '=', 'customers.id')
             ->select('proforma_invoices.*', 'customers.company_name as customer_name')
