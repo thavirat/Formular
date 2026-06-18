@@ -256,9 +256,9 @@
             <div style="margin-top:6px;">DATE :&nbsp;________________________</div>
         </td>
         <td width="50%" class="text-center">
-            <span class="bold">{{ trim(optional($pi->createdBy)->firstname . ' ' . optional($pi->createdBy)->lastname) }}</span>
-            <div style="margin-top:30px;">________________________</div>
-            <div class="bold">{{ $issuer }}</div>
+            <span class="bold">FORMULA INTERTRADE CO.,LTD.</span>
+            <div style="margin-top:45px;">________________________</div>
+            <div class="bold">{{ trim(optional($pi->createdBy)->firstname . ' ' . optional($pi->createdBy)->lastname) }}</div>
             <div>EXPORT DIVISION</div>
         </td>
     </tr>

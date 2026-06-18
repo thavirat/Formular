@@ -52,7 +52,7 @@
                                         <option value="">{{__('Select Customer')}}</option>
                                         @foreach($Customers as $customer)
                                             <option value="{{$customer->id}}" {{ $ProformaInvoice->customer_id == $customer->id ? 'selected' : '' }}>
-                                                {{$customer->company_name}} - {{$customer->contact_name}}
+                                                {{$customer->code ? $customer->code.' - ' : ''}}{{$customer->company_name}} - {{$customer->contact_name}}
                                             </option>
                                         @endforeach
                                     </select>
@@ -128,6 +128,50 @@
                             </div>
                         </div>
 
+                        {{-- ===== ข้อมูลการขนส่ง ===== --}}
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="ship_date">{{__('Ship Date')}}</label>
+                                    <input type="text" name="ship_date" id="ship_date" class="form-control init-date" value="{{ $ProformaInvoice->ship_date }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="ship_to_code">{{__('Ship To Code')}}</label>
+                                    <input type="text" name="ship_to_code" id="ship_to_code" class="form-control" value="{{ $ProformaInvoice->ship_to_code }}">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="cno">C/NO.</label>
+                                    <input type="text" name="cno" id="cno" class="form-control" value="{{ $ProformaInvoice->cno }}" placeholder="เช่น 1-UP">
+                                </div>
+                                <div class="form-group">
+                                    <label for="customer_po">{{__('Customer PO')}}</label>
+                                    <input type="text" name="customer_po" id="customer_po" class="form-control" value="{{ $ProformaInvoice->customer_po }}">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="ship_remark">{{__('Ship Remark')}}</label>
+                                    <input type="text" name="ship_remark" id="ship_remark" class="form-control" value="{{ $ProformaInvoice->ship_remark }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="shipment_to">TO</label>
+                                    <input type="text" name="shipment_to" id="shipment_to" class="form-control" value="{{ $ProformaInvoice->shipment_to }}" placeholder="ปลายทาง">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="text-bold d-block">{{__('Shipment')}}</label>
+                                    @foreach($ShipmentMethods as $sm)
+                                        <label class="mr-3">
+                                            <input type="radio" name="shipment_method_id" value="{{ $sm->id }}" {{ $ProformaInvoice->shipment_method_id == $sm->id ? 'checked' : '' }}> {{ $sm->name }}
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col-12">
                                 <table class="table table-bordered" id="productTable">
@@ -172,17 +216,64 @@
                                             <th colspan="2">
                                                 <button type="button" class="btn btn-primary btn-sm mb-2" id="addRow"><i class="fa fa-plus"></i> เพิ่มแถว</button>
                                             </th>
-                                            <th colspan="5" class="text-right">Total Amount</th>
-                                            <th><input type="text" id="grand_total" name="grand_total" class="form-control text-bold text-primary" value="{{ number_format($ProformaInvoice->total, 2) }}" readonly></th>
+                                            <th colspan="5" class="text-right">Subtotal</th>
+                                            <th><input type="text" id="subtotal_amount" name="subtotal" class="form-control text-bold text-right" value="{{ number_format($ProformaInvoice->subtotal, 2) }}" readonly></th>
                                             <th></th>
-                                        </tr>
-                                        <tr>
-                                            <th colspan="10" class="text-center">
-                                                <button type="submit" class="btn btn-warning"><i class="fa fa-save"></i> Update PI</button>
-                                            </th>
                                         </tr>
                                     </tfoot>
                                 </table>
+
+                                {{-- ===== ค่าบริการอื่นๆ ===== --}}
+                                <div class="row mt-2">
+                                    <div class="col-md-7">
+                                        <label class="text-bold">{{__('Other Services')}}</label>
+                                        <table class="table table-bordered table-sm" id="serviceTable">
+                                            <thead class="bgc-grey-l3"><tr><th>{{__('Service Description')}}</th><th width="35%">{{__('Amount')}}</th><th width="40"></th></tr></thead>
+                                            <tbody>
+                                                @foreach($ProformaInvoice->services as $sv)
+                                                <tr>
+                                                    <td><input type="text" class="form-control form-control-sm service-name" name="service_name[]" value="{{ $sv->name }}"></td>
+                                                    <td><input type="number" step="any" class="form-control form-control-sm text-right service-amount" name="service_amount[]" value="{{ $sv->amount }}"></td>
+                                                    <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm removeService" tabindex="-1"><i class="fa fa-trash"></i></button></td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                            <tfoot><tr><td colspan="3"><button type="button" class="btn btn-outline-primary btn-sm" id="addService"><i class="fa fa-plus"></i> {{__('Add Service')}}</button></td></tr></tfoot>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <table class="table table-borderless mb-0">
+                                            <tr><td class="text-right text-bold">Subtotal</td><td class="text-right" id="subtotal_show" style="width:45%;">{{ number_format($ProformaInvoice->subtotal, 2) }}</td></tr>
+                                            <tr><td class="text-right text-bold">Services</td><td class="text-right" id="services_show">0.00</td></tr>
+                                            <tr><td class="text-right text-bold" style="font-size:1.1em;">Total</td>
+                                                <td><input type="text" id="grand_total" name="grand_total" class="form-control text-bold text-primary text-right" value="{{ number_format($ProformaInvoice->total, 2) }}" readonly></td></tr>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                {{-- ===== หมายเหตุ ===== --}}
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <label class="text-bold">{{__('Remarks')}}</label>
+                                        <table class="table table-bordered table-sm" id="remarkTable">
+                                            <thead class="bgc-grey-l3"><tr><th width="50" class="text-center">#</th><th>{{__('Remark')}}</th><th width="40"></th></tr></thead>
+                                            <tbody>
+                                                @foreach($ProformaInvoice->remarks as $rm)
+                                                <tr>
+                                                    <td class="text-center align-middle"><i class="fas fa-grip-vertical cursor-move text-muted remark-handle"></i></td>
+                                                    <td><input type="text" class="form-control form-control-sm" name="remark_text[]" value="{{ $rm->remark }}"></td>
+                                                    <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm removeRemark" tabindex="-1"><i class="fa fa-trash"></i></button></td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                            <tfoot><tr><td colspan="3"><button type="button" class="btn btn-outline-primary btn-sm" id="addRemark"><i class="fa fa-plus"></i> {{__('Add Remark')}}</button></td></tr></tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="text-center mt-3">
+                                    <button type="submit" class="btn btn-warning"><i class="fa fa-save"></i> Update PI</button>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -410,18 +501,53 @@ $(document).ready(function() {
         calculateGrandTotal();
     }
 
+    function fmt(n) {
+        return (n || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
     function calculateGrandTotal() {
-        var grandTotal = 0;
+        var subtotal = 0;
         $('.amount').each(function() {
-            var val = $(this).val().replace(/,/g, '');
-            grandTotal += parseFloat(val) || 0;
+            subtotal += parseFloat($(this).val().replace(/,/g, '')) || 0;
         });
-        $('#grand_total').val(grandTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+        var services = 0;
+        $('.service-amount').each(function() {
+            services += parseFloat($(this).val().replace(/,/g, '')) || 0;
+        });
+        var grand = subtotal + services;
+        $('#subtotal_amount').val(fmt(subtotal));
+        $('#subtotal_show').text(fmt(subtotal));
+        $('#services_show').text(fmt(services));
+        $('#grand_total').val(fmt(grand));
     }
 
     $('body').on('input', '.qty, .unit_price', function() {
         calculateRow($(this).closest('tr'));
     });
+
+    // ----- ค่าบริการอื่นๆ -----
+    function serviceRow() {
+        return '<tr>' +
+            '<td><input type="text" class="form-control form-control-sm service-name" name="service_name[]" placeholder="เช่น ค่าขนส่ง"></td>' +
+            '<td><input type="number" step="any" class="form-control form-control-sm text-right service-amount" name="service_amount[]" value="0"></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm removeService" tabindex="-1"><i class="fa fa-trash"></i></button></td>' +
+            '</tr>';
+    }
+    $('#addService').on('click', function() { $('#serviceTable tbody').append(serviceRow()); });
+    $('body').on('click', '.removeService', function() { $(this).closest('tr').remove(); calculateGrandTotal(); });
+    $('body').on('input', '.service-amount', calculateGrandTotal);
+
+    // ----- หมายเหตุ (จำลำดับตามแถว) -----
+    function remarkRow() {
+        return '<tr>' +
+            '<td class="text-center align-middle"><i class="fas fa-grip-vertical cursor-move text-muted remark-handle"></i></td>' +
+            '<td><input type="text" class="form-control form-control-sm" name="remark_text[]"></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm removeRemark" tabindex="-1"><i class="fa fa-trash"></i></button></td>' +
+            '</tr>';
+    }
+    $('#addRemark').on('click', function() { $('#remarkTable tbody').append(remarkRow()); });
+    $('body').on('click', '.removeRemark', function() { $(this).closest('tr').remove(); });
+    if ($('#remarkTable tbody').sortable) { $('#remarkTable tbody').sortable({ handle: '.remark-handle', placeholder: 'ui-state-highlight' }); }
 
     if ($('#customer_id').val()) {
         $('#customer_id, #currency_id').attr('readonly', true).css('pointer-events', 'none');

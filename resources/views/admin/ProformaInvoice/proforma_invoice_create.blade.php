@@ -59,7 +59,7 @@
                                             @foreach ($Customers as $customer)
                                                 <option value="{{ $customer->id }}"
                                                     {{ $Quotation && $Quotation->customer_id == $customer->id ? 'selected' : '' }}>
-                                                    {{ $customer->company_name }} - {{ $customer->contact_name }}</option>
+                                                    {{ $customer->code ? $customer->code.' - ' : '' }}{{ $customer->company_name }} - {{ $customer->contact_name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -145,6 +145,11 @@
                                             value="">
                                     </div>
                                     <div class="form-group">
+                                        <label for="cno">C/NO.</label>
+                                        <input type="text" name="cno" id="cno" class="form-control"
+                                            value="1-UP" placeholder="เช่น 1-UP">
+                                    </div>
+                                    <div class="form-group">
                                         <label for="ship_remark">{{ __('Ship Remark') }}</label>
                                         <input type="text" name="ship_remark" id="ship_remark" class="form-control"
                                             value="">
@@ -190,6 +195,25 @@
                                                     {{ $CreditPayment->name }}</option>
                                             @endforeach
                                         </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="text-bold d-block">{{ __('Shipment') }}</label>
+                                        @foreach ($ShipmentMethods as $sm)
+                                            <label class="mr-3">
+                                                <input type="radio" name="shipment_method_id" value="{{ $sm->id }}"> {{ $sm->name }}
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="shipment_to">TO</label>
+                                        <input type="text" name="shipment_to" id="shipment_to" class="form-control" value="" placeholder="ปลายทาง">
                                     </div>
                                 </div>
                             </div>
@@ -259,20 +283,86 @@
                                                     <button type="button" class="btn btn-primary btn-sm mb-2"
                                                         id="addRow"><i class="fa fa-plus"></i> เพิ่มแถว</button>
                                                 </th>
-                                                <th colspan="6" class="text-right">Total Amount (<span
+                                                <th colspan="6" class="text-right">Subtotal (<span
                                                         class="show_currency">{{ $Quotation ? $Quotation->symbol : $default_currency_symbol }}</span>)</th>
-                                                <th><input type="text" id="grand_total" name="grand_total"
-                                                        class="form-control text-bold text-primary" readonly></th>
+                                                <th><input type="text" id="subtotal_amount" name="subtotal"
+                                                        class="form-control text-bold text-right" readonly></th>
                                                 <th></th>
-                                            </tr>
-                                            <tr>
-                                                <th colspan="11" class="text-center">
-                                                    <button type="submit" class="btn btn-success"><i
-                                                            class="fa fa-save"></i> Create PI</button>
-                                                </th>
                                             </tr>
                                         </tfoot>
                                     </table>
+
+                                    {{-- ===== ค่าบริการอื่นๆ (ระหว่าง Subtotal กับ Total) ===== --}}
+                                    <div class="row mt-2">
+                                        <div class="col-md-7">
+                                            <label class="text-bold">{{ __('Other Services') }}</label>
+                                            <table class="table table-bordered table-sm" id="serviceTable">
+                                                <thead class="bgc-grey-l3">
+                                                    <tr>
+                                                        <th>{{ __('Service Description') }}</th>
+                                                        <th width="35%">{{ __('Amount') }}</th>
+                                                        <th width="40"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <td colspan="3">
+                                                            <button type="button" class="btn btn-outline-primary btn-sm" id="addService">
+                                                                <i class="fa fa-plus"></i> {{ __('Add Service') }}</button>
+                                                        </td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <table class="table table-borderless mb-0">
+                                                <tr>
+                                                    <td class="text-right text-bold">Subtotal</td>
+                                                    <td class="text-right" id="subtotal_show" style="width:45%;">0.00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-right text-bold">Services</td>
+                                                    <td class="text-right" id="services_show">0.00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="text-right text-bold" style="font-size:1.1em;">Total (<span
+                                                            class="show_currency">{{ $Quotation ? $Quotation->symbol : $default_currency_symbol }}</span>)</td>
+                                                    <td><input type="text" id="grand_total" name="grand_total"
+                                                            class="form-control text-bold text-primary text-right" readonly></td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    {{-- ===== หมายเหตุ (หลายบรรทัด, จำลำดับ) ===== --}}
+                                    <div class="row mt-2">
+                                        <div class="col-12">
+                                            <label class="text-bold">{{ __('Remarks') }}</label>
+                                            <table class="table table-bordered table-sm" id="remarkTable">
+                                                <thead class="bgc-grey-l3">
+                                                    <tr>
+                                                        <th width="50" class="text-center">#</th>
+                                                        <th>{{ __('Remark') }}</th>
+                                                        <th width="40"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <td colspan="3">
+                                                            <button type="button" class="btn btn-outline-primary btn-sm" id="addRemark">
+                                                                <i class="fa fa-plus"></i> {{ __('Add Remark') }}</button>
+                                                        </td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-center mt-3">
+                                        <button type="submit" class="btn btn-success"><i class="fa fa-save"></i> Create PI</button>
+                                    </div>
                                 </div>
                             </div>
                         </form>
@@ -505,18 +595,53 @@
                 calculateGrandTotal();
             }
 
+            function fmt(n) {
+                return (n || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            }
+
             function calculateGrandTotal() {
-                var grandTotal = 0;
+                var subtotal = 0;
                 $('.amount').each(function() {
-                    var val = $(this).val().replace(/,/g, '');
-                    grandTotal += parseFloat(val) || 0;
+                    subtotal += parseFloat($(this).val().replace(/,/g, '')) || 0;
                 });
-                $('#grand_total').val(grandTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                var services = 0;
+                $('.service-amount').each(function() {
+                    services += parseFloat($(this).val().replace(/,/g, '')) || 0;
+                });
+                var grand = subtotal + services;
+                $('#subtotal_amount').val(fmt(subtotal));
+                $('#subtotal_show').text(fmt(subtotal));
+                $('#services_show').text(fmt(services));
+                $('#grand_total').val(fmt(grand));
             }
 
             $('body').on('input', '.qty, .unit_price', function() {
                 calculateRow($(this).closest('tr'));
             });
+
+            // ----- ค่าบริการอื่นๆ -----
+            function serviceRow() {
+                return '<tr>' +
+                    '<td><input type="text" class="form-control form-control-sm service-name" name="service_name[]" placeholder="เช่น ค่าขนส่ง"></td>' +
+                    '<td><input type="number" step="any" class="form-control form-control-sm text-right service-amount" name="service_amount[]" value="0"></td>' +
+                    '<td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm removeService" tabindex="-1"><i class="fa fa-trash"></i></button></td>' +
+                    '</tr>';
+            }
+            $('#addService').on('click', function() { $('#serviceTable tbody').append(serviceRow()); });
+            $('body').on('click', '.removeService', function() { $(this).closest('tr').remove(); calculateGrandTotal(); });
+            $('body').on('input', '.service-amount', calculateGrandTotal);
+
+            // ----- หมายเหตุ (จำลำดับตามแถว) -----
+            function remarkRow() {
+                return '<tr>' +
+                    '<td class="text-center align-middle"><i class="fas fa-grip-vertical cursor-move text-muted remark-handle"></i></td>' +
+                    '<td><input type="text" class="form-control form-control-sm" name="remark_text[]"></td>' +
+                    '<td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm removeRemark" tabindex="-1"><i class="fa fa-trash"></i></button></td>' +
+                    '</tr>';
+            }
+            $('#addRemark').on('click', function() { $('#remarkTable tbody').append(remarkRow()); });
+            $('body').on('click', '.removeRemark', function() { $(this).closest('tr').remove(); });
+            $('#remarkTable tbody').sortable({ handle: '.remark-handle', placeholder: 'ui-state-highlight' });
 
             if ($('#customer_id').val()) {
                 $('#customer_id, #currency_id').attr('readonly', true).css('pointer-events', 'none');

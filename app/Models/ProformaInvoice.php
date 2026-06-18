@@ -40,4 +40,19 @@ class ProformaInvoice extends Model
     {
         return $this->belongsTo(CreditPayment::class, 'credit_payment_id');
     }
+
+    public function shipmentMethod()
+    {
+        return $this->belongsTo(ShipmentMethod::class, 'shipment_method_id');
+    }
+
+    public function remarks()
+    {
+        return $this->hasMany(ProformaInvoiceRemark::class, 'pi_id', 'id')->orderBy('seq');
+    }
+
+    public function services()
+    {
+        return $this->hasMany(ProformaInvoiceService::class, 'pi_id', 'id')->orderBy('seq');
+    }
 }

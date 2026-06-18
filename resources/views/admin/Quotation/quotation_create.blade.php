@@ -40,7 +40,7 @@
                                     <select name="customer_id" id="customer_id" class="form-control select2" >
                                         <option value="">{{__('Select Customer')}}</option>
                                         @foreach($Customers as $customer)
-                                            <option value="{{$customer->id}}">{{$customer->company_name}} - {{$customer->contact_name}}</option>
+                                            <option value="{{$customer->id}}">{{$customer->code ? $customer->code.' - ' : ''}}{{$customer->company_name}} - {{$customer->contact_name}}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -176,6 +176,13 @@
 @push('scripts')
 <script type="text/javascript">
 $(document).ready(function() {
+
+    // ทำให้ dropdown ลูกค้าค้นหาได้ (ค้นด้วยรหัส/ชื่อบริษัท/ชื่อผู้ติดต่อ)
+    $('#customer_id').select2({
+        placeholder: 'ค้นหาลูกค้า...',
+        allowClear: true,
+        width: '100%'
+    });
 
     $('#customer_id').on('change', function(){
         var customer_id = $(this).val();

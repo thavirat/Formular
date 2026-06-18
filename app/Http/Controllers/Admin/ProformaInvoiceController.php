@@ -8,6 +8,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Menu;
 use App\Models\ProformaInvoice;
 use App\Models\ProformaInvoiceProduct;
+use App\Models\ProformaInvoiceRemark;
+use App\Models\ProformaInvoiceService;
+use App\Models\ShipmentMethod;
 use App\Models\Customer;
 use App\Models\Incoterm;
 use App\Models\CreditPayment;
@@ -80,6 +83,7 @@ class ProformaInvoiceController extends AdminController
         $data['Incoterms'] = Incoterm::orderBy('code')->get();
         $data['Currencies'] = Currency::orderBy('name')->get();
         $data['CreditPayments'] = CreditPayment::orderBy('name')->get();
+        $data['ShipmentMethods'] = ShipmentMethod::active()->orderBy('seq')->get();
         $data['admin_lang_slash'] = $this->adminLangSlash($request);
         $data['default_currency_symbol'] = Currency::orderBy('name')->value('symbol') ?? '';
         $data['suggested_doc_no'] = $this->suggestProformaInvoiceDocNo(date('Y-m-d'))['doc_no'];
@@ -181,10 +185,17 @@ class ProformaInvoiceController extends AdminController
             $pi->ship_to_code            = $request->ship_to_code;
             $pi->customer_po            = $request->customer_po;
             $pi->ship_remark            = $request->ship_remark;
-            $pi->subtotal          = str_replace(',', '', $request->grand_total);
-            $pi->total             = str_replace(',', '', $request->grand_total);
+            $pi->cno                  = $request->cno;
+            $pi->shipment_method_id   = $request->shipment_method_id ?: null;
+            $pi->shipment_to          = $request->shipment_to;
+            $subtotal = (float) str_replace(',', '', $request->subtotal ?? $request->grand_total);
+            $servicesTotal = $this->sumServices($request);
+            $pi->subtotal          = $subtotal;
+            $pi->total             = $subtotal + $servicesTotal;
             $pi->created_by        = Auth::guard('admin')->user()->id;
             $pi->save();
+
+            $this->saveRemarksAndServices($request, $pi->id);
 
             if ($request->product && is_array($request->product)) {
                 foreach ($request->product as $key => $product_id) {
@@ -253,6 +264,43 @@ class ProformaInvoiceController extends AdminController
         return $return;
     }
 
+    /** รวมยอดค่าบริการอื่นๆ จาก request */
+    private function sumServices(Request $request): float
+    {
+        $total = 0;
+        foreach ((array) $request->input('service_amount', []) as $a) {
+            $total += (float) str_replace(',', '', $a);
+        }
+        return $total;
+    }
+
+    /** บันทึกหมายเหตุ (หลายบรรทัด) + ค่าบริการ ลงตารางแยก (ลบของเดิมก่อน, จำลำดับตามแถว) */
+    private function saveRemarksAndServices(Request $request, $piId): void
+    {
+        ProformaInvoiceRemark::where('pi_id', $piId)->delete();
+        $seq = 1;
+        foreach ((array) $request->input('remark_text', []) as $text) {
+            $text = trim((string) $text);
+            if ($text === '') {
+                continue;
+            }
+            ProformaInvoiceRemark::create(['pi_id' => $piId, 'seq' => $seq++, 'remark' => $text]);
+        }
+
+        ProformaInvoiceService::where('pi_id', $piId)->delete();
+        $names = (array) $request->input('service_name', []);
+        $amounts = (array) $request->input('service_amount', []);
+        $seq = 1;
+        foreach ($names as $i => $name) {
+            $name = trim((string) $name);
+            $amount = (float) str_replace(',', '', $amounts[$i] ?? 0);
+            if ($name === '' && $amount == 0) {
+                continue;
+            }
+            ProformaInvoiceService::create(['pi_id' => $piId, 'seq' => $seq++, 'name' => $name, 'amount' => $amount]);
+        }
+    }
+
     /**
      * Show the form for editing the specified resource.
      *
@@ -269,8 +317,9 @@ class ProformaInvoiceController extends AdminController
         $data['Incoterms']      = Incoterm::orderBy('code')->get();
         $data['Currencies']     = Currency::orderBy('name')->get();
         $data['CreditPayments'] = CreditPayment::orderBy('name')->get();
+        $data['ShipmentMethods'] = ShipmentMethod::active()->orderBy('seq')->get();
 
-        // ดึงข้อมูล Proforma Invoice พร้อม Products ที่เรียงตาม seq
+        // ดึงข้อมูล Proforma Invoice พร้อม Products ที่เรียงตาม seq + remarks/services
         $data['ProformaInvoice'] = ProformaInvoice::with(['products' => function ($q) {
             $q->leftJoin('products', 'proforma_invoice_products.product_id', '=', 'products.id')
                 ->select(
@@ -278,7 +327,7 @@ class ProformaInvoiceController extends AdminController
                     'products.code as part_no'
                 )
                 ->orderBy('proforma_invoice_products.seq', 'asc'); // เรียงตามลำดับที่บันทึกไว้
-        }])->findOrFail($id);
+        }, 'remarks', 'services'])->findOrFail($id);
 
         $data['admin_lang_slash'] = $this->adminLangSlash($request);
 
@@ -331,9 +380,15 @@ class ProformaInvoiceController extends AdminController
             $pi->ship_to_code            = $request->ship_to_code;
             $pi->customer_po            = $request->customer_po;
             $pi->ship_remark            = $request->ship_remark;
-            $pi->subtotal          = str_replace(',', '', $request->grand_total);
-            $pi->total             = str_replace(',', '', $request->grand_total);
+            $pi->cno                  = $request->cno;
+            $pi->shipment_method_id   = $request->shipment_method_id ?: null;
+            $pi->shipment_to          = $request->shipment_to;
+            $subtotal = (float) str_replace(',', '', $request->subtotal ?? $request->grand_total);
+            $pi->subtotal          = $subtotal;
+            $pi->total             = $subtotal + $this->sumServices($request);
             $pi->save();
+
+            $this->saveRemarksAndServices($request, $pi->id);
 
             // --- 3. ตรวจสอบโควต้าและ Insert รอบใหม่ ---
             if ($request->product && is_array($request->product)) {

@@ -100,6 +100,9 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::get('/CreditPayment/ExportPrint', 'Admin\CreditPaymentController@export_print');
                 Route::resource('/CreditPayment', Admin\CreditPaymentController::class);
 
+                Route::post('/ShipmentMethod/Lists', 'Admin\ShipmentMethodController@lists');
+                Route::resource('/ShipmentMethod', Admin\ShipmentMethodController::class);
+
                 Route::post('/Quotation/RequestApproval', 'Admin\QuotationController@RequestApproval');
                 Route::post('/Quotation/Approve', 'Admin\QuotationController@Approve');
                 Route::post('/Quotation/Lists', 'Admin\QuotationController@lists');
