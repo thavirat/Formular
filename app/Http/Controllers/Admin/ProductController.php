@@ -595,15 +595,21 @@ class ProductController extends AdminController
         @set_time_limit(0);
         @ini_set('memory_limit', '1024M');
 
-        $dir = storage_path('app/imports');
-        if (!is_dir($dir)) {
-            @mkdir($dir, 0775, true);
+        // หาไฟล์จาก 2 ที่: ในโปรเจ็ค (deploy ไปด้วย) ก่อน แล้วค่อย storage (กรณีอัปโหลดเอง)
+        $storageDir = storage_path('app/imports');
+        if (!is_dir($storageDir)) {
+            @mkdir($storageDir, 0775, true);
         }
-        // รองรับทั้ง .xls และ .xlsx
         $path = null;
-        foreach (['product_content.xls', 'product_content.xlsx'] as $name) {
-            if (is_file($dir . DIRECTORY_SEPARATOR . $name)) {
-                $path = $dir . DIRECTORY_SEPARATOR . $name;
+        $candidates = [
+            database_path('imports/masters/product_content.xls'),
+            database_path('imports/masters/product_content.xlsx'),
+            $storageDir . DIRECTORY_SEPARATOR . 'product_content.xls',
+            $storageDir . DIRECTORY_SEPARATOR . 'product_content.xlsx',
+        ];
+        foreach ($candidates as $cand) {
+            if (is_file($cand)) {
+                $path = $cand;
                 break;
             }
         }
@@ -611,7 +617,7 @@ class ProductController extends AdminController
             return response()->json([
                 'status'  => 0,
                 'title'   => 'ไม่พบไฟล์',
-                'content' => 'กรุณาวางไฟล์ไว้ที่ storage/app/imports/product_content.xls (หรือ .xlsx) แล้วเรียกลิงก์นี้อีกครั้ง',
+                'content' => 'กรุณาวางไฟล์ไว้ที่ database/imports/masters/product_content.xls หรือ storage/app/imports/product_content.xls แล้วเรียกลิงก์นี้อีกครั้ง',
             ], 404);
         }
 
