@@ -25,7 +25,16 @@
             $logo = json_decode($settings['logo']);
             $logo = ( sizeof( $logo ) > 0 ? $logo[0] : null );
         }
+        // จัดกลุ่มสินค้าตามโรงงาน (Fac No.) -> เอกสาร 1 ชุด ต่อ 1 โรงงาน (รวมในไฟล์เดียว)
+        $groups = $ProformaInvoice->products->groupBy(function ($p) {
+            return ($p->fac_no !== null && $p->fac_no !== '') ? $p->fac_no : '-';
+        });
     @endphp
+
+    @foreach($groups as $facNo => $items)
+    @if(!$loop->first)
+        <div style="page-break-before: always;"></div>
+    @endif
 
     <table  width="100%"   cellpadding="0" cellspacing="0" style="background-color: rgb(255, 243, 216);">
         <tr>
@@ -57,6 +66,13 @@
                 </div>
 
             </td>
+        </tr>
+        <tr>
+            <td align="center">
+                <b><u>Fac No.</u></b>
+            </td>
+            <td><b>{{ $facNo }}</b></td>
+            <td></td>
         </tr>
         <tr>
             <td align="center">
@@ -108,22 +124,23 @@
     <tr>
         <th width="5%" style="padding-bottom: 5px; background-color: rgb(255, 243, 216);"><u>NO</u></th>
         <th width="5%" style="padding-bottom: 5px; background-color: rgb(255, 243, 216);"><u>ITM</u></th>
-        <th width="5%" style="padding-bottom: 5px; background-color: rgb(255, 243, 216);" align="right"><u>QTY</u><br><u>Total</u></th>
-        <th width="20%" style="padding-bottom: 5px; padding-left: 5px; background-color: rgb(255, 243, 216);"  align="left"><u>Part No</u><br><u><span style="color: green;">ราคาต่อหน่วย</span></u></th>
-        <th width="45%" style="padding-bottom: 5px; background-color: rgb(255, 243, 216);"><u>Description</u><br><span style="color: blue;"><u>DWG</u></span></th>
+        <th width="8%" style="padding-bottom: 5px; background-color: rgb(255, 243, 216);" align="right"><u>QTY</u></th>
+        <th width="20%" style="padding-bottom: 5px; padding-left: 5px; background-color: rgb(255, 243, 216);"  align="left"><u>Part No</u><br><u><span style="color: green;">ต้นทุน</span></u></th>
+        <th width="42%" style="padding-bottom: 5px; background-color: rgb(255, 243, 216);"><u>Description</u><br><span style="color: blue;"><u>DWG</u></span></th>
         <th width="20%" style="padding-bottom: 5px; background-color: rgb(255, 243, 216);"><u>Customer.</u><br><u>P/NO.</u></th>
     </tr>
-    @foreach($ProformaInvoice->products as $key => $product)
+    @foreach($items as $key => $product)
     <tr>
-        <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px; color: blue;" valign="top" align="center">{{ $key + 1 }}</td>
+        <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px; color: blue;" valign="top" align="center">{{ $loop->iteration }}</td>
         <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;" valign="top" align="center">{{ $product->seq }}</td>
-        <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;" align="right">{{ number_format($product->qty, 0) }}<br><span style="color: rgb(107, 73, 73);">{{ number_format($product->qty, 0) }}</span></td>
-        <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;">{{ $product->part_no }}<br>{{ $product->unit_name }} <span style="color: red;">{{ number_format($product->price_per_item, 2) }}</span></td>
+        <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;" align="right">{{ number_format($product->qty, 0) }} {{ $product->unit_name }}</td>
+        <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;">{{ $product->part_no }}<div style="text-align: right; color: red;">{{ number_format($product->cost, 2) }}</div></td>
         <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;" valign="top">{{ $product->name_en }}</td>
         <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;" valign="top" align="center">{{ $product->drawing }}</td>
     </tr>
     @endforeach
 </table>
+    @endforeach
 </body>
 
 </html>

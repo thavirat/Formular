@@ -72,6 +72,18 @@ class ImportMasters extends Command
         return $reader->load($path)->getActiveSheet()->toArray(null, true, false, false);
     }
 
+    /** โหลด code ของสินค้าทั้งหมดมาเป็น set ไว้เช็คการ match (เลี่ยงนับ affected=0 ของแถวที่ค่าไม่เปลี่ยนว่าเป็น not found) */
+    private function productCodeSet(): array
+    {
+        $set = [];
+        foreach (DB::table('products')->pluck('code') as $c) {
+            if ($c !== null) {
+                $set[trim((string) $c)] = true;
+            }
+        }
+        return $set;
+    }
+
     private function columnExists(string $table, string $column): bool
     {
         $r = DB::select(
@@ -117,8 +129,9 @@ class ImportMasters extends Command
             $facCount++;
         }
 
+        $codes = $this->productCodeSet();
         $prodRows = $this->rows($prodPath);
-        $updated = $notFound = $noType = 0;
+        $matched = $notFound = $noType = 0;
         foreach ($prodRows as $i => $r) {
             if ($i === 0) continue;
             $code = isset($r[0]) ? trim((string) $r[0]) : '';
@@ -127,11 +140,12 @@ class ImportMasters extends Command
             if ($typeId === null || $typeId === '' || strtoupper((string) $typeId) === 'NULL') { $noType++; continue; }
             $facId = $factoryIdByType[(string) $typeId] ?? null;
             if ($facId === null) continue;
-            $aff = DB::table('products')->where('code', $code)->update(['factory_id' => $facId]);
-            $aff > 0 ? $updated++ : $notFound++;
+            if (!isset($codes[$code])) { $notFound++; continue; }
+            DB::table('products')->where('code', $code)->update(['factory_id' => $facId]);
+            $matched++;
         }
         DB::commit();
-        $this->info("  factories: {$facCount} | factory_id ที่ตั้ง: {$updated} | ไม่พบ code: {$notFound} | ไม่มี GoodTypeID: {$noType}");
+        $this->info("  factories: {$facCount} | จับคู่สินค้าได้: {$matched} | ไม่พบ code: {$notFound} | ไม่มี GoodTypeID: {$noType}");
     }
 
     /** ----- dimensions : product_dimensions.xlsx ----- */
@@ -160,8 +174,9 @@ class ImportMasters extends Command
         $sheet = $ss->getSheetByName('All in') ?: $ss->getActiveSheet();
         $rows = $sheet->toArray(null, true, false, false);
 
+        $codes = $this->productCodeSet();
         DB::beginTransaction();
-        $updated = $skipped = $notFound = 0;
+        $matched = $skipped = $notFound = 0;
         foreach ($rows as $i => $r) {
             if ($i === 0) continue;
             $code = isset($r[9]) ? trim((string) $r[9]) : '';
@@ -171,14 +186,15 @@ class ImportMasters extends Command
             $h = is_numeric($r[16] ?? null) ? (float) $r[16] : null;
             $wt = is_numeric($r[17] ?? null) ? (float) $r[17] : 0;
             if ($w === null || $l === null || $h === null || $w <= 0 || $l <= 0 || $h <= 0) { $skipped++; continue; }
+            if (!isset($codes[$code])) { $notFound++; continue; }
             $cube = round($w * $l * $h / 1000000000, 6);
-            $aff = DB::table('products')->where('code', $code)->update([
+            DB::table('products')->where('code', $code)->update([
                 'width' => $w, 'length' => $l, 'height' => $h, 'weight' => $wt, 'cube' => $cube,
             ]);
-            $aff > 0 ? $updated++ : $notFound++;
+            $matched++;
         }
         DB::commit();
-        $this->info("  อัปเดต: {$updated} | ข้าม(ไม่มีมิติ): {$skipped} | ไม่พบ code: {$notFound}");
+        $this->info("  จับคู่+อัปเดต: {$matched} | ข้าม(ไม่มีมิติ): {$skipped} | ไม่พบ code: {$notFound}");
     }
 
     /** ----- content : product_content.xls (คอลัมน์ T) ----- */
@@ -209,13 +225,15 @@ class ImportMasters extends Command
             if (!isset($byCode[$code]) || $t > $byCode[$code]) $byCode[$code] = $t;
         }
 
+        $codes = $this->productCodeSet();
         DB::beginTransaction();
-        $updated = $notFound = 0;
+        $matched = $notFound = 0;
         foreach ($byCode as $code => $content) {
-            $aff = DB::table('products')->where('code', $code)->update(['content' => $content]);
-            $aff > 0 ? $updated++ : $notFound++;
+            if (!isset($codes[$code])) { $notFound++; continue; }
+            DB::table('products')->where('code', $code)->update(['content' => $content]);
+            $matched++;
         }
         DB::commit();
-        $this->info("  อัปเดต content: {$updated} | ไม่พบ code: {$notFound} | code มีค่า T: " . count($byCode));
+        $this->info("  จับคู่+อัปเดต content: {$matched} | ไม่พบ code: {$notFound} | code มีค่า T: " . count($byCode));
     }
 }

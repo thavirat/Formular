@@ -309,10 +309,10 @@
                 <th width="120">Part No.</th>
                 <th>Description</th>
                 <th width="58">W</th>
-                <th width="58">L</th>
-                <th width="58">H</th>
-                <th width="60">Qty/Carton</th>
-                <th width="45">Qty</th>
+                <th width="50">L</th>
+                <th width="50">H</th>
+                <th width="60">Packing</th>
+                <th width="60">Order Qty</th>
                 <th width="70">CBM</th>
             </tr>
         </thead>

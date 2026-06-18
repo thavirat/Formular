@@ -855,8 +855,9 @@ class ProformaInvoiceController extends AdminController
 
     public function export_po($id)
     {
+        $pfx = DB::getTablePrefix(); // raw order by ไม่ถูกเติม prefix อัตโนมัติ
         // ดึงข้อมูล PI แบบเดียวกับหน้า Show
-        $data['ProformaInvoice'] = ProformaInvoice::with(['products' => function ($q) {
+        $data['ProformaInvoice'] = ProformaInvoice::with(['products' => function ($q) use ($pfx) {
             $q->leftJoin('products', 'proforma_invoice_products.product_id', '=', 'products.id')
                 ->leftJoin('factories', 'products.factory_id', '=', 'factories.id')
                 ->leftJoin('unit_products', 'products.unit_id', '=', 'unit_products.id')
@@ -865,10 +866,12 @@ class ProformaInvoiceController extends AdminController
                     'products.code as part_no',
                     'products.name_en',
                     'products.drawing',
+                    'products.cost',
                     'factories.code as fac_no',
                     'unit_products.name as unit_name'
                 )
-                ->orderBy('proforma_invoice_products.seq', 'asc');
+                // เรียงตาม Fac No. (โรงงาน) เพื่อ group เป็นชุดเอกสารต่อโรงงาน, ไม่มี Fac No. ไว้ท้าย
+                ->orderByRaw("{$pfx}factories.code IS NULL, CAST({$pfx}factories.code AS UNSIGNED), {$pfx}proforma_invoice_products.seq ASC");
         }, 'customer'])
             ->leftJoin('customers', 'proforma_invoices.customer_id', '=', 'customers.id')
             ->leftJoin('admin_users', 'proforma_invoices.created_by', '=', 'admin_users.id')
