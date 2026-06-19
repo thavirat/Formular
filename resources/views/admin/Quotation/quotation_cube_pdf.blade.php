@@ -80,8 +80,8 @@
                     $height = (float) ($product->height ?? 0);
                     $qty = (float) ($product->qty ?? 0);
                     $content = (float) ($product->content ?? 0);
-                    // คิว(CBM) = (กว้าง*ยาว*สูง หน่วยมม. -> ลบ.ม.) * จำนวนสั่งซื้อ / CONTENT(จำนวนต่อลัง)
-                    $cartonVolume = ($width * $length * $height) / 1000000000;
+                    // คิว(CBM) = (กว้าง/100 * ยาว/100 * สูง/100) * จำนวนสั่งซื้อ / CONTENT(จำนวนต่อลัง) — ลูกค้าให้หารแต่ละด้านด้วย 100 ก่อน
+                    $cartonVolume = ($width / 100) * ($length / 100) * ($height / 100);
                     $lineCube = $content > 0 ? ($cartonVolume * $qty / $content) : 0;
                     $grandCube += $lineCube;
                 @endphp
