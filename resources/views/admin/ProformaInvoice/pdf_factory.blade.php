@@ -39,6 +39,9 @@
 
     // ผู้ลงนามฝ่ายส่งออก
     $issuer = optional($pi->createdBy)->name ?: '';
+
+    // วิธีการขนส่งทั้งหมด (ไว้แสดงเป็น checkbox + ติ๊กตัวที่เลือก)
+    $shipmentMethods = \App\Models\ShipmentMethod::where('active', 'T')->orderBy('seq')->get();
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -129,7 +132,7 @@
                 <span class="bold">SHIPPING MARKS</span><br>
                 {{-- ป้ายมาร์ค: ใช้รหัส ship_to_code ถ้ามี ไม่งั้นใช้ชื่อย่อจากชื่อบริษัท --}}
                 {{ $pi->ship_to_code ?: \Illuminate\Support\Str::before($pi->company_name, ' ') }}<br>
-                C/NO.1-UP {{-- hardcode ไว้ก่อน --}}
+                C/NO.{{ $pi->cno ?: '1-UP' }}
             </td>
             <td width="25%">
                 PAGE&nbsp;&nbsp;{PAGENO}/{nbpg}<br><br>
@@ -212,6 +215,22 @@
             </tr>
         @endforeach
 
+        {{-- ===================== ค่าบริการอื่นๆ (ระหว่าง SUBTOTAL กับ TOTAL) ===================== --}}
+        @foreach($pi->services as $sv)
+            <tr>
+                <td class="vline"></td>
+                <td colspan="4"></td>
+                <td class="vline"></td>
+                <td class="text-right vline">{{ $sv->name }}</td>
+                <td class="vline">
+                    <table width="100%" style="border:none; border-collapse:collapse;"><tr>
+                        <td style="border:none; padding:0;" class="text-left">{{ $cur }}</td>
+                        <td style="border:none; padding:0;" class="text-right">{{ number_format($sv->amount, 2) }}</td>
+                    </tr></table>
+                </td>
+            </tr>
+        @endforeach
+
         {{-- ===================== TOTAL (แถวสุดท้าย ปิดท้ายด้วยเส้นล่าง) ===================== --}}
         <tr>
             <td colspan="5" class="bold" style="border-left:1px solid #000; border-bottom:1px solid #000;">TOTAL :&nbsp;( {{ Help::numberToWords($total, 'DOLLARS') }} )</td>
@@ -239,11 +258,24 @@
     </tr>
     <tr>
         <td class="bold">SHIPMENT</td>
-        <td>: BY [&nbsp;&nbsp;] SEAFREIGHT&nbsp;&nbsp;&nbsp;[&nbsp;&nbsp;] AIRFREIGHT &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TO _______________</td>
+        <td>: BY
+            @forelse($shipmentMethods as $sm)
+                [{!! $pi->shipment_method_id == $sm->id ? 'X' : '&nbsp;&nbsp;' !!}] {{ $sm->name }}&nbsp;&nbsp;&nbsp;
+            @empty
+                [&nbsp;&nbsp;] SEAFREIGHT&nbsp;&nbsp;&nbsp;[&nbsp;&nbsp;] AIRFREIGHT&nbsp;&nbsp;&nbsp;
+            @endforelse
+            &nbsp;&nbsp;TO {{ $pi->shipment_to ?: '_______________' }}
+        </td>
     </tr>
     <tr>
-        <td class="bold">REMARKS</td>
-        <td>: {{ $pi->ship_remark }}</td>
+        <td class="bold" style="vertical-align:top;">REMARKS</td>
+        <td>:
+            @forelse($pi->remarks as $rm)
+                {{ $loop->iteration }}. {{ $rm->remark }}<br>
+            @empty
+                {{ $pi->ship_remark }}
+            @endforelse
+        </td>
     </tr>
 </table>
 

@@ -103,6 +103,13 @@
         </tr>
         <tr>
             <td align="center">
+                <b><u>C/NO.</u></b>
+            </td>
+            <td>{{ $ProformaInvoice->cno ?: '1-UP' }}</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td align="center">
                 <b><u>CustPONo</u></b>
             </td>
             <td>{{$ProformaInvoice->customer_po}}</td>
@@ -112,9 +119,15 @@
         </tr>
         <tr>
             <td align="center">
-                <b><u>SHIPPING MARKS</u></b>
+                <b><u>REMARKS</u></b>
             </td>
-            <td>{{$ProformaInvoice->ship_remark}}</td>
+            <td>
+                @forelse($ProformaInvoice->remarks as $rm)
+                    {{ $loop->iteration }}. {{ $rm->remark }}<br>
+                @empty
+                    {{ $ProformaInvoice->ship_remark }}
+                @endforelse
+            </td>
             <td>
 
             </td>
