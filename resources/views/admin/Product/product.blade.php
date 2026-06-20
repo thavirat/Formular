@@ -248,6 +248,25 @@
                                 </div>
                             </div>
 
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="add_unit_id">หน่วย (Unit)</label>
+                                    <select name="unit_id" id="add_unit_id" class="form-control">
+                                        <option value="">- เลือกหน่วย -</option>
+                                        @foreach($UnitProducts as $u)
+                                            <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="add_content">จำนวน/คาร์ตั้น (Content)</label>
+                                    <input type="number" step="any" name="content" id="add_content" class="form-control" value="0">
+                                </div>
+                            </div>
+
 
                         </div>
                     </div>
@@ -376,6 +395,25 @@
                                 <div class="form-group">
                                     <label for="edit_weight">Weight</label>
                                     <input type="text" name="weight" id="edit_weight" class="form-control ">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="edit_unit_id">หน่วย (Unit)</label>
+                                    <select name="unit_id" id="edit_unit_id" class="form-control">
+                                        <option value="">- เลือกหน่วย -</option>
+                                        @foreach($UnitProducts as $u)
+                                            <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="edit_content">จำนวน/คาร์ตั้น (Content)</label>
+                                    <input type="number" step="any" name="content" id="edit_content" class="form-control" value="0">
                                 </div>
                             </div>
 
@@ -560,6 +598,8 @@
                 $("#edit_weight").val(res.content.weight);
                 $("#edit_factory_id").val(res.content.factory_id);
                 $("#edit_sub_category_id").val(res.content.sub_category_id).trigger('change.select2');
+                $("#edit_unit_id").val(res.content.unit_id).trigger('change.select2');
+                $("#edit_content").val(res.content.content);
 
                 $('#ModalEdit').modal('show');
             }).fail(function(res) {
@@ -582,6 +622,14 @@
         })
         $("#edit_sub_category_id").select2({
             placeholder: 'กรุณาเลือก',
+            allowClear: true
+        })
+        $("#add_unit_id").select2({
+            placeholder: 'เลือกหน่วย',
+            allowClear: true
+        })
+        $("#edit_unit_id").select2({
+            placeholder: 'เลือกหน่วย',
             allowClear: true
         })
 

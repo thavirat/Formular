@@ -14,6 +14,7 @@ use App\Models\ProductCategory;
 use App\Models\SubCategory;
 use App\Models\Customer;
 use App\Models\Factory;
+use App\Models\UnitProduct;
 class ProductController extends AdminController
 {
     public $current_menu;
@@ -38,6 +39,7 @@ class ProductController extends AdminController
         $data['ProductCategories'] = ProductCategory::orderBy('name_th')->get();
         $data['SubCategories'] = SubCategory::orderBy('name_th')->get();
         $data['Factories'] = Factory::orderBy('name')->get();
+        $data['UnitProducts'] = UnitProduct::orderBy('name')->get();
         return view('admin.Product.product',$data);
     }
 
@@ -98,6 +100,8 @@ class ProductController extends AdminController
                 $Product->weight = $weight;
                 $Product->factory_id = $factory_id;
                 $Product->sub_category_id = $sub_category_id;
+                $Product->unit_id = $request->input('unit_id') ?: null;
+                $Product->content = $request->input('content') ?: 0;
                 $Product->save();
                 DB::commit();
                 $return['status'] = 1;
@@ -192,6 +196,8 @@ class ProductController extends AdminController
                 $Product->cost = $cost;
                 $Product->factory_id = $factory_id;
                 $Product->sub_category_id = $sub_category_id;
+                $Product->unit_id = $request->input('unit_id') ?: null;
+                $Product->content = $request->input('content') ?: 0;
                 $Product->save();
                 DB::commit();
                 $return['status'] = 1;
