@@ -193,9 +193,18 @@ class ProformaInvoiceController extends AdminController
             $pi->subtotal          = $subtotal;
             $pi->total             = $subtotal + $servicesTotal;
             $pi->created_by        = Auth::guard('admin')->user()->id;
+            // ผู้ขาย = ผู้สร้างใบเสนอราคา (ถ้าผูกใบเสนอราคา); ถ้าไม่มี ใช้ผู้สร้าง PI เป็นผู้ขาย
+            $pi->sale_by           = $quotationId
+                ? (Quotation::where('id', $quotationId)->value('created_by') ?: $pi->created_by)
+                : $pi->created_by;
             $pi->save();
 
             $this->saveRemarksAndServices($request, $pi->id);
+
+            // เมื่อออกใบ PI จากใบเสนอราคา -> ปรับสถานะใบเสนอราคาเป็น "ออก PI แล้ว" (5)
+            if ($quotationId) {
+                Quotation::where('id', $quotationId)->update(['status_id' => 5]);
+            }
 
             if ($request->product && is_array($request->product)) {
                 foreach ($request->product as $key => $product_id) {
@@ -386,9 +395,20 @@ class ProformaInvoiceController extends AdminController
             $subtotal = (float) str_replace(',', '', $request->subtotal ?? $request->grand_total);
             $pi->subtotal          = $subtotal;
             $pi->total             = $subtotal + $this->sumServices($request);
+            // ผู้ขาย = ผู้สร้างใบเสนอราคา (ถ้ายังไม่เคยตั้ง) ; ถ้าไม่ผูกใบเสนอราคาและยังว่าง ใช้ผู้สร้าง PI
+            if ($newQuotationId) {
+                $pi->sale_by = Quotation::where('id', $newQuotationId)->value('created_by') ?: ($pi->sale_by ?: $pi->created_by);
+            } elseif (empty($pi->sale_by)) {
+                $pi->sale_by = $pi->created_by;
+            }
             $pi->save();
 
             $this->saveRemarksAndServices($request, $pi->id);
+
+            // ผูกใบเสนอราคา -> ปรับสถานะใบเสนอราคาเป็น "ออก PI แล้ว" (5)
+            if ($newQuotationId) {
+                Quotation::where('id', $newQuotationId)->update(['status_id' => 5]);
+            }
 
             // --- 3. ตรวจสอบโควต้าและ Insert รอบใหม่ ---
             if ($request->product && is_array($request->product)) {

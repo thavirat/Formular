@@ -40,6 +40,10 @@
     // ผู้ลงนามฝ่ายส่งออก
     $issuer = optional($pi->createdBy)->name ?: '';
 
+    // ชื่อผู้ขาย: ใช้ผู้ขายจริง (sale_by = ผู้สร้างใบเสนอราคา) ถ้าไม่มีใช้ผู้สร้าง PI
+    $sellerUser = $pi->saleBy ?: $pi->createdBy;
+    $sellerName = trim(optional($sellerUser)->firstname . ' ' . optional($sellerUser)->lastname);
+
     // วิธีการขนส่งทั้งหมด (ไว้แสดงเป็น checkbox + ติ๊กตัวที่เลือก)
     $shipmentMethods = \App\Models\ShipmentMethod::where('active', 'T')->orderBy('seq')->get();
 @endphp
@@ -290,7 +294,7 @@
         <td width="50%" class="text-center">
             <span class="bold">FORMULA INTERTRADE CO.,LTD.</span>
             <div style="margin-top:45px;">________________________</div>
-            <div class="bold">{{ trim(optional($pi->createdBy)->firstname . ' ' . optional($pi->createdBy)->lastname) }}</div>
+            <div class="bold">{{ $sellerName }}</div>
             <div>EXPORT DIVISION</div>
         </td>
     </tr>

@@ -240,6 +240,10 @@ class QuotationController extends AdminController
      */
     public function edit($id)
     {
+        // ใบเสนอราคาที่อนุมัติแล้ว (>=3) ห้ามแก้ไข
+        if ((int) Quotation::where('id', $id)->value('status_id') >= 3) {
+            return redirect('/admin/Quotation');
+        }
 
         $data['currentMenu'] = Menu::where('url', $this->current_menu)->first();
         $data['Customers'] = Customer::orderBy('company_name')->get();
@@ -283,6 +287,10 @@ class QuotationController extends AdminController
         $permission = Help::CheckPermissionMenu($this->current_menu , 'u');
         if(!$permission){
             return redirect('/admin/PermissionDenined');
+        }
+        // ใบเสนอราคาที่อนุมัติแล้ว (>=3) ห้ามแก้ไข
+        if ((int) Quotation::where('id', $id)->value('status_id') >= 3) {
+            return ['status' => 0, 'title' => 'ไม่สามารถแก้ไขได้', 'content' => 'ใบเสนอราคาที่อนุมัติแล้วไม่สามารถแก้ไขได้'];
         }
         $validator = Validator::make($request->all(), [
         ]);
@@ -376,6 +384,10 @@ class QuotationController extends AdminController
      */
     public function destroy($id)
     {
+        // ใบเสนอราคาที่อนุมัติแล้ว (>=3) ห้ามลบ
+        if ((int) Quotation::where('id', $id)->value('status_id') >= 3) {
+            return ['status' => 0, 'title' => 'ไม่สามารถลบได้', 'content' => 'ใบเสนอราคาที่อนุมัติแล้วไม่สามารถลบได้'];
+        }
         DB::beginTransaction();
         try {
             $Quotation = Quotation::find($id);
@@ -573,10 +585,12 @@ class QuotationController extends AdminController
             $str .= '<a href="'.url('admin/'.$lang.'/Quotation/'.$rec->id.'/pdf').'" target="_blank" class="btn btn-outline-info btn-h-light-info btn-a-light-info border-b-2" title="PDF"><i class="fa fa-file-pdf"></i></a>';
             $str .= '<a href="'.url('admin/'.$lang.'/Quotation/'.$rec->id.'/cube').'" target="_blank" class="btn btn-outline-secondary btn-h-light-secondary btn-a-light-secondary border-b-2" title="ใบคิว"><i class="fa fa-cubes"></i></a>';
             $str .= '<a href="'.url('admin/'.$lang.'/Quotation/'.$rec->id.'/ExportExcelDoc').'" class="btn btn-outline-primary btn-h-light-primary btn-a-light-primary border-b-2" title="Excel"><i class="fa fa-file-excel"></i></a>';
-            if($update){
+            // แก้ไข/ลบ ได้เฉพาะตอนยังไม่อนุมัติ (สถานะ 1 รอเสนอ, 2 รอ Customer); อนุมัติ/ยกเลิก/ออก PI แล้ว = ล็อก
+            $editable = $rec->status_id < 3;
+            if($update && $editable){
                 $str .= '<a href="'.url('admin/'.$lang.'/Quotation/'.$rec->id.'/edit').'" class="btn btn-outline-warning btn-h-light-warning btn-a-light-warning border-b-2" title="แก้ไข"><i class="fa fa-edit"></i></a>';
             }
-            if($delete){
+            if($delete && $editable){
                 $str .= '<button class="btn btn-outline-danger btn-h-light-danger btn-a-light-danger border-b-2 btn-delete" data-id="'.$rec->id.'" title="ลบ"><i class="fa fa-trash-alt"></i></button>';
             }
 

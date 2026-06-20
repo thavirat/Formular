@@ -21,6 +21,11 @@ class ProformaInvoice extends Model
         return $this->belongsTo('\App\Models\AdminUser', 'created_by', 'id');
     }
 
+    public function saleBy()
+    {
+        return $this->belongsTo('\App\Models\AdminUser', 'sale_by', 'id');
+    }
+
     public function Comments()
     {
         return $this->hasMany(Comment::class, 'pi_id');
