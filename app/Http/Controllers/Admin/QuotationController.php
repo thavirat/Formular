@@ -424,6 +424,7 @@ class QuotationController extends AdminController
             , 'approve.firstname as approve_name'
             , 'approve.lastname as approve_lastname'
             , 'quotation_statuses.name as status_name'
+            , 'quotation_statuses.color as status_color_hex'
         );
         if($request->has('start_date') && $request->start_date != ''){
             $result = $result->where('quotations.doc_date' , '>=' , date('Y-m-d', strtotime($request->start_date)));
@@ -443,6 +444,29 @@ class QuotationController extends AdminController
         return $result;
     }
 
+    /** เมนูใหม่: หน้าใบเสนอราคาที่อนุมัติแล้ว (สถานะ 3 อนุมัติ + 5 ออก PI แล้ว) */
+    public function approvedIndex()
+    {
+        if (!Help::CheckPermissionMenu('ApprovedQuotation', 'r')) {
+            return redirect('/admin/PermissionDenined');
+        }
+        $data['currentMenu']        = Menu::where('url', 'ApprovedQuotation')->first();
+        $data['Customers']          = Customer::orderBy('company_name')->get();
+        $data['Incoterms']          = Incoterm::orderBy('code')->get();
+        $data['Currencies']         = Currency::orderBy('name')->get();
+        $data['CreditPayments']     = CreditPayment::orderBy('name')->get();
+        $data['quotation_statuses'] = QuotationStatus::whereIn('id', [3, 5])->orderBy('id')->get();
+        $data['admins']             = AdminUser::orderBy('nickname')->get();
+        return view('admin.Quotation.quotation_approved', $data);
+    }
+
+    /** datatable ของหน้าอนุมัติแล้ว (บังคับกรองเฉพาะสถานะ 3,5) */
+    public function approvedLists(Request $request)
+    {
+        $request->merge(['approved_only' => 1]);
+        return $this->lists($request);
+    }
+
     public function lists(Request $request)
     {
         $result = $this->report($request);
@@ -455,16 +479,15 @@ class QuotationController extends AdminController
             $result->where('quotations.created_by' , $user->id);
         }
 
+        // เมนู "ใบเสนอราคาที่อนุมัติแล้ว": แสดงเฉพาะสถานะ อนุมัติ (3) + ออก PI แล้ว (5)
+        if($request->boolean('approved_only')){
+            $result->whereIn('quotations.status_id', [3, 5]);
+        }
+
         return DataTables::of($result)
         ->addColumn('status_name', function($rec) use($lang) {
-            $status_color = 'secondary';
-            if ($rec->status_id == 1) $status_color = 'light-grey'; // Draft
-            if ($rec->status_id == 2) $status_color = 'warning';    // Pending
-            if ($rec->status_id == 3) $status_color = 'success';    // Approved
-
-
             $str = '<div class="text-center">';
-            $str .= '<span class="badge badge-lg bgc-'.$status_color.'-l3 text-'.$status_color.'-d2 border-1 brc-'.$status_color.'-m3 mb-1">' . $rec->status_name . '</span>';
+            $str .= '<span class="mb-1 d-inline-block">' . Help::statusBadge($rec->status_name, $rec->status_color_hex) . '</span>';
 
             if ($rec->status_id >= 2 && $rec->send_approve_date) {
                 $str .= '<div class="text-75 text-grey-m1 mt-1" title="วันที่ส่งขออนุมัติ">

@@ -61,6 +61,7 @@
                             <tr>
                                 <th class="text-center" width="5%">ลำดับ</th>
                                 <th>ชื่อ</th>
+                                <th>ตัวอย่างสี</th>
                                 <th class="text-center">#</th>
                             </tr>
                         </thead>
@@ -99,6 +100,12 @@
                                     <input type="text" name="name" id="add_name" class="form-control autofocus" >
                                 </div>
                             </div>
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="add_color">สีสถานะ</label>
+                                    <input type="color" name="color" id="add_color" class="form-control" value="#6c757d" style="height:40px;">
+                                </div>
+                            </div>
 
                         </div>
                     </div>
@@ -132,6 +139,12 @@
                                 <div class="form-group">
                                     <label for="edit_name">ชื่อ</label>
                                     <input type="text" name="name" id="edit_name" class="form-control " >
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="edit_color">สีสถานะ</label>
+                                    <input type="color" name="color" id="edit_color" class="form-control" value="#6c757d" style="height:40px;">
                                 </div>
                             </div>
 
@@ -168,6 +181,7 @@
         "columns": [
             {"data": "DT_RowIndex", 'searchable': false, 'orderable': false, "class": "text-center"},
             {"data": "name", "name": 'name'},
+            {"data": "color_badge", "name": 'color', "searchable": false, "sortable": false},
             {
                 "data": "action" ,
                 "name": "action",
@@ -277,6 +291,7 @@
             resetButton(btn);
 
             $("#edit_name").val(res.content.name);
+            $("#edit_color").val(res.content.color || '#6c757d');
             $('#ModalEdit').modal('show');
         }).fail(function(res){
             ajaxFail(res , "");

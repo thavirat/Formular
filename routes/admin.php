@@ -115,6 +115,8 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::get('/Quotation/ExportExcel', 'Admin\QuotationController@export_excel');
                 Route::get('/Quotation/ExportPrint', 'Admin\QuotationController@export_print');
                 Route::get('/Quotation/SuggestDocNo', 'Admin\QuotationController@suggestDocNo');
+                Route::get('/ApprovedQuotation', 'Admin\QuotationController@approvedIndex');
+                Route::post('/ApprovedQuotation/Lists', 'Admin\QuotationController@approvedLists');
                 Route::resource('/Quotation', Admin\QuotationController::class);
 
                 Route::get('/CustomerLevel/ExportProduct', 'Admin\CustomerLevelController@export_product');

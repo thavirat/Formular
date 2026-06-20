@@ -67,6 +67,7 @@ class QuotationStatusController extends AdminController
             try {
                 $QuotationStatus = new QuotationStatus;
                 $QuotationStatus->name = $name;
+                $QuotationStatus->color = $request->input('color') ?: '#6c757d';
                 $QuotationStatus->save();
                 DB::commit();
                 $return['status'] = 1;
@@ -137,6 +138,7 @@ class QuotationStatusController extends AdminController
             try {
                 $QuotationStatus = QuotationStatus::find($id);
                 $QuotationStatus->name = $name;
+                $QuotationStatus->color = $request->input('color') ?: '#6c757d';
                 $QuotationStatus->save();
                 DB::commit();
                 $return['status'] = 1;
@@ -199,6 +201,11 @@ class QuotationStatusController extends AdminController
         $result = $this->report($request);
 
         return DataTables::of($result)
+        ->addColumn('color_badge', function($rec){
+            $c = $rec->color ?: '#6c757d';
+            return '<span class="badge badge-lg" style="background-color:'.$c.'; color:#fff;">'.e($rec->name).'</span>'
+                .' <small class="text-muted">'.$c.'</small>';
+        })
         ->addColumn('action', function($rec){
             $btnEdit = '<button class="btn btn-xs btn-warning btn-edit" data-id="'.$rec->id.'" data-toggle="tooltip" data-placement="top" title="แก้ไข">
             <i class="fa fa-edit"></i>
@@ -218,6 +225,7 @@ class QuotationStatusController extends AdminController
 
             return $str;
         })
+        ->rawColumns(['color_badge', 'action'])
         ->addIndexColumn()
         ->make(true);
     }

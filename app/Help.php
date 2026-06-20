@@ -7,6 +7,22 @@ use \App\Models\Live;
 use NumberFormatter;
 class Help
 {
+    /** สร้าง badge สถานะด้วยสี hex + เลือกสีตัวอักษร (ดำ/ขาว) ให้อ่านง่ายตามความสว่างของพื้นหลัง */
+    public static function statusBadge($name, $hex)
+    {
+        $hex = $hex ?: '#6c757d';
+        $c = ltrim($hex, '#');
+        if (strlen($c) === 3) {
+            $c = $c[0].$c[0].$c[1].$c[1].$c[2].$c[2];
+        }
+        $r = hexdec(substr($c, 0, 2));
+        $g = hexdec(substr($c, 2, 2));
+        $b = hexdec(substr($c, 4, 2));
+        $luminance = (0.299 * $r + 0.587 * $g + 0.114 * $b) / 255;
+        $text = $luminance > 0.6 ? '#000' : '#fff';
+        return '<span class="badge badge-lg" style="background-color:'.$hex.'; color:'.$text.';">'.e($name).'</span>';
+    }
+
     public static function DateThai($strDate , $format ='d/m/Y' , $para = '/')
 	{
         if($strDate){
