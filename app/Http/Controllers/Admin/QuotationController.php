@@ -427,6 +427,7 @@ class QuotationController extends AdminController
         ->leftJoin('admin_users as send_approve' , 'quotations.send_approve_by', '=', 'send_approve.id')
         ->leftJoin('admin_users as approve' , 'quotations.approve_by', '=', 'approve.id')
         ->leftJoin('quotation_statuses' , 'quotations.status_id', '=', 'quotation_statuses.id')
+        ->leftJoin('currencies' , 'quotations.currency_id', '=', 'currencies.id')
         ->select(
             'quotations.*'
             , 'admin_users.firstname as created_by_name'
@@ -437,6 +438,7 @@ class QuotationController extends AdminController
             , 'approve.lastname as approve_lastname'
             , 'quotation_statuses.name as status_name'
             , 'quotation_statuses.color as status_color_hex'
+            , 'currencies.symbol as currency_symbol'
         );
         if($request->has('start_date') && $request->start_date != ''){
             $result = $result->where('quotations.doc_date' , '>=' , date('Y-m-d', strtotime($request->start_date)));
@@ -530,7 +532,8 @@ class QuotationController extends AdminController
                     <div class="text-80 text-blue-m2"><i class="far fa-user mr-1"></i>'.$rec->created_by_name.' '.$rec->created_by_lastname.'</div>';
         })
         ->editColumn('total', function($rec) {
-            return '<span class="text-110 font-bolder text-success-d1">'.number_format($rec->total, 2).'</span>';
+            $sym = $rec->currency_symbol ? '<span class="text-90 text-grey-m1 mr-1">'.e($rec->currency_symbol).'</span>' : '';
+            return '<span class="text-110 font-bolder text-success-d1">'.$sym.number_format($rec->total, 2).'</span>';
         })
         ->addColumn('comment_box', function($rec) use($channels){
             $items = '';
