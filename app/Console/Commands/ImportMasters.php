@@ -16,8 +16,8 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
  */
 class ImportMasters extends Command
 {
-    protected $signature = 'masters:import {what=all : factories|content|dimensions|all}';
-    protected $description = 'Import factory / content / dimensions master data via CLI (no web timeout)';
+    protected $signature = 'masters:import {what=all : factories|content|dimensions|brands|units|all}';
+    protected $description = 'Import factory / content / dimensions / brand / unit master data via CLI (no web timeout)';
 
     public function handle()
     {
@@ -26,7 +26,7 @@ class ImportMasters extends Command
         @set_time_limit(0);
 
         $what = strtolower((string) $this->argument('what'));
-        $valid = ['factories', 'content', 'dimensions', 'all'];
+        $valid = ['factories', 'content', 'dimensions', 'brands', 'units', 'all'];
         if (!in_array($what, $valid, true)) {
             $this->error("ค่าไม่ถูกต้อง: {$what} (ใช้ได้: " . implode(', ', $valid) . ')');
             return 1;
@@ -35,6 +35,12 @@ class ImportMasters extends Command
         try {
             if ($what === 'all' || $what === 'factories') {
                 $this->importFactories();
+            }
+            if ($what === 'all' || $what === 'brands') {
+                $this->importBrands();
+            }
+            if ($what === 'all' || $what === 'units') {
+                $this->importUnits();
             }
             if ($what === 'all' || $what === 'dimensions') {
                 $this->importDimensions();
@@ -146,6 +152,124 @@ class ImportMasters extends Command
         }
         DB::commit();
         $this->info("  factories: {$facCount} | จับคู่สินค้าได้: {$matched} | ไม่พบ code: {$notFound} | ไม่มี GoodTypeID: {$noType}");
+    }
+
+    /** ----- Brand : Brand_Master + Prod_Master.GoodBrandID(col7) -> brand_products / products.brand_id ----- */
+    private function importBrands(): void
+    {
+        $brandPath = $this->findFile(['Brand_Master.xlsx']);
+        $prodPath  = $this->findFile(['Prod_Master.xlsx']);
+        if (!$brandPath || !$prodPath) {
+            $this->warn('ข้าม brands: ไม่พบ Brand_Master.xlsx หรือ Prod_Master.xlsx');
+            return;
+        }
+        $this->info('นำเข้า Brand...');
+
+        // Brand_Master: 0=GoodBrandID, 1=GoodBrandCode, 2=GoodBrandName, 3=GoodBrandNameEng
+        $brandRows = $this->rows($brandPath);
+        DB::beginTransaction();
+        $brandIdByGid = [];
+        $cnt = 0;
+        foreach ($brandRows as $i => $r) {
+            if ($i === 0) continue;
+            $gid = $r[0] ?? null;
+            if ($gid === null || $gid === '') continue;
+            $name = trim((string) ($r[2] ?? '')) ?: trim((string) ($r[1] ?? '')); // ชื่อ ไม่งั้นใช้ code
+            if ($name === '' || strtoupper($name) === 'NULL') continue;
+
+            $existing = DB::table('brand_products')->where('name', $name)->first();
+            if ($existing) {
+                $bid = $existing->id;
+            } else {
+                $bid = DB::table('brand_products')->insertGetId(['name' => $name, 'created_at' => now(), 'updated_at' => now()]);
+            }
+            $brandIdByGid[(string) $gid] = $bid;
+            $cnt++;
+        }
+
+        $codes = $this->productCodeSet();
+        $prodRows = $this->rows($prodPath);
+        $codesByBrand = []; $notFound = $noBrand = 0;
+        foreach ($prodRows as $i => $r) {
+            if ($i === 0) continue;
+            $code = isset($r[0]) ? trim((string) $r[0]) : '';
+            if ($code === '' || strtoupper($code) === 'NULL') continue;
+            $gid = $r[7] ?? null; // GoodBrandID
+            if ($gid === null || $gid === '' || strtoupper((string) $gid) === 'NULL') { $noBrand++; continue; }
+            $bid = $brandIdByGid[(string) $gid] ?? null;
+            if ($bid === null) continue;
+            if (!isset($codes[$code])) { $notFound++; continue; }
+            $codesByBrand[$bid][] = $code;
+        }
+        // อัปเดตแบบ batch (whereIn) ต่อ brand -> ลดจำนวน query มหาศาล
+        $matched = $this->bulkUpdate('brand_id', $codesByBrand);
+        DB::commit();
+        $this->info("  brands: {$cnt} | จับคู่สินค้าได้: {$matched} | ไม่พบ code: {$notFound} | ไม่มี GoodBrandID: {$noBrand}");
+    }
+
+    /** ----- Unit : Unit_Master + Prod_Master.MainGoodUnitID(col16) -> unit_products / products.unit_id ----- */
+    private function importUnits(): void
+    {
+        $unitPath = $this->findFile(['Unit_Master.xlsx']);
+        $prodPath = $this->findFile(['Prod_Master.xlsx']);
+        if (!$unitPath || !$prodPath) {
+            $this->warn('ข้าม units: ไม่พบ Unit_Master.xlsx หรือ Prod_Master.xlsx');
+            return;
+        }
+        $this->info('นำเข้า Unit...');
+
+        // Unit_Master: 0=GoodUnitID, 1=GoodUnitCode, 2=GoodUnitName
+        $unitRows = $this->rows($unitPath);
+        DB::beginTransaction();
+        $unitIdByGid = [];
+        $cnt = 0;
+        foreach ($unitRows as $i => $r) {
+            if ($i === 0) continue;
+            $gid = $r[0] ?? null;
+            if ($gid === null || $gid === '') continue;
+            $name = trim((string) ($r[2] ?? '')) ?: trim((string) ($r[1] ?? ''));
+            if ($name === '' || strtoupper($name) === 'NULL') continue;
+
+            $existing = DB::table('unit_products')->where('name', $name)->first();
+            if ($existing) {
+                $uid = $existing->id;
+            } else {
+                $uid = DB::table('unit_products')->insertGetId(['name' => $name, 'created_at' => now(), 'updated_at' => now()]);
+            }
+            $unitIdByGid[(string) $gid] = $uid;
+            $cnt++;
+        }
+
+        $codes = $this->productCodeSet();
+        $prodRows = $this->rows($prodPath);
+        $codesByUnit = []; $notFound = $noUnit = 0;
+        foreach ($prodRows as $i => $r) {
+            if ($i === 0) continue;
+            $code = isset($r[0]) ? trim((string) $r[0]) : '';
+            if ($code === '' || strtoupper($code) === 'NULL') continue;
+            $gid = $r[16] ?? null; // MainGoodUnitID
+            if ($gid === null || $gid === '' || strtoupper((string) $gid) === 'NULL') { $noUnit++; continue; }
+            $uid = $unitIdByGid[(string) $gid] ?? null;
+            if ($uid === null) continue;
+            if (!isset($codes[$code])) { $notFound++; continue; }
+            $codesByUnit[$uid][] = $code;
+        }
+        $matched = $this->bulkUpdate('unit_id', $codesByUnit);
+        DB::commit();
+        $this->info("  units: {$cnt} | จับคู่สินค้าได้: {$matched} | ไม่พบ code: {$notFound} | ไม่มี MainGoodUnitID: {$noUnit}");
+    }
+
+    /** อัปเดต products.<column> แบบ batch ตามค่า id (whereIn เป็นก้อนละ 1000) คืนจำนวน code ที่จับคู่ */
+    private function bulkUpdate(string $column, array $codesById): int
+    {
+        $total = 0;
+        foreach ($codesById as $id => $codeList) {
+            foreach (array_chunk($codeList, 1000) as $chunk) {
+                DB::table('products')->whereIn('code', $chunk)->update([$column => $id]);
+            }
+            $total += count($codeList);
+        }
+        return $total;
     }
 
     /** ----- dimensions : product_dimensions.xlsx ----- */
