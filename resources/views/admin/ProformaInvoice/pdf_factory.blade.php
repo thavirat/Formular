@@ -220,27 +220,41 @@
         @endforeach
 
         {{-- ===================== ค่าบริการอื่นๆ (ระหว่าง SUBTOTAL กับ TOTAL) ===================== --}}
-        @foreach($pi->services as $sv)
+        @foreach($pi->services as $k=>$sv)
+            @if($k > 0)
+                <tr>
+                    <td class="vline"></td>
+
+
+                    <td class="text-right" colspan="6">{{ $sv->name }}</td>
+                    <td class="vline">
+                        <table width="100%" style="border:none; border-collapse:collapse;"><tr>
+                            <td style="border:none; padding:0;" class="text-left">{{ $cur }}</td>
+                            <td style="border:none; padding:0;" class="text-right">{{ number_format($sv->amount, 2) }}</td>
+                        </tr></table>
+                    </td>
+                </tr>
+            @else
             <tr>
-                <td class="vline"></td>
-                <td colspan="4"></td>
-                <td class="vline"></td>
-                <td class="text-right vline">{{ $sv->name }}</td>
-                <td class="vline">
+                <td class="vline" style="border-top:1px solid #000;"></td>
+
+
+                <td class="text-right" colspan="6" style="border-top:1px solid #000;">{{ $sv->name }}</td>
+                <td class="vline" style="border-top:1px solid #000;">
                     <table width="100%" style="border:none; border-collapse:collapse;"><tr>
                         <td style="border:none; padding:0;" class="text-left">{{ $cur }}</td>
                         <td style="border:none; padding:0;" class="text-right">{{ number_format($sv->amount, 2) }}</td>
                     </tr></table>
                 </td>
             </tr>
+            @endif
         @endforeach
 
         {{-- ===================== TOTAL (แถวสุดท้าย ปิดท้ายด้วยเส้นล่าง) ===================== --}}
         <tr>
-            <td colspan="5" class="bold" style="border-left:1px solid #000; border-bottom:1px solid #000;">TOTAL :&nbsp;( {{ Help::numberToWords($total, 'DOLLARS') }} )</td>
-            <td class="vline" style="border-bottom:1px solid #000;"></td>
-            <td class="text-right bold vline" style="border-bottom:1px solid #000;">TOTAL</td>
-            <td class="bold vline" style="border-bottom:1px solid #000;">
+            <td colspan="6" class="bold" style="border-top:1px solid #000;">TOTAL :&nbsp;( {{ Help::numberToWords($total, 'DOLLARS') }} )</td>
+            <td class="text-right bold " style="border-top:1px solid #000;">TOTAL</td>
+            <td class="bold" style="border-top:1px solid #000;">
                 <table width="100%" style="border:none; border-collapse:collapse;"><tr>
                     <td style="border:none; padding:0;" class="text-left bold">{{ $cur }}</td>
                     <td style="border:none; padding:0;" class="text-right bold">{{ number_format($total, 2) }}</td>
@@ -268,7 +282,7 @@
             @empty
                 [&nbsp;&nbsp;] SEAFREIGHT&nbsp;&nbsp;&nbsp;[&nbsp;&nbsp;] AIRFREIGHT&nbsp;&nbsp;&nbsp;
             @endforelse
-            &nbsp;&nbsp;TO {{ $pi->shipment_to ?: '_______________' }}
+            &nbsp;&nbsp;{{ $pi->shipment_to ?: '___________TO___________' }}
         </td>
     </tr>
     <tr>
