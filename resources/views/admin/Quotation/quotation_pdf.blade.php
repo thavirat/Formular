@@ -202,6 +202,10 @@
                         <td class="label text-bold">Payment Term</td>
                         <td>: {{ $Quotation->credit_payment_name }}</td>
                     </tr>
+                    <tr>
+                        <td class="label text-bold">Customer PO</td>
+                        <td>: {{ $Quotation->customer_po }}</td>
+                    </tr>
                 </table>
             </td>
         </tr>

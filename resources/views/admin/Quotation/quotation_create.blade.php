@@ -90,6 +90,10 @@
                                     <label for="fax_no">{{__('Fax No')}}</label>
                                     <input type="text" name="fax_no" id="fax_no" class="form-control">
                                 </div>
+                                <div class="form-group">
+                                    <label for="customer_po">{{__('Customer PO')}}</label>
+                                    <input type="text" name="customer_po" id="customer_po" class="form-control">
+                                </div>
                             </div>
 
                             <div class="col-md-3">

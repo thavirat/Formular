@@ -155,6 +155,7 @@ class QuotationController extends AdminController
                 $Quotation->phone = $phone;
                 $Quotation->mobile = $mobile;
                 $Quotation->fax_no = $fax_no;
+                $Quotation->customer_po = $request->input('customer_po');
                 $Quotation->currency_id = $currency_id;
                 $Quotation->credit_payment_id = $credit_payment_id;
                 $Quotation->incoterm_id = $incoterm_id;
@@ -327,6 +328,7 @@ class QuotationController extends AdminController
                 $Quotation->phone = $phone;
                 $Quotation->mobile = $mobile;
                 $Quotation->fax_no = $fax_no;
+                $Quotation->customer_po = $request->input('customer_po');
                 $Quotation->currency_id = $currency_id;
                 $Quotation->credit_payment_id = $credit_payment_id;
                 $Quotation->incoterm_id = $incoterm_id;
