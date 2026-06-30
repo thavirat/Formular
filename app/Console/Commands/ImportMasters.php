@@ -16,8 +16,8 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
  */
 class ImportMasters extends Command
 {
-    protected $signature = 'masters:import {what=all : factories|content|dimensions|brands|units|all}';
-    protected $description = 'Import factory / content / dimensions / brand / unit master data via CLI (no web timeout)';
+    protected $signature = 'masters:import {what=all : factories|content|dimensions|brands|units|cost|all}';
+    protected $description = 'Import factory / content / dimensions / brand / unit / cost master data via CLI (no web timeout)';
 
     public function handle()
     {
@@ -26,7 +26,7 @@ class ImportMasters extends Command
         @set_time_limit(0);
 
         $what = strtolower((string) $this->argument('what'));
-        $valid = ['factories', 'content', 'dimensions', 'brands', 'units', 'all'];
+        $valid = ['factories', 'content', 'dimensions', 'brands', 'units', 'cost', 'all'];
         if (!in_array($what, $valid, true)) {
             $this->error("ค่าไม่ถูกต้อง: {$what} (ใช้ได้: " . implode(', ', $valid) . ')');
             return 1;
@@ -47,6 +47,9 @@ class ImportMasters extends Command
             }
             if ($what === 'all' || $what === 'content') {
                 $this->importContent();
+            }
+            if ($what === 'all' || $what === 'cost') {
+                $this->importCost();
             }
             $this->info('=== เสร็จสมบูรณ์ ===');
             return 0;
@@ -270,6 +273,66 @@ class ImportMasters extends Command
             $total += count($codeList);
         }
         return $total;
+    }
+
+    /** อัปเดต products.<column> ด้วยค่าต่อ code (ค่าต่างกันทุกแถว) แบบ batch ด้วย CASE WHEN เป็นก้อนละ 500 */
+    private function bulkUpdateValues(string $column, array $valueByCode): int
+    {
+        $prefix = DB::getTablePrefix();
+        $total = 0;
+        foreach (array_chunk($valueByCode, 500, true) as $chunk) {
+            $cases = '';
+            $bindings = [];
+            foreach ($chunk as $code => $val) {
+                $cases .= 'WHEN ? THEN ? ';
+                $bindings[] = (string) $code;
+                $bindings[] = $val;
+            }
+            $codes = array_keys($chunk);
+            $in = implode(',', array_fill(0, count($codes), '?'));
+            foreach ($codes as $c) {
+                $bindings[] = (string) $c;
+            }
+            DB::update("UPDATE {$prefix}products SET {$column} = CASE code {$cases} ELSE {$column} END WHERE code IN ({$in})", $bindings);
+            $total += count($chunk);
+        }
+        return $total;
+    }
+
+    /** ----- ราคาทุน : product_cost.xlsx (ชีทแรก: DWG, Part No., cost) -> products.cost ----- */
+    private function importCost(): void
+    {
+        $path = $this->findFile(['product_cost.xlsx', 'product_cost.xls']);
+        if (!$path) {
+            $this->warn('ข้าม cost: ไม่พบ product_cost.xlsx (วางที่ database/imports/masters/ หรือ storage/app/imports/)');
+            return;
+        }
+        $this->info('นำเข้า ราคาทุน (cost)...');
+
+        // อ่านชีทแรกโดยตรง (เลี่ยงปัญหา active sheet ในไฟล์ที่มีหลายชีท)
+        $reader = IOFactory::createReaderForFile($path);
+        $reader->setReadDataOnly(true);
+        $rows = $reader->load($path)->getSheet(0)->toArray(null, true, false, false);
+
+        $codesSet = $this->productCodeSet();
+        $costByCode = []; $notFound = 0;
+        foreach ($rows as $i => $r) {
+            if ($i === 0) continue; // header: DWG, Part No., cost
+            $code = isset($r[1]) ? trim((string) $r[1]) : ''; // Part No. (คอลัมน์ B)
+            if ($code === '' || strtoupper($code) === 'NULL') continue;
+            $raw = $r[2] ?? null; // cost (คอลัมน์ C)
+            if (is_string($raw)) {
+                $raw = str_replace(',', '', trim($raw));
+            }
+            if (!is_numeric($raw)) continue;
+            if (!isset($codesSet[$code])) { $notFound++; continue; }
+            $costByCode[$code] = (float) $raw; // แถวหลังทับแถวก่อน (กรณี code ซ้ำ ใช้ค่าล่าสุด)
+        }
+
+        DB::beginTransaction();
+        $matched = $this->bulkUpdateValues('cost', $costByCode);
+        DB::commit();
+        $this->info("  cost: อัปเดต {$matched} รายการ | ไม่พบ code ในระบบ {$notFound}");
     }
 
     /** ----- dimensions : product_dimensions.xlsx ----- */
