@@ -119,15 +119,9 @@
         </tr>
         <tr>
             <td align="center">
-                <b><u>REMARKS</u></b>
+                <b><u>Shipping Remark</u></b>
             </td>
-            <td>
-                @forelse($ProformaInvoice->remarks as $rm)
-                    {{ $loop->iteration }}. {{ $rm->remark }}<br>
-                @empty
-                    {{ $ProformaInvoice->ship_remark }}
-                @endforelse
-            </td>
+            <td>{{ $ProformaInvoice->ship_remark }}</td>
             <td>
 
             </td>
@@ -138,22 +132,45 @@
         <th width="5%" style="padding-bottom: 5px; background-color: rgb(255, 243, 216);"><u>NO</u></th>
         <th width="5%" style="padding-bottom: 5px; background-color: rgb(255, 243, 216);"><u>ITM</u></th>
         <th width="8%" style="padding-bottom: 5px; background-color: rgb(255, 243, 216);" align="right"><u>QTY</u></th>
-        <th width="20%" style="padding-bottom: 5px; padding-left: 5px; background-color: rgb(255, 243, 216);"  align="left"><u>Part No</u><br><u><span style="color: green;">ต้นทุน</span></u></th>
-        <th width="42%" style="padding-bottom: 5px; background-color: rgb(255, 243, 216);"><u>Description</u><br><span style="color: blue;"><u>DWG</u></span></th>
+        <th width="13%" style="padding-bottom: 5px; padding-left: 5px; background-color: rgb(255, 243, 216);"  align="left"><u>Part No</u><br><u><span style="color: green;">ต้นทุน</span></u></th>
+        <th width="49%" style="padding-bottom: 5px; background-color: rgb(255, 243, 216);"><u>Description</u><br><span style="color: blue;"><u>DWG</u></span></th>
         <th width="20%" style="padding-bottom: 5px; background-color: rgb(255, 243, 216);"><u>Customer.</u><br><u>P/NO.</u></th>
     </tr>
-    @foreach($items as $key => $product)
+    @foreach($items->sortBy('part_no') as $product)
     <tr>
         <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px; color: blue;" valign="top" align="center">{{ $loop->iteration }}</td>
-        <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;" valign="top" align="center">{{ $product->seq }}</td>
+        <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;" valign="top" align="center">{{ $product->fa_itm }}</td>
         <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;" align="right">{{ number_format($product->qty, 0) }} {{ $product->unit_name }}</td>
-        <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;">{{ $product->part_no }}<div style="text-align: right; color: red;">{{ number_format($product->cost, 2) }}</div></td>
-        <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;" valign="top">{{ $product->name_en }}</td>
-        <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;" valign="top" align="center">{{ $product->drawing }}</td>
+        <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;">
+            {{ $product->part_no }}
+            <table width="100%" style="border:none; border-collapse:collapse;"><tr>
+                <td style="border:none; padding:0; text-align:right; color:red;">{{ number_format($product->cost ?? 0, 2) }}</td>
+            </tr></table>
+        </td>
+        <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;" valign="top">{{ $product->name_en }}<div style="color: blue; font-size: 90%;">{{ $product->drawing }}</div></td>
+        <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;" valign="top" align="center">{{ $product->cus_code }}</td>
     </tr>
     @endforeach
 </table>
     @endforeach
+
+    {{-- ===== หมายเหตุ (รายการที่คีย์เป็นข้อๆ) ไว้แผ่นสุดท้าย ===== --}}
+    @if($ProformaInvoice->remarks->count())
+        <div style="page-break-before: always;"></div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: rgb(255, 243, 216);">
+            <tr>
+                <th align="center" valign="middle" style="font-size: 160%; font-weight: bold;"><b>REMARKS</b></th>
+            </tr>
+        </table>
+        <table width="100%" style="margin-top: 10px;">
+            @foreach($ProformaInvoice->remarks as $rm)
+                <tr>
+                    <td width="40" valign="top" align="right" style="padding: 4px 8px;">{{ $loop->iteration }}.</td>
+                    <td valign="top" style="padding: 4px 8px;">{{ $rm->remark }}</td>
+                </tr>
+            @endforeach
+        </table>
+    @endif
 </body>
 
 </html>

@@ -960,7 +960,11 @@ class ProformaInvoiceController extends AdminController
             )
             ->findOrFail($id);
 
-
+        // กำหนดเลข ITM ให้ตรงกับหน้า FA (proforma_invoice_pdf) — products ถูกเรียงตาม fac_no, seq อยู่แล้ว
+        $itm = 1;
+        foreach ($data['ProformaInvoice']->products as $p) {
+            $p->fa_itm = $itm++;
+        }
 
         // โหลด View สำหรับ PDF พร้อมส่งตัวแปรไป
         $pdf = \PDF::loadView('admin.ProformaInvoice.proforma_invoice_export_po', $data);
