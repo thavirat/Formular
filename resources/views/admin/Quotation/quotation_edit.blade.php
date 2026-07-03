@@ -303,6 +303,11 @@ $(document).ready(function() {
             }
 
             if (input.hasClass('part-no-input') || input.hasClass('drawing')) {
+                // ถ้าเลือกสินค้าไว้แล้ว (มี product-id) การ Tab ออกจากช่อง Drawing จะไม่ค้นหาซ้ำ แค่ไปช่องถัดไป
+                if (input.hasClass('drawing') && row.find('.product-id').val()) {
+                    focusNextInput(row, 'drawing');
+                    return;
+                }
                 checkDuplicatePartNo(input);
                 searchProduct(input, row);
             } else {
@@ -313,6 +318,11 @@ $(document).ready(function() {
     });
 
     // --- 5. Check Duplicate ---
+    // ผู้ใช้พิมพ์แก้ช่อง Drawing เอง -> ล้าง product-id เพื่อให้ Tab ครั้งถัดไปค้นด้วย Drawing ใหม่ได้
+    $('body').on('input', '.drawing', function() {
+        $(this).closest('tr').find('.product-id').val('');
+    });
+
     function checkDuplicatePartNo(input) {
         var currentVal = input.val().trim();
         var duplicateCount = 0;
