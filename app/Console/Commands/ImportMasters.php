@@ -16,8 +16,8 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
  */
 class ImportMasters extends Command
 {
-    protected $signature = 'masters:import {what=all : factories|content|dimensions|brands|units|cost|all}';
-    protected $description = 'Import factory / content / dimensions / brand / unit / cost master data via CLI (no web timeout)';
+    protected $signature = 'masters:import {what=all : factories|content|dimensions|brands|units|cost|coilcost|all}';
+    protected $description = 'Import factory / content / dimensions / brand / unit / cost / coilcost master data via CLI (no web timeout)';
 
     public function handle()
     {
@@ -26,7 +26,7 @@ class ImportMasters extends Command
         @set_time_limit(0);
 
         $what = strtolower((string) $this->argument('what'));
-        $valid = ['factories', 'content', 'dimensions', 'brands', 'units', 'cost', 'all'];
+        $valid = ['factories', 'content', 'dimensions', 'brands', 'units', 'cost', 'coilcost', 'all'];
         if (!in_array($what, $valid, true)) {
             $this->error("ค่าไม่ถูกต้อง: {$what} (ใช้ได้: " . implode(', ', $valid) . ')');
             return 1;
@@ -50,6 +50,9 @@ class ImportMasters extends Command
             }
             if ($what === 'all' || $what === 'cost') {
                 $this->importCost();
+            }
+            if ($what === 'coilcost') { // ไม่รวมใน all (เป็นชุด COIL เฉพาะกลุ่ม)
+                $this->importCoilCost();
             }
             $this->info('=== เสร็จสมบูรณ์ ===');
             return 0;
@@ -333,6 +336,57 @@ class ImportMasters extends Command
         $matched = $this->bulkUpdateValues('cost', $costByCode);
         DB::commit();
         $this->info("  cost: อัปเดต {$matched} รายการ | ไม่พบ code ในระบบ {$notFound}");
+    }
+
+    /** ----- ราคาทุน COIL : coil_price.xlsx (หลายชีท, detect คอลัมน์ COST จากหัว) -> products.cost ----- */
+    private function importCoilCost(): void
+    {
+        $path = $this->findFile(['coil_price.xlsx', 'coil_price.xls']);
+        if (!$path) {
+            $this->warn('ข้าม coilcost: ไม่พบ coil_price.xlsx');
+            return;
+        }
+        $this->info('นำเข้า ราคาทุน COIL (ทุกชีท)...');
+
+        $reader = IOFactory::createReaderForFile($path);
+        $reader->setReadDataOnly(true);
+        $book = $reader->load($path);
+
+        $codesSet = $this->productCodeSet();
+        $costByCode = []; $notFound = 0;
+
+        foreach ($book->getWorksheetIterator() as $sheet) {
+            $rows = $sheet->toArray(null, true, false, false);
+            if (empty($rows)) continue;
+            $header = $rows[0];
+
+            // หาคอลัมน์ต้นทุน: หัวคอลัมน์ = "COST" หรือขึ้นต้น "ปรับ" / "ต้นทุน"
+            $costIdx = null;
+            foreach ($header as $ci => $h) {
+                $h = trim((string) $h);
+                if (strtoupper($h) === 'COST' || mb_strpos($h, 'ปรับ') === 0 || mb_strpos($h, 'ต้นทุน') === 0) {
+                    $costIdx = $ci;
+                    break;
+                }
+            }
+            if ($costIdx === null) continue; // ชีทนี้ไม่มีคอลัมน์ต้นทุน -> ข้าม
+
+            foreach ($rows as $i => $r) {
+                if ($i === 0) continue;
+                $code = isset($r[1]) ? trim((string) $r[1]) : ''; // Part No คอลัมน์ B ทุกชีท
+                if ($code === '' || strtoupper($code) === 'NULL') continue;
+                $raw = $r[$costIdx] ?? null;
+                if (is_string($raw)) $raw = str_replace(',', '', trim($raw));
+                if (!is_numeric($raw) || (float) $raw <= 0) continue; // ข้าม #REF!, "-", ว่าง, 0
+                if (!isset($codesSet[$code])) { $notFound++; continue; }
+                $costByCode[$code] = (float) $raw; // ชีท/แถวหลังทับก่อน
+            }
+        }
+
+        DB::beginTransaction();
+        $matched = $this->bulkUpdateValues('cost', $costByCode);
+        DB::commit();
+        $this->info("  coil cost: อัปเดต {$matched} รายการ | ไม่พบ code ในระบบ {$notFound}");
     }
 
     /** ----- dimensions : product_dimensions.xlsx ----- */

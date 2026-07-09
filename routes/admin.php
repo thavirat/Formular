@@ -103,6 +103,9 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::post('/ShipmentMethod/Lists', 'Admin\ShipmentMethodController@lists');
                 Route::resource('/ShipmentMethod', Admin\ShipmentMethodController::class);
 
+                Route::post('/PriceSetting/Lists', 'Admin\PriceSettingController@lists');
+                Route::resource('/PriceSetting', Admin\PriceSettingController::class);
+
                 Route::post('/Quotation/RequestApproval', 'Admin\QuotationController@RequestApproval');
                 Route::post('/Quotation/Approve', 'Admin\QuotationController@Approve');
                 Route::post('/Quotation/Lists', 'Admin\QuotationController@lists');
