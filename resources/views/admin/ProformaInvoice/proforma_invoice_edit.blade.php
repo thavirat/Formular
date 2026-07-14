@@ -137,7 +137,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="ship_to_code">{{__('Ship To Code')}}</label>
-                                    <textarea name="ship_to_code" id="ship_to_code" class="form-control" rows="3" placeholder="พิมพ์ได้หลายบรรทัด">{{ $ProformaInvoice->ship_to_code }}</textarea>
+                                    <input type="text" name="ship_to_code" id="ship_to_code" class="form-control" value="{{ $ProformaInvoice->ship_to_code }}">
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -152,8 +152,8 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label for="ship_remark">{{__('Ship Remark')}}</label>
-                                    <input type="text" name="ship_remark" id="ship_remark" class="form-control" value="{{ $ProformaInvoice->ship_remark }}">
+                                    <label for="ship_remark">{{__('Ship Remark')}} (Shipping Marks)</label>
+                                    <textarea name="ship_remark" id="ship_remark" class="form-control" rows="3" placeholder="พิมพ์ได้หลายบรรทัด">{{ $ProformaInvoice->ship_remark }}</textarea>
                                 </div>
                                 <div class="form-group">
                                     <label for="shipment_to">TO</label>

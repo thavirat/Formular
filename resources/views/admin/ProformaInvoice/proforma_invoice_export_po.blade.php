@@ -96,7 +96,7 @@
             <td align="center">
                 <b><u>ShipToCode</u></b>
             </td>
-            <td>{!! nl2br(e($ProformaInvoice->ship_to_code)) !!}</td>
+            <td>{{$ProformaInvoice->ship_to_code}}</td>
             <td>
 
             </td>
@@ -121,7 +121,7 @@
             <td align="center">
                 <b><u>Shipping Remark</u></b>
             </td>
-            <td>{{ $ProformaInvoice->ship_remark }}</td>
+            <td>{!! nl2br(e($ProformaInvoice->ship_remark)) !!}</td>
             <td>
 
             </td>

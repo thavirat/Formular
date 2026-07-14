@@ -140,8 +140,8 @@
                                 </div>
                                 <div class="col-3">
                                     <div class="form-group">
-                                        <label for="ship_to_code">{{ __('Ship To Code') }} (Shipping Marks)</label>
-                                        <textarea name="ship_to_code" id="ship_to_code" class="form-control" rows="3" placeholder="พิมพ์ได้หลายบรรทัด"></textarea>
+                                        <label for="ship_to_code">{{ __('Ship To Code') }}</label>
+                                        <input type="text" name="ship_to_code" id="ship_to_code" class="form-control">
                                     </div>
                                     <div class="form-group">
                                         <label for="cno">C/NO.</label>
@@ -149,9 +149,8 @@
                                             value="1-UP" placeholder="เช่น 1-UP">
                                     </div>
                                     <div class="form-group">
-                                        <label for="ship_remark">{{ __('Ship Remark') }}</label>
-                                        <input type="text" name="ship_remark" id="ship_remark" class="form-control"
-                                            value="">
+                                        <label for="ship_remark">{{ __('Ship Remark') }} (Shipping Marks)</label>
+                                        <textarea name="ship_remark" id="ship_remark" class="form-control" rows="3" placeholder="พิมพ์ได้หลายบรรทัด"></textarea>
                                     </div>
                                     <div class="form-group">
                                         <label for="customer_po">{{ __('Customer PO') }}</label>
