@@ -54,14 +54,17 @@
                 <b><u>DocuNo</u></b>
             </td>
             <td>{{$ProformaInvoice->doc_no}}</td>
-            <td width="25%">
+            <td width="35%" rowspan="7" valign="top">
                 <div>
                     <b><u>Sale Rep</u></b>
                 </div>
                 <div>
                     {{$ProformaInvoice->sale_prefix}}{{$ProformaInvoice->sale_firstname}} {{$ProformaInvoice->sale_lastname}}
                 </div>
-
+                <div style="margin-top: 6px;">
+                    <b><u>Shipping Remark</u></b>
+                </div>
+                <div>{!! nl2br(e($ProformaInvoice->ship_remark)) !!}</div>
             </td>
         </tr>
         <tr>
@@ -69,59 +72,36 @@
                 <b><u>Fac No.</u></b>
             </td>
             <td><b>{{ $facNos }}</b></td>
-            <td></td>
         </tr>
         <tr>
             <td align="center">
                 <b><u>CustName</u></b>
             </td>
             <td>{{$ProformaInvoice->company_name}}</td>
-            <td>
-
-            </td>
         </tr>
         <tr>
             <td align="center">
                 <b><u>ShipDate</u></b>
             </td>
             <td>{{$ProformaInvoice->ship_date}}</td>
-            <td>
-
-            </td>
         </tr>
         <tr>
             <td align="center">
                 <b><u>ShipToCode</u></b>
             </td>
             <td>{{$ProformaInvoice->ship_to_code}}</td>
-            <td>
-
-            </td>
         </tr>
         <tr>
             <td align="center">
                 <b><u>C/NO.</u></b>
             </td>
             <td>{{ $ProformaInvoice->cno ?: '1-UP' }}</td>
-            <td></td>
         </tr>
         <tr>
             <td align="center">
                 <b><u>CustPONo</u></b>
             </td>
             <td>{{$ProformaInvoice->customer_po}}</td>
-            <td>
-
-            </td>
-        </tr>
-        <tr>
-            <td align="center">
-                <b><u>Shipping Remark</u></b>
-            </td>
-            <td>{!! nl2br(e($ProformaInvoice->ship_remark)) !!}</td>
-            <td>
-
-            </td>
         </tr>
     </table>
     <table width="100%" style="border-collapse: collapse;">
