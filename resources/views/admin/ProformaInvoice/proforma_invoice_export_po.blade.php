@@ -154,8 +154,8 @@
 </table>
     @endforeach
 
-    {{-- ===== หมายเหตุ (รายการที่คีย์เป็นข้อๆ) ไว้แผ่นสุดท้าย ===== --}}
-    @if($ProformaInvoice->remarks->count())
+    {{-- ===== หมายเหตุ ไว้แผ่นสุดท้าย (คีย์เป็นข้อๆ ถ้าไม่มีใช้ Shipping Remark) ===== --}}
+    @if($ProformaInvoice->remarks->count() || trim((string) $ProformaInvoice->ship_remark) !== '')
         <div style="page-break-before: always;"></div>
         <table width="100%" cellpadding="0" cellspacing="0" style="background-color: rgb(255, 243, 216);">
             <tr>
@@ -163,12 +163,16 @@
             </tr>
         </table>
         <table width="100%" style="margin-top: 10px;">
-            @foreach($ProformaInvoice->remarks as $rm)
+            @forelse($ProformaInvoice->remarks as $rm)
                 <tr>
                     <td width="40" valign="top" align="right" style="padding: 4px 8px;">{{ $loop->iteration }}.</td>
                     <td valign="top" style="padding: 4px 8px;">{{ $rm->remark }}</td>
                 </tr>
-            @endforeach
+            @empty
+                <tr>
+                    <td valign="top" style="padding: 4px 8px;">{{ $ProformaInvoice->ship_remark }}</td>
+                </tr>
+            @endforelse
         </table>
     @endif
 </body>
