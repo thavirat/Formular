@@ -25,16 +25,14 @@
             $logo = json_decode($settings['logo']);
             $logo = ( sizeof( $logo ) > 0 ? $logo[0] : null );
         }
-        // จัดกลุ่มสินค้าตามโรงงาน (Fac No.) -> เอกสาร 1 ชุด ต่อ 1 โรงงาน (รวมในไฟล์เดียว)
-        $groups = $ProformaInvoice->products->groupBy(function ($p) {
-            return ($p->fac_no !== null && $p->fac_no !== '') ? $p->fac_no : '-';
-        });
+        // ไม่จัดกลุ่มตามโรงงานแล้ว -> แสดงสินค้าทั้งหมดในชุดเดียว
+        $items = $ProformaInvoice->products;
+        // รวมเลขโรงงานที่ไม่ซ้ำมาแสดงในช่อง Fac No.
+        $facNos = $items->pluck('fac_no')->filter(fn($f) => $f !== null && $f !== '')->unique()->implode(', ');
+        // รวมจำนวนแยกตามหน่วย เพื่อแสดงแถวสรุปท้ายตาราง (เช่น "1,500 PCS   30 SET")
+        $qtyByUnit = $items->groupBy('unit_name')->map(fn($g) => $g->sum('qty'));
+        $qtySummary = $qtyByUnit->map(fn($sum, $unit) => number_format($sum, 0) . ' ' . $unit)->implode('   ');
     @endphp
-
-    @foreach($groups as $facNo => $items)
-    @if(!$loop->first)
-        <div style="page-break-before: always;"></div>
-    @endif
 
     <table  width="100%"   cellpadding="0" cellspacing="0" style="background-color: rgb(255, 243, 216);">
         <tr>
@@ -71,7 +69,7 @@
             <td align="center">
                 <b><u>Fac No.</u></b>
             </td>
-            <td><b>{{ $facNo }}</b></td>
+            <td><b>{{ $facNos }}</b></td>
             <td></td>
         </tr>
         <tr>
@@ -151,8 +149,12 @@
         <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;" valign="top" align="center">{{ $product->cus_code }}</td>
     </tr>
     @endforeach
+    <tr>
+        <td style="border-top: 2px solid #333;"></td>
+        <td style="border-top: 2px solid #333;" align="right"><b>รวม</b></td>
+        <td style="border-top: 2px solid #333;" colspan="4">&nbsp;<b>{{ $qtySummary }}</b></td>
+    </tr>
 </table>
-    @endforeach
 
     {{-- ===== หมายเหตุ ไว้แผ่นสุดท้าย (ดึงจากหมายเหตุของ PI นั้น; ไม่มีก็ไม่แสดง) ===== --}}
     @if($ProformaInvoice->remarks->count())
