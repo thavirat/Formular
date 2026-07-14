@@ -347,7 +347,27 @@
                                                         <th width="40"></th>
                                                     </tr>
                                                 </thead>
-                                                <tbody></tbody>
+                                                <tbody>
+                                                    @php
+                                                        $defaultRemarks = [
+                                                            'CDS, PFC, CO, LM บรรจุกล่องแบบ "A" และไม่ต้องติดสติ๊กเกอร์ FORMULA ที่ตัวสินค้า',
+                                                            'CDS, PFC ทุกรายการ พิมพ์ JAY AIR ตามแบบที่วางไว้บนกล่อง',
+                                                            'ทุกรายการให้ติดสติ๊กเกอร์ JAY AIR พิมพ์ PART NO. และบาร์โค้ดลูกค้าตามที่วางไว้บนกล่อง',
+                                                            'PFC ทุกรุ่นที่เป็นสี BRONZE ไม่ต้องทำการพ่นสี',
+                                                            'สินค้าตู้แอร์ใช้กล่องแบบ "N"',
+                                                            'ปั้มสกรีน MADE IN THAILAND บนตู้แอร์',
+                                                            'PFC ทุกรายการไม่ต้องพ่นสี',
+                                                            'PFE ทุกรายการที่มีหน้าแปลนใช้ BLOCK VALVE KNOB สีเหลือง',
+                                                        ];
+                                                    @endphp
+                                                    @foreach($defaultRemarks as $dr)
+                                                    <tr>
+                                                        <td class="text-center align-middle"><i class="fas fa-grip-vertical cursor-move text-muted remark-handle"></i></td>
+                                                        <td><input type="text" class="form-control form-control-sm" name="remark_text[]" value="{{ $dr }}"></td>
+                                                        <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm removeRemark" tabindex="-1"><i class="fa fa-trash"></i></button></td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
                                                 <tfoot>
                                                     <tr>
                                                         <td colspan="3">

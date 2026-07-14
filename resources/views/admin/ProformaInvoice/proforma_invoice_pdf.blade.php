@@ -140,14 +140,9 @@
 {{-- ===================== หมายเหตุการผลิต + ลงนาม (ให้อยู่หน้าเดียวกัน) ===================== --}}
 <div style="page-break-inside: avoid;">
 <ol class="remark-list">
-    <li>CDS, PFC, CO, LM บรรจุกล่องแบบ "A" และไม่ต้องติดสติ๊กเกอร์ FORMULA ที่ตัวสินค้า</li>
-    <li>CDS, PFC ทุกรายการ พิมพ์ JAY AIR ตามแบบที่วางไว้บนกล่อง</li>
-    <li>ทุกรายการให้ติดสติ๊กเกอร์ JAY AIR พิมพ์ PART NO. และบาร์โค้ดลูกค้าตามที่วางไว้บนกล่อง</li>
-    <li>PFC ทุกรุ่นที่เป็นสี BRONZE ไม่ต้องทำการพ่นสี</li>
-    <li>สินค้าตู้แอร์ใช้กล่องแบบ "N"</li>
-    <li>ปั้มสกรีน MADE IN THAILAND บนตู้แอร์</li>
-    <li>PFC ทุกรายการไม่ต้องพ่นสี</li>
-    <li>PFE ทุกรายการที่มีหน้าแปลนใช้ BLOCK VALVE KNOB สีเหลือง</li>
+    @foreach($pi->remarks as $rm)
+        <li>{{ $rm->remark }}</li>
+    @endforeach
 </ol>
 <div class="bold" style="margin-left:6px;">**สินค้าเคลม</div>
 
