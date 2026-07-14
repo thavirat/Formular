@@ -8,9 +8,6 @@
 
     $pi = $ProformaInvoice;
     $cur = optional($pi->currency)->symbol ?: 'USD';
-
-    // ป้ายมาร์ค: ใช้ ship_to_code ถ้ามี ไม่งั้นชื่อย่อจากชื่อบริษัทลูกค้า
-    $markName = $pi->ship_to_code ?: \Illuminate\Support\Str::before(($pi->customer_name ?: $pi->company_name), ' ');
 @endphp
 <!DOCTYPE html>
 <html lang="th">
@@ -89,13 +86,13 @@
             <td><span class="bold">SALE REP :</span>&nbsp;&nbsp;&nbsp;&nbsp;{{ optional($pi->createdBy)->name }}</td>
         </tr>
         <tr>
-            <td><span class="bold">COUNTRY :</span></td>
+            <td><span class="bold">COUNTRY :</span> {{ $pi->ship_to_code }}</td>
             <td><span class="bold">SHIPMENT BY :</span></td>
         </tr>
         <tr>
             <td rowspan="5" valign="top">
                 <span class="bold">SHIPPING MARKS</span><br>
-                &nbsp;&nbsp;{{ $markName }}<br>
+                &nbsp;&nbsp;{!! nl2br(e($pi->ship_remark)) !!}<br>
                 &nbsp;&nbsp;C/NO.1-UP {{-- hardcode ไว้ก่อน --}}
             </td>
             <td><span class="bold">PAYMENT BY :</span> {{ optional($pi->creditPayment)->name }}</td>
