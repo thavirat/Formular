@@ -151,8 +151,7 @@
     @foreach($qtyByUnit as $unit => $sum)
     <tr>
         <td @if($loop->first) style="border-top: 2px solid #333;" @endif></td>
-        <td @if($loop->first) style="border-top: 2px solid #333;" @endif></td>
-        <td @if($loop->first) style="border-top: 2px solid #333;" @endif align="right"><b>{{ number_format($sum, 0) }} {{ $unit }}</b></td>
+        <td colspan="2" @if($loop->first) style="border-top: 2px solid #333;" @endif align="right"><b>{{ number_format($sum, 0) }} {{ $unit }}</b></td>
         <td @if($loop->first) style="border-top: 2px solid #333;" @endif></td>
         <td @if($loop->first) style="border-top: 2px solid #333;" @endif></td>
         <td @if($loop->first) style="border-top: 2px solid #333;" @endif></td>
