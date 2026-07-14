@@ -140,9 +140,8 @@
                                 </div>
                                 <div class="col-3">
                                     <div class="form-group">
-                                        <label for="ship_to_code">{{ __('Ship To Code') }}</label>
-                                        <input type="text" name="ship_to_code" id="ship_to_code" class="form-control"
-                                            value="">
+                                        <label for="ship_to_code">{{ __('Ship To Code') }} (Shipping Marks)</label>
+                                        <textarea name="ship_to_code" id="ship_to_code" class="form-control" rows="3" placeholder="พิมพ์ได้หลายบรรทัด"></textarea>
                                     </div>
                                     <div class="form-group">
                                         <label for="cno">C/NO.</label>

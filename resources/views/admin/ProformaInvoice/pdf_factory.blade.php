@@ -135,7 +135,7 @@
             <td width="33%">
                 <span class="bold">SHIPPING MARKS</span><br>
                 {{-- ป้ายมาร์ค: ใช้รหัส ship_to_code ถ้ามี ไม่งั้นใช้ชื่อย่อจากชื่อบริษัท --}}
-                {{ $pi->ship_to_code ?: \Illuminate\Support\Str::before($pi->company_name, ' ') }}<br>
+                {!! nl2br(e($pi->ship_to_code ?: \Illuminate\Support\Str::before($pi->company_name, ' '))) !!}<br>
                 C/NO.{{ $pi->cno ?: '1-UP' }}
             </td>
             <td width="25%">

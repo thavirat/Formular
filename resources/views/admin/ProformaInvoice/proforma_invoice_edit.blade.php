@@ -137,7 +137,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="ship_to_code">{{__('Ship To Code')}}</label>
-                                    <input type="text" name="ship_to_code" id="ship_to_code" class="form-control" value="{{ $ProformaInvoice->ship_to_code }}">
+                                    <textarea name="ship_to_code" id="ship_to_code" class="form-control" rows="3" placeholder="พิมพ์ได้หลายบรรทัด">{{ $ProformaInvoice->ship_to_code }}</textarea>
                                 </div>
                             </div>
                             <div class="col-md-3">

@@ -95,7 +95,7 @@
         <tr>
             <td rowspan="5" valign="top">
                 <span class="bold">SHIPPING MARKS</span><br>
-                &nbsp;&nbsp;{{ $markName }}<br>
+                &nbsp;&nbsp;{!! nl2br(e($markName)) !!}<br>
                 &nbsp;&nbsp;C/NO.1-UP {{-- hardcode ไว้ก่อน --}}
             </td>
             <td><span class="bold">PAYMENT BY :</span> {{ optional($pi->creditPayment)->name }}</td>
