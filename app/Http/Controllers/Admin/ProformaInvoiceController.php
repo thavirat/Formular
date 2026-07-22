@@ -949,7 +949,8 @@ class ProformaInvoiceController extends AdminController
                 ->orderByRaw("{$pfx}factories.code IS NULL, CAST({$pfx}factories.code AS UNSIGNED), {$pfx}proforma_invoice_products.seq ASC");
         }, 'customer'])
             ->leftJoin('customers', 'proforma_invoices.customer_id', '=', 'customers.id')
-            ->leftJoin('admin_users', 'proforma_invoices.created_by', '=', 'admin_users.id')
+            // ใช้ผู้ขายจริง (sale_by) ถ้าไม่มีค่อย fallback เป็นคนสร้าง (created_by)
+            ->leftJoin('admin_users', DB::raw("COALESCE(NULLIF({$pfx}proforma_invoices.sale_by, ''), {$pfx}proforma_invoices.created_by)"), '=', 'admin_users.id')
             ->leftJoin('prefixes', 'admin_users.prefix_id', '=', 'prefixes.id')
             ->select(
                 'proforma_invoices.*',
