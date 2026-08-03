@@ -573,16 +573,14 @@ class ProformaInvoiceController extends AdminController
             ->addColumn('doc_info', function ($rec) use ($lang) {
                 // เลขที่ PI คลิกได้ -> เปิด PDF ใบ PI (โรงงาน) แท็บใหม่
                 $piPdfUrl = url('admin/' . $lang . '/ProformaInvoice/pdfFactory?pi_id=' . $rec->id);
-                return '<div class="font-bolder text-95"><a href="' . $piPdfUrl . '" target="_blank" class="text-primary-d2" title="เปิด PDF ใบ PI (โรงงาน)">' . e($rec->doc_no) . '</a></div>
+                $html = '<div class="font-bolder text-95"><a href="' . $piPdfUrl . '" target="_blank" class="text-primary-d2" title="เปิด PDF ใบ PI (โรงงาน)">' . e($rec->doc_no) . '</a></div>
                         <div class="text-80 text-grey-m2"><i class="far fa-calendar-alt mr-1"></i>' . e($rec->doc_date) . '</div>';
-            })
-            ->addColumn('quotation_info', function ($rec) use ($lang) {
-                // เลขที่ใบเสนอราคา คลิกได้ -> เปิด PDF ใบเสนอราคา แท็บใหม่
-                if (empty($rec->quotation_id) || empty($rec->quotation_doc_no)) {
-                    return '<span class="text-grey-m2">-</span>';
+                // เลขที่ใบเสนอราคา อยู่ใต้เลข PI คลิกได้ -> เปิด PDF ใบเสนอราคา แท็บใหม่
+                if (!empty($rec->quotation_id) && !empty($rec->quotation_doc_no)) {
+                    $qPdfUrl = url('admin/' . $lang . '/Quotation/' . $rec->quotation_id . '/pdf');
+                    $html .= '<div class="text-80 mt-1"><i class="far fa-file-alt mr-1 text-blue-d1"></i><a href="' . $qPdfUrl . '" target="_blank" class="text-blue-d1" title="เปิด PDF ใบเสนอราคา">' . e($rec->quotation_doc_no) . '</a></div>';
                 }
-                $qPdfUrl = url('admin/' . $lang . '/Quotation/' . $rec->quotation_id . '/pdf');
-                return '<a href="' . $qPdfUrl . '" target="_blank" class="text-blue-d1 font-bolder" title="เปิด PDF ใบเสนอราคา"><i class="far fa-file-alt mr-1"></i>' . e($rec->quotation_doc_no) . '</a>';
+                return $html;
             })
             ->addColumn('customer_info', function ($rec) {
                 return '<div class="text-dark-m3 font-bold">' . e($rec->company_name) . '</div>
@@ -756,7 +754,7 @@ class ProformaInvoiceController extends AdminController
                 return $str;
             })
             ->addIndexColumn()
-            ->rawColumns(['doc_info', 'quotation_info', 'customer_info', 'total', 'produced_progress', 'status_name', 'comment_box', 'action_btns'])
+            ->rawColumns(['doc_info', 'customer_info', 'total', 'produced_progress', 'status_name', 'comment_box', 'action_btns'])
             ->make(true);
     }
 
