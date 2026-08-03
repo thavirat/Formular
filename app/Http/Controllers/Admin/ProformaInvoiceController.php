@@ -1016,9 +1016,10 @@ class ProformaInvoiceController extends AdminController
                     'unit_products.name as unit_name'
                 )
                 ->orderBy('proforma_invoice_products.seq', 'asc');
-        }, 'customer'])
+        }, 'customer', 'remarks'])
             ->leftJoin('customers', 'proforma_invoices.customer_id', '=', 'customers.id')
-            ->leftJoin('admin_users', 'proforma_invoices.created_by', '=', 'admin_users.id')
+            // ผู้ขายจริง (sale_by) ถ้าไม่มี fallback เป็นคนสร้าง
+            ->leftJoin('admin_users', DB::raw("COALESCE(NULLIF(".DB::getTablePrefix()."proforma_invoices.sale_by, ''), ".DB::getTablePrefix()."proforma_invoices.created_by)"), '=', 'admin_users.id')
             ->leftJoin('prefixes', 'admin_users.prefix_id', '=', 'prefixes.id')
             ->select(
                 'proforma_invoices.*',
@@ -1035,7 +1036,9 @@ class ProformaInvoiceController extends AdminController
         $pdf = \PDF::loadView('admin.ProformaInvoice.proforma_invoice_export_product', $data);
 
         // สั่งให้เปิด PDF ใน Browser (ถ้าอยากให้โหลดลงเครื่องเลย เปลี่ยน stream เป็น download)
-        return $pdf->stream('EXPORT_PRODUCT_' . $data['ProformaInvoice']->doc_no . '.pdf');
+        $docNo = $data['ProformaInvoice']->doc_no;
+        $faNo = \Illuminate\Support\Str::startsWith($docNo, 'PI') ? 'FA'.substr($docNo, 2) : $docNo;
+        return $pdf->stream('EXPORT_PRODUCT_' . $faNo . '.pdf');
     }
 
     public function fic_2_fi(Request $request, $id)
