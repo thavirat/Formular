@@ -514,6 +514,7 @@ class ProformaInvoiceController extends AdminController
             )->orderBy('comments.created_at', 'desc');
         }])
             ->leftJoin('admin_users', 'admin_users.id', '=', 'proforma_invoices.created_by')
+            ->leftJoin('admin_users as sale_user', 'proforma_invoices.sale_by', '=', 'sale_user.id')
             ->leftJoin('admin_users as send_approve', 'proforma_invoices.send_approve_by', '=', 'send_approve.id')
             ->leftJoin('admin_users as approve', 'proforma_invoices.approve_by', '=', 'approve.id')
             ->leftJoin('proforma_invoice_statuses', 'proforma_invoices.status_id', '=', 'proforma_invoice_statuses.id')
@@ -521,6 +522,7 @@ class ProformaInvoiceController extends AdminController
             ->select(
                 'proforma_invoices.*',
                 'admin_users.nickname as created_by_name',
+                'sale_user.nickname as sale_by_name',
                 'send_approve.nickname as send_approve_name',
                 'approve.nickname as approve_name',
                 'proforma_invoice_statuses.name as status_name',
@@ -583,8 +585,10 @@ class ProformaInvoiceController extends AdminController
                 return $html;
             })
             ->addColumn('customer_info', function ($rec) {
+                $saleName = $rec->sale_by_name ?: $rec->created_by_name; // ผู้ขาย (fallback ผู้จัดทำถ้าไม่มี)
                 return '<div class="text-dark-m3 font-bold">' . e($rec->company_name) . '</div>
-                        <div class="text-80 text-blue-m2"><i class="far fa-user mr-1"></i>' . e($rec->created_by_name ?? '-') . '</div>';
+                        <div class="text-80 text-blue-m2"><i class="fa fa-user-tie mr-1"></i>ผู้ขาย: ' . e($saleName ?? '-') . '</div>
+                        <div class="text-80 text-grey-m2"><i class="far fa-user mr-1"></i>ผู้จัดทำ: ' . e($rec->created_by_name ?? '-') . '</div>';
             })
             ->editColumn('total', function ($rec) {
                 return '<span class="text-110 font-bolder text-success-d1">' . number_format($rec->total, 2) . '</span>';
