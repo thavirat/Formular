@@ -212,6 +212,7 @@
                             <tr class="bgc-primary-d1 text-white">
                                 <th class="text-center" width="5%">#</th>
                                 <th>เลขที่ / วันที่เอกสาร</th>
+                                <th>ใบเสนอราคา</th>
                                 <th>ลูกค้า / ผู้จัดทำ</th>
                                 <th class="text-right">ยอดรวม</th>
                                 <th class="text-center" width="120">ผลิตเสร็จ</th>
@@ -292,6 +293,7 @@
         "columns": [
             {"data": "DT_RowIndex", 'searchable': false, 'orderable': false, "class": "text-center"},
             {"data": "doc_info", "name": 'doc_no', "className": "align-middle"},
+            {"data": "quotation_info", "name": 'quotations.doc_no', "className": "align-middle"},
             {"data": "customer_info", "name": 'company_name', "className": "align-middle"},
             {"data": "total", "name": 'total', "className": "text-right align-middle text-600 text-success-d1"},
             {"data": "produced_progress", "searchable": false, "orderable": false, "className": "align-middle"},

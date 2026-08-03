@@ -517,12 +517,14 @@ class ProformaInvoiceController extends AdminController
             ->leftJoin('admin_users as send_approve', 'proforma_invoices.send_approve_by', '=', 'send_approve.id')
             ->leftJoin('admin_users as approve', 'proforma_invoices.approve_by', '=', 'approve.id')
             ->leftJoin('proforma_invoice_statuses', 'proforma_invoices.status_id', '=', 'proforma_invoice_statuses.id')
+            ->leftJoin('quotations', 'proforma_invoices.quotation_id', '=', 'quotations.id')
             ->select(
                 'proforma_invoices.*',
                 'admin_users.nickname as created_by_name',
                 'send_approve.nickname as send_approve_name',
                 'approve.nickname as approve_name',
-                'proforma_invoice_statuses.name as status_name'
+                'proforma_invoice_statuses.name as status_name',
+                'quotations.doc_no as quotation_doc_no'
             );
 
         $pfx = DB::getTablePrefix();
@@ -568,9 +570,19 @@ class ProformaInvoiceController extends AdminController
         $all_permission = UserPermission::getMyPermissions();
 
         return DataTables::of($result)
-            ->addColumn('doc_info', function ($rec) {
-                return '<div class="text-primary-d2 font-bolder text-95">' . e($rec->doc_no) . '</div>
+            ->addColumn('doc_info', function ($rec) use ($lang) {
+                // เลขที่ PI คลิกได้ -> เปิด PDF ใบ PI (โรงงาน) แท็บใหม่
+                $piPdfUrl = url('admin/' . $lang . '/ProformaInvoice/pdfFactory?pi_id=' . $rec->id);
+                return '<div class="font-bolder text-95"><a href="' . $piPdfUrl . '" target="_blank" class="text-primary-d2" title="เปิด PDF ใบ PI (โรงงาน)">' . e($rec->doc_no) . '</a></div>
                         <div class="text-80 text-grey-m2"><i class="far fa-calendar-alt mr-1"></i>' . e($rec->doc_date) . '</div>';
+            })
+            ->addColumn('quotation_info', function ($rec) use ($lang) {
+                // เลขที่ใบเสนอราคา คลิกได้ -> เปิด PDF ใบเสนอราคา แท็บใหม่
+                if (empty($rec->quotation_id) || empty($rec->quotation_doc_no)) {
+                    return '<span class="text-grey-m2">-</span>';
+                }
+                $qPdfUrl = url('admin/' . $lang . '/Quotation/' . $rec->quotation_id . '/pdf');
+                return '<a href="' . $qPdfUrl . '" target="_blank" class="text-blue-d1 font-bolder" title="เปิด PDF ใบเสนอราคา"><i class="far fa-file-alt mr-1"></i>' . e($rec->quotation_doc_no) . '</a>';
             })
             ->addColumn('customer_info', function ($rec) {
                 return '<div class="text-dark-m3 font-bold">' . e($rec->company_name) . '</div>
@@ -744,7 +756,7 @@ class ProformaInvoiceController extends AdminController
                 return $str;
             })
             ->addIndexColumn()
-            ->rawColumns(['doc_info', 'customer_info', 'total', 'produced_progress', 'status_name', 'comment_box', 'action_btns'])
+            ->rawColumns(['doc_info', 'quotation_info', 'customer_info', 'total', 'produced_progress', 'status_name', 'comment_box', 'action_btns'])
             ->make(true);
     }
 
