@@ -14,8 +14,10 @@
         ? 'FA'.substr($pi->doc_no, 2)
         : $pi->doc_no;
 
-    // ผู้ขายจริง: ใช้ sale_by ถ้าไม่มี fallback เป็นคนสร้าง
-    $saleName = optional($pi->saleBy ?: $pi->createdBy)->name;
+    // ผู้ขายจริง: ใช้ sale_by ถ้าไม่มี fallback เป็นคนสร้าง; แสดง nickname เป็นหลัก (เหมือนหน้า list) ไม่งั้น name / ชื่อ-สกุล
+    $seller = $pi->saleBy ?: $pi->createdBy;
+    $saleName = optional($seller)->nickname
+        ?: (optional($seller)->name ?: trim(optional($seller)->firstname . ' ' . optional($seller)->lastname));
 @endphp
 <!DOCTYPE html>
 <html lang="th">
@@ -100,8 +102,7 @@
         <tr>
             <td rowspan="5" valign="top">
                 <span class="bold">SHIPPING MARKS</span><br>
-                &nbsp;&nbsp;{!! nl2br(e($pi->ship_remark)) !!}<br>
-                &nbsp;&nbsp;C/NO.1-UP {{-- hardcode ไว้ก่อน --}}
+                &nbsp;&nbsp;{!! nl2br(e($pi->ship_remark)) !!}
             </td>
             <td><span class="bold">PAYMENT BY :</span> {{ optional($pi->creditPayment)->name }}</td>
         </tr>
