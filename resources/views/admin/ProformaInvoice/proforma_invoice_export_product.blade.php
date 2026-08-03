@@ -36,6 +36,10 @@
         Page {PAGENO} of {nbpg}
     </div>
 
+    @foreach($groups as $facNo => $items)
+    @if(!$loop->first)
+        <div style="page-break-before: always;"></div>
+    @endif
     <table width="100%" cellpadding="5" cellspacing="0" >
         <tr style="background-color: rgb(237, 237, 249);">
             <th style="width: 10%;" align="left" rowspan="3">
@@ -86,7 +90,6 @@
             <td width="12%"></td>
         </tr>
 
-    @foreach($groups as $facNo => $items)
         {{-- หัวกลุ่มโรงงาน --}}
         <tr style="background-color: rgb(237, 237, 249);">
             <td colspan="7" style="padding: 4px 6px;"><b>Fac No. : {{ $facNo }}</b></td>
@@ -118,7 +121,7 @@
             </td>
         </tr>
         @endif
-    @endforeach
     </table>
+    @endforeach
 </body>
 </html>
