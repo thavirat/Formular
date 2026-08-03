@@ -81,7 +81,7 @@
         .head-box td { border: 1px solid #000; vertical-align: top; padding: 4px 6px; }
 
         /* ---------- ตารางรายการ ---------- */
-        .items { width: 100%; border-collapse: collapse; font-size: 11px; border-top: 1px solid #000; border-bottom: 1px solid #000; }
+        .items { width: 100%; border-collapse: collapse; font-size: 11px; border-top: 1px solid #000; }
         /* หัวตาราง: เส้นครบทุกด้าน (แนวตั้งทุกคอลัมน์ + เส้นบน + เส้นล่างหัวตาราง) */
         .items th { border: 1px solid #000; padding: 2px 4px; text-align: center; vertical-align: middle; font-weight: bold; }
         /* เนื้อหา: ไม่มีเส้นระหว่างบรรทัด, เส้นแนวตั้งเฉพาะคอลัมน์ที่ใส่ class .vline */
@@ -199,21 +199,22 @@
 
         {{-- ยอดรวมจำนวนแยกตามหน่วย --}}
         @foreach($unitTotals as $unit => $sumQty)
+            @php $bb = $loop->last ? 'border-bottom:1px solid #000;' : ''; @endphp
             <tr>
-                <td class="vline"></td>
-                <td class="text-center bold" colspan="4">********** TOTAL **********</td>
-                <td class="text-center bold vline">{{ number_format($sumQty, 0) }} {{ $unit }}</td>
-                <td class="vline"></td>
-                <td class="vline"></td>
+                <td class="vline" style="{{ $bb }}"></td>
+                <td class="text-center bold" colspan="4" style="{{ $bb }}">********** TOTAL **********</td>
+                <td class="text-center bold vline" style="{{ $bb }}">{{ number_format($sumQty, 0) }} {{ $unit }}</td>
+                <td class="vline" style="{{ $bb }}"></td>
+                <td class="vline" style="{{ $bb }}"></td>
             </tr>
         @endforeach
 
-        {{-- SUBTOTAL แยกออกมาเป็นแถวล่างจากยอดรวมตามหน่วย --}}
+        {{-- SUBTOTAL แยกออกมาเป็นแถวล่างจากยอดรวมตามหน่วย (ไม่มีเส้น) --}}
         <tr>
-            <td class="vline"></td>
+            <td></td>
             <td colspan="5"></td>
-            <td class="text-right bold vline">SUBTOTAL</td>
-            <td class="bold vline">
+            <td class="text-right bold">SUBTOTAL</td>
+            <td class="bold">
                 <table width="100%" style="border:none; border-collapse:collapse;"><tr>
                     <td style="border:none; padding:0;" class="text-left bold">{{ $cur }}</td>
                     <td style="border:none; padding:0;" class="text-right bold">{{ number_format($subtotal, 2) }}</td>
@@ -223,40 +224,23 @@
 
         {{-- ===================== ค่าบริการอื่นๆ (ระหว่าง SUBTOTAL กับ TOTAL) ===================== --}}
         @foreach($pi->services as $k=>$sv)
-            @if($k > 0)
-                <tr>
-                    <td class="vline"></td>
-
-
-                    <td class="text-right" colspan="6">{{ $sv->name }}</td>
-                    <td class="vline">
-                        <table width="100%" style="border:none; border-collapse:collapse;"><tr>
-                            <td style="border:none; padding:0;" class="text-left">{{ $cur }}</td>
-                            <td style="border:none; padding:0;" class="text-right">{{ number_format($sv->amount, 2) }}</td>
-                        </tr></table>
-                    </td>
-                </tr>
-            @else
             <tr>
-                <td class="vline" style="border-top:1px solid #000;"></td>
-
-
-                <td class="text-right" colspan="6" style="border-top:1px solid #000;">{{ $sv->name }}</td>
-                <td class="vline" style="border-top:1px solid #000;">
+                <td></td>
+                <td class="text-right" colspan="6">{{ $sv->name }}</td>
+                <td>
                     <table width="100%" style="border:none; border-collapse:collapse;"><tr>
                         <td style="border:none; padding:0;" class="text-left">{{ $cur }}</td>
                         <td style="border:none; padding:0;" class="text-right">{{ number_format($sv->amount, 2) }}</td>
                     </tr></table>
                 </td>
             </tr>
-            @endif
         @endforeach
 
         {{-- ===================== TOTAL (แถวสุดท้าย ปิดท้ายด้วยเส้นล่าง) ===================== --}}
         <tr>
-            <td colspan="6" class="bold" style="border-top:1px solid #000;">TOTAL :&nbsp;( {{ Help::numberToWords($total, 'DOLLARS') }} )</td>
-            <td class="text-right bold " style="border-top:1px solid #000;">TOTAL</td>
-            <td class="bold" style="border-top:1px solid #000;">
+            <td colspan="6" class="bold">TOTAL :&nbsp;( {{ Help::numberToWords($total, 'DOLLARS') }} )</td>
+            <td class="text-right bold ">TOTAL</td>
+            <td class="bold">
                 <table width="100%" style="border:none; border-collapse:collapse;"><tr>
                     <td style="border:none; padding:0;" class="text-left bold">{{ $cur }}</td>
                     <td style="border:none; padding:0;" class="text-right bold">{{ number_format($total, 2) }}</td>
