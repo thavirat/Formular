@@ -140,6 +140,15 @@
                                 </div>
                                 <div class="col-3">
                                     <div class="form-group">
+                                        <label for="sale_by">{{ __('ผู้ขาย (Sale)') }}</label>
+                                        @php $defaultSaleBy = old('sale_by', $Quotation ? $Quotation->created_by : optional(auth()->guard('admin')->user())->id); @endphp
+                                        <select name="sale_by" id="sale_by" class="form-control select2">
+                                            @foreach($admins as $admin)
+                                                <option value="{{ $admin->id }}" {{ (string)$defaultSaleBy === (string)$admin->id ? 'selected' : '' }}>{{ $admin->name ?: trim($admin->firstname.' '.$admin->lastname) }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
                                         <label for="ship_to_code">{{ __('Ship To Code') }}</label>
                                         <input type="text" name="ship_to_code" id="ship_to_code" class="form-control">
                                     </div>

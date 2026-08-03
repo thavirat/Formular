@@ -84,6 +84,7 @@ class ProformaInvoiceController extends AdminController
         $data['Currencies'] = Currency::orderBy('name')->get();
         $data['CreditPayments'] = CreditPayment::orderBy('name')->get();
         $data['ShipmentMethods'] = ShipmentMethod::active()->orderBy('seq')->get();
+        $data['admins'] = AdminUser::orderBy('nickname')->get(); // รายชื่อผู้ขายให้เลือก
         $data['admin_lang_slash'] = $this->adminLangSlash($request);
         $data['default_currency_symbol'] = Currency::orderBy('name')->value('symbol') ?? '';
         $data['suggested_doc_no'] = $this->suggestProformaInvoiceDocNo(date('Y-m-d'))['doc_no'];
@@ -193,10 +194,12 @@ class ProformaInvoiceController extends AdminController
             $pi->subtotal          = $subtotal;
             $pi->total             = $subtotal + $servicesTotal;
             $pi->created_by        = Auth::guard('admin')->user()->id;
-            // ผู้ขาย = ผู้สร้างใบเสนอราคา (ถ้าผูกใบเสนอราคา); ถ้าไม่มี ใช้ผู้สร้าง PI เป็นผู้ขาย
-            $pi->sale_by           = $quotationId
-                ? (Quotation::where('id', $quotationId)->value('created_by') ?: $pi->created_by)
-                : $pi->created_by;
+            // ผู้ขาย: ใช้ค่าที่เลือกในฟอร์มก่อน; ถ้าไม่เลือก default = ผู้สร้างใบเสนอราคา (ถ้าผูก) มิฉะนั้นผู้สร้าง PI
+            $pi->sale_by           = $request->filled('sale_by')
+                ? $request->sale_by
+                : ($quotationId
+                    ? (Quotation::where('id', $quotationId)->value('created_by') ?: $pi->created_by)
+                    : $pi->created_by);
             $pi->save();
 
             $this->saveRemarksAndServices($request, $pi->id);
@@ -327,6 +330,7 @@ class ProformaInvoiceController extends AdminController
         $data['Currencies']     = Currency::orderBy('name')->get();
         $data['CreditPayments'] = CreditPayment::orderBy('name')->get();
         $data['ShipmentMethods'] = ShipmentMethod::active()->orderBy('seq')->get();
+        $data['admins'] = AdminUser::orderBy('nickname')->get(); // รายชื่อผู้ขายให้เลือก
 
         // ดึงข้อมูล Proforma Invoice พร้อม Products ที่เรียงตาม seq + remarks/services
         $data['ProformaInvoice'] = ProformaInvoice::with(['products' => function ($q) {
@@ -395,8 +399,10 @@ class ProformaInvoiceController extends AdminController
             $subtotal = (float) str_replace(',', '', $request->subtotal ?? $request->grand_total);
             $pi->subtotal          = $subtotal;
             $pi->total             = $subtotal + $this->sumServices($request);
-            // ผู้ขาย = ผู้สร้างใบเสนอราคา (ถ้ายังไม่เคยตั้ง) ; ถ้าไม่ผูกใบเสนอราคาและยังว่าง ใช้ผู้สร้าง PI
-            if ($newQuotationId) {
+            // ผู้ขาย: ให้สิทธิ์ค่าที่เลือกในฟอร์มก่อน; ถ้าไม่เลือก ใช้ตรรกะเดิม (จากใบเสนอราคา/ผู้สร้าง)
+            if ($request->filled('sale_by')) {
+                $pi->sale_by = $request->sale_by;
+            } elseif ($newQuotationId) {
                 $pi->sale_by = Quotation::where('id', $newQuotationId)->value('created_by') ?: ($pi->sale_by ?: $pi->created_by);
             } elseif (empty($pi->sale_by)) {
                 $pi->sale_by = $pi->created_by;
