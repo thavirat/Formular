@@ -89,31 +89,34 @@
             </th>
             <td width="12%"></td>
         </tr>
+    </table>
 
+    {{-- ===== ตารางสินค้า (แยกออกมาเพื่อคุมความกว้างเอง: เลขแคบ รายละเอียดกว้าง) ===== --}}
+    <table width="100%" cellpadding="5" cellspacing="0" style="border-collapse: collapse;">
         {{-- หัวกลุ่มโรงงาน --}}
         <tr style="background-color: rgb(237, 237, 249);">
-            <td colspan="7" style="padding: 4px 6px;"><b>Fac No. : {{ $facNo }}</b></td>
+            <td colspan="6" style="padding: 4px 6px;"><b>Fac No. : {{ $facNo }}</b></td>
         </tr>
         @foreach($items as $key => $product)
         <tr>
-            <td style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;" valign="top" align="center">{{ $product->seq }}</td>
-            <td style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px; color: blue;" valign="top" align="center">{{ $key + 1 }}</td>
-            <td style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;" valign="top">{{ $product->part_no }}<div style="color: blue; font-size: 90%;">{{ $product->drawing }}</div></td>
-            <td style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;" colspan="2" valign="top" >{{ $product->name_th ?: $product->name_en }}</td>
-            <td style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;" align="center" valign="top">{{ number_format($product->qty,0) }}</td>
-            <td style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;" align="center" valign="top">{{ $product->cus_code }}</td>
+            <td width="4%" style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;" valign="top" align="center">{{ $product->seq }}</td>
+            <td width="4%" style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px; color: blue;" valign="top" align="center">{{ $key + 1 }}</td>
+            <td width="17%" style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;" valign="top">{{ $product->part_no }}<div style="color: blue; font-size: 90%;">{{ $product->drawing }}</div></td>
+            <td width="52%" style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;" valign="top" >{{ $product->name_th ?: $product->name_en }}</td>
+            <td width="9%" style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;" align="center" valign="top">{{ number_format($product->qty,0) }}</td>
+            <td width="14%" style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;" align="center" valign="top">{{ $product->cus_code }}</td>
         </tr>
         @endforeach
         {{-- สรุปจำนวนรวมของ fac นี้ (อยู่คอลัมน์เดียวกับ Qty) --}}
         <tr>
-            <td colspan="5" align="right" style="border-top: 2px solid #333;"><b>รวม Fac {{ $facNo }}</b></td>
+            <td colspan="4" align="right" style="border-top: 2px solid #333;"><b>รวม Fac {{ $facNo }}</b></td>
             <td align="center" style="border-top: 2px solid #333;"><b>{{ number_format($items->sum('qty'), 0) }}</b></td>
             <td style="border-top: 2px solid #333;"></td>
         </tr>
         {{-- หมายเหตุ ต่อท้ายกลุ่ม fac (ไม่ขึ้นหน้าใหม่ ประหยัดกระดาษ) --}}
         @if($ProformaInvoice->remarks->count())
         <tr>
-            <td colspan="7" style="padding: 4px 8px;">
+            <td colspan="6" style="padding: 4px 8px;">
                 <b>หมายเหตุ :</b>
                 @foreach($ProformaInvoice->remarks as $rm)
                     <div style="padding-left: 12px;">{{ $loop->iteration }}. {{ $rm->remark }}</div>
