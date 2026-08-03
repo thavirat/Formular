@@ -910,6 +910,7 @@ class ProformaInvoiceController extends AdminController
                     'proforma_invoice_products.*',
                     'products.code as part_no',
                     'products.name_en',
+                    'products.name_th',
                     'products.drawing',
                     'products.width',
                     'products.length',
@@ -920,7 +921,7 @@ class ProformaInvoiceController extends AdminController
                 )
                 // เรียงตาม Fac No. (โรงงาน) ก่อน — สินค้าที่ไม่มี Fac No. ไว้ท้ายสุด, ตามด้วยลำดับ seq
                 ->orderByRaw("{$pfx}factories.code IS NULL, CAST({$pfx}factories.code AS UNSIGNED), {$pfx}proforma_invoice_products.seq ASC");
-        }, 'customer', 'createdBy', 'creditPayment', 'currency'])
+        }, 'customer', 'createdBy', 'saleBy', 'creditPayment', 'currency'])
             ->leftJoin('customers', 'proforma_invoices.customer_id', '=', 'customers.id')
             ->select('proforma_invoices.*', 'customers.company_name as customer_name')
             ->findOrFail($id);
@@ -931,7 +932,9 @@ class ProformaInvoiceController extends AdminController
         $pdf = \PDF::loadView('admin.ProformaInvoice.proforma_invoice_pdf', $data);
 
         // สั่งให้เปิด PDF ใน Browser (ถ้าอยากให้โหลดลงเครื่องเลย เปลี่ยน stream เป็น download)
-        return $pdf->stream('EXPORT_FA_' . $data['ProformaInvoice']->doc_no . '.pdf');
+        $docNo = $data['ProformaInvoice']->doc_no;
+        $faNo = \Illuminate\Support\Str::startsWith($docNo, 'PI') ? 'FA'.substr($docNo, 2) : $docNo;
+        return $pdf->stream('EXPORT_FA_' . $faNo . '.pdf');
     }
 
     public function export_po($id)
@@ -1178,7 +1181,7 @@ class ProformaInvoiceController extends AdminController
             ->orderBy('run_no', 'desc')
             ->first();
         $run_no = $last_run ? ((int) $last_run->run_no) + 1 : 1;
-        $doc_no = 'PI'.$year_month.str_pad((string) $run_no, 4, '0', STR_PAD_LEFT);
+        $doc_no = 'PI'.$year_month.str_pad((string) $run_no, 3, '0', STR_PAD_LEFT);
 
         return ['run_no' => $run_no, 'doc_no' => $doc_no];
     }

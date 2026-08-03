@@ -8,15 +8,23 @@
 
     $pi = $ProformaInvoice;
     $cur = optional($pi->currency)->symbol ?: 'USD';
+
+    // เลขเอกสาร FA = เลข PI แต่เปลี่ยนตัวหน้า PI -> FA (ส่วนหลังเหมือนกัน) คำนวณสด ไม่เก็บเพิ่ม
+    $faNo = \Illuminate\Support\Str::startsWith($pi->doc_no, 'PI')
+        ? 'FA'.substr($pi->doc_no, 2)
+        : $pi->doc_no;
+
+    // ผู้ขายจริง: ใช้ sale_by ถ้าไม่มี fallback เป็นคนสร้าง
+    $saleName = optional($pi->saleBy ?: $pi->createdBy)->name;
 @endphp
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>EXPORT ORDER FORM {{ $pi->doc_no }}</title>
+    <title>EXPORT ORDER FORM {{ $faNo }}</title>
     <style>
         @page {
-            margin: 80mm 7mm 8mm 7mm;   /* เว้นบนไว้ให้หัวเอกสาร (กล่องข้อมูล) ที่ซ้ำทุกหน้า */
+            margin: 84mm 7mm 8mm 7mm;   /* เว้นบนไว้ให้หัวเอกสาร (กล่องข้อมูล) ที่ซ้ำทุกหน้า — ขยับตารางลงกันทับหัว */
             header: html_faheader;
         }
 
@@ -70,7 +78,7 @@
     </table>
     <table width="100%" style="border:none; margin-bottom:3px;">
         <tr>
-            <td width="55%" style="border:none;"><span class="bold">DOCUMENT NO. :</span> {{ $pi->doc_no }}</td>
+            <td width="55%" style="border:none;"><span class="bold">DOCUMENT NO. :</span> {{ $faNo }}</td>
             <td width="45%" style="border:none;"><span class="bold">DATE :</span> {{ $pi->doc_date ? \Carbon\Carbon::parse($pi->doc_date)->format('d/m/Y') : '' }}</td>
         </tr>
     </table>
@@ -78,12 +86,12 @@
     {{-- กล่องข้อมูลคำสั่ง --}}
     <table class="box">
         <tr>
-            <td width="50%"><span class="bold">EXPORT ORDER NO. :</span>&nbsp;&nbsp;{{ $pi->doc_no }}</td>
+            <td width="50%"><span class="bold">EXPORT ORDER NO. :</span>&nbsp;&nbsp;{{ $faNo }}</td>
             <td width="50%"><span class="bold">EXPECTED SHIPMENT DATE :</span> {{ $pi->ship_date ? \Carbon\Carbon::parse($pi->ship_date)->format('d/m/Y') : '' }}</td>
         </tr>
         <tr>
             <td><span class="bold">CUSTOMER :</span> {{ $pi->customer_name ?: $pi->company_name }}</td>
-            <td><span class="bold">SALE REP :</span>&nbsp;&nbsp;&nbsp;&nbsp;{{ optional($pi->createdBy)->name }}</td>
+            <td><span class="bold">SALE REP :</span>&nbsp;&nbsp;&nbsp;&nbsp;{{ $saleName }}</td>
         </tr>
         <tr>
             <td><span class="bold">COUNTRY :</span> {{ $pi->ship_to_code }}</td>
@@ -125,7 +133,7 @@
                 <td class="text-center bold">{{ number_format($item->qty, 0) }} {{ $item->unit_name ?: 'PCS' }}</td>
                 <td class="text-center">{{ $item->part_no }}</td>
                 <td class="text-center">{{ $item->drawing }}</td>
-                <td>{{ $item->detail_thai ?: $item->detail_eng }}</td>
+                <td>{{ $item->detail_thai ?: ($item->name_th ?: $item->detail_eng) }}</td>
                 <td class="text-center">{{ $item->cus_code }}</td>
             </tr>
         @empty
@@ -141,7 +149,6 @@
         <li>{{ $rm->remark }}</li>
     @endforeach
 </ol>
-<div class="bold" style="margin-left:6px;">**สินค้าเคลม</div>
 
 {{-- ===================== วันที่พิมพ์ + ลงนาม ===================== --}}
 <table width="100%" style="margin-top:10px;">
