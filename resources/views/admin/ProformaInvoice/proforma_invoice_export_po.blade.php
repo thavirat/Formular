@@ -27,8 +27,6 @@
         }
         // ไม่จัดกลุ่มตามโรงงานแล้ว -> แสดงสินค้าทั้งหมดในชุดเดียว
         $items = $ProformaInvoice->products;
-        // รวมเลขโรงงานที่ไม่ซ้ำมาแสดงในช่อง Fac No.
-        $facNos = $items->pluck('fac_no')->filter(fn($f) => $f !== null && $f !== '')->unique()->implode(', ');
         // รวมจำนวนแยกตามหน่วย เพื่อแสดงแถวสรุปท้ายตาราง (1 แถวต่อ 1 หน่วย)
         $qtyByUnit = $items->groupBy('unit_name')->map(fn($g) => $g->sum('qty'));
     @endphp
@@ -54,7 +52,7 @@
                 <b><u>DocuNo</u></b>
             </td>
             <td>{{$ProformaInvoice->doc_no}}</td>
-            <td width="35%" rowspan="7" valign="top">
+            <td width="35%" rowspan="5" valign="top">
                 <div>
                     <b><u>Sale Rep</u></b>
                 </div>
@@ -62,16 +60,10 @@
                     {{$ProformaInvoice->sale_prefix}}{{$ProformaInvoice->sale_firstname}} {{$ProformaInvoice->sale_lastname}}
                 </div>
                 <div style="margin-top: 6px;">
-                    <b><u>Shipping Remark</u></b>
+                    <b><u>Shipping Mark</u></b>
                 </div>
                 <div>{!! nl2br(e($ProformaInvoice->ship_remark)) !!}</div>
             </td>
-        </tr>
-        <tr>
-            <td align="center">
-                <b><u>Fac No.</u></b>
-            </td>
-            <td><b>{{ $facNos }}</b></td>
         </tr>
         <tr>
             <td align="center">
@@ -90,12 +82,6 @@
                 <b><u>ShipToCode</u></b>
             </td>
             <td>{{$ProformaInvoice->ship_to_code}}</td>
-        </tr>
-        <tr>
-            <td align="center">
-                <b><u>C/NO.</u></b>
-            </td>
-            <td>{{ $ProformaInvoice->cno ?: '1-UP' }}</td>
         </tr>
         <tr>
             <td align="center">
@@ -124,7 +110,7 @@
                 <td style="border:none; padding:0; text-align:right; color:red;">{{ number_format($product->cost ?? 0, 2) }}</td>
             </tr></table>
         </td>
-        <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;" valign="top">{{ $product->name_en }}<div style="color: blue; font-size: 90%;">{{ $product->drawing }}</div></td>
+        <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;" valign="top">{{ $product->name_th ?: $product->name_en }}<div style="color: blue; font-size: 90%;">{{ $product->drawing }}</div></td>
         <td style="border-bottom: 1px dashed #999; padding-top: 5px; padding-bottom: 5px;" valign="top" align="center">{{ $product->cus_code }}</td>
     </tr>
     @endforeach
@@ -139,10 +125,9 @@
     @endforeach
 </table>
 
-    {{-- ===== หมายเหตุ ไว้แผ่นสุดท้าย (ดึงจากหมายเหตุของ PI นั้น; ไม่มีก็ไม่แสดง) ===== --}}
+    {{-- ===== หมายเหตุ ต่อท้ายเอกสารเลย (ไม่ขึ้นหน้าใหม่ เพื่อประหยัดกระดาษ) ===== --}}
     @if($ProformaInvoice->remarks->count())
-        <div style="page-break-before: always;"></div>
-        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: rgb(255, 243, 216);">
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 12px; background-color: rgb(255, 243, 216);">
             <tr>
                 <th align="center" valign="middle" style="font-size: 160%; font-weight: bold;"><b>REMARKS</b></th>
             </tr>
