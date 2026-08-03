@@ -14,10 +14,9 @@
         ? 'FA'.substr($pi->doc_no, 2)
         : $pi->doc_no;
 
-    // ผู้ขายจริง: ใช้ sale_by ถ้าไม่มี fallback เป็นคนสร้าง; แสดง nickname เป็นหลัก (เหมือนหน้า list) ไม่งั้น name / ชื่อ-สกุล
+    // ผู้ขายจริง: ใช้ sale_by ถ้าไม่มี fallback เป็นคนสร้าง — แหล่งเดียวกับหน้า pdfFactory (firstname + lastname)
     $seller = $pi->saleBy ?: $pi->createdBy;
-    $saleName = optional($seller)->nickname
-        ?: (optional($seller)->name ?: trim(optional($seller)->firstname . ' ' . optional($seller)->lastname));
+    $saleName = trim(optional($seller)->firstname . ' ' . optional($seller)->lastname);
 @endphp
 <!DOCTYPE html>
 <html lang="th">
