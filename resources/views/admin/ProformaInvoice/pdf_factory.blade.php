@@ -134,9 +134,8 @@
             </td>
             <td width="33%">
                 <span class="bold">SHIPPING MARKS</span><br>
-                {{-- ป้ายมาร์ค: ใช้รหัส ship_to_code ถ้ามี ไม่งั้นใช้ชื่อย่อจากชื่อบริษัท --}}
-                {{ $pi->ship_to_code ?: \Illuminate\Support\Str::before($pi->company_name, ' ') }}<br>
-                C/NO.{{ $pi->cno ?: '1-UP' }}
+                {{-- ป้ายมาร์ค: ใช้ ship_remark (คีย์ได้หลายบรรทัด) --}}
+                {!! nl2br(e($pi->ship_remark)) !!}
             </td>
             <td width="25%">
                 PAGE&nbsp;&nbsp;{PAGENO}/{nbpg}<br><br>
@@ -204,20 +203,23 @@
                 <td class="vline"></td>
                 <td class="text-center bold" colspan="4">********** TOTAL **********</td>
                 <td class="text-center bold vline">{{ number_format($sumQty, 0) }} {{ $unit }}</td>
-                @if($loop->first)
-                    <td class="text-right bold vline">SUBTOTAL</td>
-                    <td class="bold vline">
-                        <table width="100%" style="border:none; border-collapse:collapse;"><tr>
-                            <td style="border:none; padding:0;" class="text-left bold">{{ $cur }}</td>
-                            <td style="border:none; padding:0;" class="text-right bold">{{ number_format($subtotal, 2) }}</td>
-                        </tr></table>
-                    </td>
-                @else
-                    <td class="vline"></td>
-                    <td class="vline"></td>
-                @endif
+                <td class="vline"></td>
+                <td class="vline"></td>
             </tr>
         @endforeach
+
+        {{-- SUBTOTAL แยกออกมาเป็นแถวล่างจากยอดรวมตามหน่วย --}}
+        <tr>
+            <td class="vline"></td>
+            <td colspan="5"></td>
+            <td class="text-right bold vline">SUBTOTAL</td>
+            <td class="bold vline">
+                <table width="100%" style="border:none; border-collapse:collapse;"><tr>
+                    <td style="border:none; padding:0;" class="text-left bold">{{ $cur }}</td>
+                    <td style="border:none; padding:0;" class="text-right bold">{{ number_format($subtotal, 2) }}</td>
+                </tr></table>
+            </td>
+        </tr>
 
         {{-- ===================== ค่าบริการอื่นๆ (ระหว่าง SUBTOTAL กับ TOTAL) ===================== --}}
         @foreach($pi->services as $k=>$sv)
@@ -283,16 +285,6 @@
                 [&nbsp;&nbsp;] SEAFREIGHT&nbsp;&nbsp;&nbsp;[&nbsp;&nbsp;] AIRFREIGHT&nbsp;&nbsp;&nbsp;
             @endforelse
             &nbsp;&nbsp;{{ $pi->shipment_to ?: '___________TO___________' }}
-        </td>
-    </tr>
-    <tr>
-        <td class="bold" style="vertical-align:top;">REMARKS</td>
-        <td>:
-            @forelse($pi->remarks as $rm)
-                {{ $loop->iteration }}. {{ $rm->remark }}<br>
-            @empty
-                {!! nl2br(e($pi->ship_remark)) !!}
-            @endforelse
         </td>
     </tr>
 </table>
