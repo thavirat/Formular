@@ -406,15 +406,14 @@
     </tbody>
     @if(!$isAccounting && count($qtyByUom) > 0)
     <tfoot>
+        {{-- สรุปจำนวนแยกตามหน่วย: 1 แถวต่อ 1 หน่วย ในคอลัมน์ TOTAL QTY (เหมือนหน้า PI) --}}
+        @foreach($qtyByUom as $uom => $total)
         <tr class="row-qty-summary">
-            <td colspan="2"></td>
-            <td colspan="2" class="text-right" style="line-height: 1.5;">
-                @foreach($qtyByUom as $uom => $total)
-                    {{ $fmtInt($total) }} {{ $uom }}@if(!$loop->last)<br>@endif
-                @endforeach
-            </td>
-            <td colspan="3"></td>
+            <td colspan="4" @if($loop->first) style="border-top:1px solid #000;" @endif></td>
+            <td class="text-right text-bold" @if($loop->first) style="border-top:1px solid #000;" @endif>{{ $fmtInt($total) }} {{ $uom }}</td>
+            <td colspan="2" @if($loop->first) style="border-top:1px solid #000;" @endif></td>
         </tr>
+        @endforeach
         <tr class="row-total">
             <td colspan="5" class="text-right">TOTAL</td>
             <td class="text-right">{{ $fmt($sumDetailNw) }}</td>
