@@ -58,7 +58,12 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-3"></div>
+                            <div class="col-3">
+                                <div class="form-group">
+                                    <label for="doc_no">{{__('Document No.')}} <span class="text-danger">*</span></label>
+                                    <input type="text" name="doc_no" id="doc_no" class="form-control" value="{{ $ProformaInvoice->doc_no }}" autocomplete="off" required>
+                                </div>
+                            </div>
                             <div class="col-3">
                                 <div class="form-group">
                                     <label for="doc_date">{{__('Document Date')}} <span class="text-danger">*</span></label>

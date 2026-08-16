@@ -361,6 +361,15 @@ class ProformaInvoiceController extends AdminController
         try {
             $pi = ProformaInvoice::findOrFail($id);
 
+            // ตรวจเลขเอกสาร: แก้ไขได้ แต่ต้องไม่ซ้ำกับใบอื่น
+            $validator = Validator::make($request->all(), [
+                'doc_no' => 'required|string|max:50|unique:proforma_invoices,doc_no,'.$pi->id,
+            ]);
+            if ($validator->fails()) {
+                DB::rollBack();
+                return response()->json(['status' => 0, 'title' => 'เกิดข้อผิดพลาด', 'content' => $validator->errors()->first()]);
+            }
+
             $newQuotationId = $request->input('quotation_id');
             $newQuotationId = ($newQuotationId === '' || $newQuotationId === null) ? null : (int) $newQuotationId;
 
@@ -383,6 +392,7 @@ class ProformaInvoiceController extends AdminController
             $pi->incoterm_id       = $request->incoterm_id;
             $pi->currency_id       = $request->currency_id;
             $pi->credit_payment_id = $request->credit_payment_id;
+            $pi->doc_no            = $request->doc_no;
             $pi->doc_date          = $request->doc_date;
             $pi->contact_name      = $request->contact_name;
             $pi->company_name      = $request->company_name;
