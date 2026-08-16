@@ -247,6 +247,11 @@ class PackingListImportService
         $form->to = $this->cellStr($sheet, 'D2') ?: null;
         $form->customer_name = $this->cellStr($sheet, 'D3') ?: null;
         $form->country = $this->cellStr($sheet, 'D4') ?: null;
+        // Shipping Mark (Marks & No.) จาก G3 — ตั้งเฉพาะเมื่อมีค่า เพื่อไม่ลบค่าที่พิมพ์เองตอน re-import
+        $marksG3 = $this->cellStr($sheet, 'G3');
+        if ($marksG3 !== '') {
+            $form->marks = $marksG3;
+        }
         $form->doc_date = $this->cellDate($sheet, 'A7') ?? now()->toDateString();
         $form->pkg = $this->cellInt($sheet, 'M8');
         $form->weight_nw = $this->cellDecimal($sheet, 'O8');
