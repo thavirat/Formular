@@ -116,6 +116,18 @@
         }
     }
 
+    // Remark ตาม PI: เก็บ remark ของ PI แต่ละใบที่ปรากฏในรายการ ตามลำดับที่พบ (PI แรก + PI ใหม่ที่โผล่ต่อ)
+    $piRemarks = [];
+    foreach ($packingForm->details as $line) {
+        $pi = $line->piProduct?->pi;
+        if ($pi && !array_key_exists($pi->id, $piRemarks)) {
+            $rms = $pi->remarks;
+            if ($rms && $rms->count() > 0) {
+                $piRemarks[$pi->id] = ['doc_no' => $pi->doc_no, 'remarks' => $rms];
+            }
+        }
+    }
+
     // ยอดรวมเงิน (สำหรับ Invoice)
     $sumAmount = 0.0;
     $curSymbol = '';
@@ -469,6 +481,22 @@
         <td class="text-center">{{ $fmtInt($packingForm->qty) }}</td>
     </tr>
 </table>
+
+{{-- ===== Remark ตาม PI: PI แรก + PI ใหม่ที่โผล่ในรายการ (ต่อท้าย ไม่ขึ้นหน้าใหม่) ===== --}}
+@if(count($piRemarks) > 0)
+<table width="100%" style="margin-top:8px; font-size:9px;">
+    @foreach($piRemarks as $pr)
+        <tr>
+            <td style="vertical-align:top; padding:2px 0;">
+                <span class="text-bold">REMARK @if(count($piRemarks) > 1)({{ $pr['doc_no'] }})@endif :</span>
+                @foreach($pr['remarks'] as $rm)
+                    <div style="padding-left:10px;">{{ $loop->iteration }}. {{ $rm->remark }}</div>
+                @endforeach
+            </td>
+        </tr>
+    @endforeach
+</table>
+@endif
 @endif
 
 </body>

@@ -193,6 +193,7 @@ class PackingFormController extends AdminController
                 $q->orderBy('excel_row')->orderBy('id');
             },
             'details.piProduct.pi.currency',
+            'details.piProduct.pi.remarks',
             'details.piProduct.product.unitProduct',
             'details.piProduct.product.category',
         ])->findOrFail($id);
