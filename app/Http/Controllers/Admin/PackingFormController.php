@@ -29,20 +29,40 @@ class PackingFormController extends AdminController
         $data['currentMenu'] = Menu::where('url', $this->current_menu)->first();
         $data['SidebarMenus'] = Menu::Active()->get();
         $data['route_locale'] = config('app.locale');
+        // รายชื่อลูกค้าที่มีในใบ packing (ไว้ทำ dropdown ฟิลเตอร์)
+        $data['customerNames'] = PackingForm::whereNotNull('customer_name')
+            ->where('customer_name', '!=', '')
+            ->distinct()
+            ->orderBy('customer_name')
+            ->pluck('customer_name');
 
         return view('admin.PackingForm.packing_form', $data);
     }
 
-    public function report()
+    public function report(?Request $request = null)
     {
-        return PackingForm::query()
-            ->withCount('details')
-            ->orderByDesc('id');
+        $q = PackingForm::query()->withCount('details');
+
+        if ($request) {
+            $inv = trim((string) $request->input('f_invoice', ''));
+            if ($inv !== '') {
+                $q->where(function ($w) use ($inv) {
+                    $w->where('invoice_no', 'like', "%{$inv}%")
+                      ->orWhere('doc_no', 'like', "%{$inv}%");
+                });
+            }
+            $cust = trim((string) $request->input('f_customer', ''));
+            if ($cust !== '' && $cust !== 'all') {
+                $q->where('customer_name', $cust);
+            }
+        }
+
+        return $q->orderByDesc('id');
     }
 
     public function lists(Request $request)
     {
-        $result = $this->report();
+        $result = $this->report($request);
         $lang = config('app.locale');
 
         return DataTables::of($result)

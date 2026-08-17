@@ -22,6 +22,33 @@
 
     <div class="row mt-3">
         <div class="col-12">
+            <div class="card dcard mb-2">
+                <div class="card-body py-2">
+                    <div class="row align-items-end">
+                        <div class="col-md-4">
+                            <label class="text-90 mb-1">ค้นหา Invoice No. / เลขที่เอกสาร</label>
+                            <input type="text" id="filter_invoice" class="form-control form-control-sm" placeholder="พิมพ์เลข Invoice / Doc No.">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-90 mb-1">ลูกค้า</label>
+                            <select id="filter_customer" class="form-control form-control-sm select2">
+                                <option value="all">ทั้งหมด</option>
+                                @foreach($customerNames as $cn)
+                                    <option value="{{ $cn }}">{{ $cn }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="button" id="filter_reset" class="btn btn-sm btn-outline-secondary"><i class="fa fa-times"></i> ล้างตัวกรอง</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
             <div class="card dcard">
                 <div class="card-body p-0">
                     <table id="tablePackingForm" class="table table-striped-primary table-borderless border-0 mb-0 w-100 table-hover">
@@ -83,6 +110,8 @@
             headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
             data: function(d) {
                 d._token = $('meta[name="csrf-token"]').attr('content');
+                d.f_invoice = $('#filter_invoice').val();
+                d.f_customer = $('#filter_customer').val();
             }
         },
         columns: [
@@ -94,6 +123,20 @@
             { data: "action_btns", searchable: false, orderable: false, className: "text-center align-middle" }
         ],
         order: [[1, "desc"]]
+    });
+
+    // ---- ฟิลเตอร์ Invoice No. / ลูกค้า ----
+    try { $('#filter_customer').select2({ width: '100%' }); } catch (e) {}
+    var invoiceTimer = null;
+    $('#filter_invoice').on('keyup', function() {
+        clearTimeout(invoiceTimer);
+        invoiceTimer = setTimeout(function() { tablePackingForm.ajax.reload(); }, 350);
+    });
+    $('#filter_customer').on('change', function() { tablePackingForm.ajax.reload(); });
+    $('#filter_reset').on('click', function() {
+        $('#filter_invoice').val('');
+        $('#filter_customer').val('all').trigger('change.select2');
+        tablePackingForm.ajax.reload();
     });
 
     $('#btn-open-import').on('click', function() {
