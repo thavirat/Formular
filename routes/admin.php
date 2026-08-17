@@ -232,6 +232,7 @@ Route::middleware('authAdmin:admin')->group(function () {
     Route::resource('/CustomerPayment', Admin\CustomerPaymentController::class);
 
                 Route::post('/PackingForm/Lists', 'Admin\PackingFormController@lists');
+                Route::get('/PackingForm/ExportList', 'Admin\PackingFormController@exportList');
                 Route::post('/PackingForm/Import', 'Admin\PackingFormController@import');
                 Route::get('/PackingForm/SearchPiProduct', 'Admin\PackingFormController@searchPiProduct');
                 Route::get('/PackingForm/{id}/pdf', 'Admin\PackingFormController@pdf');

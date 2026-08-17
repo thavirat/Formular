@@ -40,6 +40,7 @@
                         </div>
                         <div class="col-md-4">
                             <button type="button" id="filter_reset" class="btn btn-sm btn-outline-secondary"><i class="fa fa-times"></i> ล้างตัวกรอง</button>
+                            <button type="button" id="btn-export-excel" class="btn btn-sm btn-success"><i class="fa fa-file-excel"></i> Export Excel</button>
                         </div>
                     </div>
                 </div>
@@ -137,6 +138,13 @@
         $('#filter_invoice').val('');
         $('#filter_customer').val('all').trigger('change.select2');
         tablePackingForm.ajax.reload();
+    });
+    $('#btn-export-excel').on('click', function() {
+        var params = $.param({
+            f_invoice: $('#filter_invoice').val() || '',
+            f_customer: $('#filter_customer').val() || 'all'
+        });
+        window.location = url_gb + "/admin/{{ $route_locale }}/PackingForm/ExportList?" + params;
     });
 
     $('#btn-open-import').on('click', function() {

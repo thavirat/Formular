@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Menu;
+use App\Exports\PackingFormListExport;
 use App\Models\CustomerProductDescription;
 use App\Models\PackingForm;
 use App\Models\PackingFormDetail;
@@ -14,6 +15,7 @@ use Help;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 use Validator;
 
 class PackingFormController extends AdminController
@@ -58,6 +60,19 @@ class PackingFormController extends AdminController
         }
 
         return $q->orderByDesc('id');
+    }
+
+    public function exportList(Request $request)
+    {
+        $permission = Help::CheckPermissionMenu($this->current_menu, 'r');
+        if (!$permission) {
+            return redirect('/admin/PermissionDenined');
+        }
+        // ดึงตามฟิลเตอร์เดียวกับหน้า list
+        $rows = $this->report($request)->get();
+        $filename = 'PackingList_'.date('Ymd_His').'.xlsx';
+
+        return Excel::download(new PackingFormListExport($rows), $filename);
     }
 
     public function lists(Request $request)
