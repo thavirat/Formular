@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Menu;
+use App\Exports\PackingDocumentExport;
 use App\Exports\PackingFormListExport;
 use App\Models\CustomerProductDescription;
 use App\Models\PackingForm;
@@ -109,6 +110,10 @@ class PackingFormController extends AdminController
                     // description จาก master สินค้า
                     $str .= '<a href="'.$plUrl.'?desc=master" class="btn btn-xs btn-outline-info" title="Packing List (description master)" target="_blank"><i class="fa fa-box"></i> PL-M</a> ';
                     $str .= '<a href="'.$invUrl.'?desc=master" class="btn btn-xs btn-outline-success" title="Invoice (description master)" target="_blank"><i class="fa fa-file-invoice-dollar"></i> INV-M</a> ';
+                    // Export Excel เอกสาร (เผื่อ custom ต่อ)
+                    $xlsUrl = url('admin/'.$lang.'/PackingForm/'.$rec->id.'/excel');
+                    $str .= '<a href="'.$xlsUrl.'?variant=customer" class="btn btn-xs btn-outline-secondary" title="Packing List เป็น Excel" target="_blank"><i class="fa fa-file-excel"></i> PL.xls</a> ';
+                    $str .= '<a href="'.$xlsUrl.'?variant=accounting" class="btn btn-xs btn-outline-secondary" title="Invoice เป็น Excel" target="_blank"><i class="fa fa-file-excel"></i> INV.xls</a> ';
                 }
                 if ($u) {
                     $str .= '<a href="'.url('admin/'.$lang.'/PackingForm/'.$rec->id.'/edit').'" class="btn btn-xs btn-warning" title="แก้ไข"><i class="fa fa-edit"></i></a> ';
@@ -230,13 +235,9 @@ class PackingFormController extends AdminController
         return $request->query('desc') === 'master' ? 'master' : 'customer';
     }
 
-    private function streamPlPdf($id, string $variant, string $descSource = 'customer')
+    /** โหลด packing form + แผนที่ description ลูกค้า (ใช้ร่วมกันทั้ง PDF และ Excel) */
+    private function loadPackingWithDescMap($id, string $descSource): array
     {
-        $permission = Help::CheckPermissionMenu($this->current_menu, 'r');
-        if (!$permission) {
-            return redirect('/admin/PermissionDenined');
-        }
-
         $packingForm = PackingForm::with([
             'details' => function ($q) {
                 $q->orderBy('excel_row')->orderBy('id');
@@ -248,7 +249,6 @@ class PackingFormController extends AdminController
             'services',
         ])->findOrFail($id);
 
-        // แผนที่ description ของลูกค้า: [customer_id][product_id] => description (สำหรับ PDF แบบ "ลูกค้า")
         $custDescMap = [];
         if ($descSource === 'customer') {
             $pairs = [];
@@ -268,6 +268,35 @@ class PackingFormController extends AdminController
                 }
             }
         }
+
+        return [$packingForm, $custDescMap];
+    }
+
+    /** Export ตัวเอกสาร PL/Invoice เป็น Excel (เผื่อลูกค้าเอาไป custom ต่อ) */
+    public function exportDocumentExcel(Request $request, $id)
+    {
+        $permission = Help::CheckPermissionMenu($this->current_menu, 'r');
+        if (!$permission) {
+            return redirect('/admin/PermissionDenined');
+        }
+        $variant = $request->query('variant') === 'accounting' ? 'accounting' : 'customer';
+        $descSource = $this->descSourceFrom($request);
+        [$packingForm, $custDescMap] = $this->loadPackingWithDescMap($id, $descSource);
+
+        $suffix = ($variant === 'accounting' ? '_Invoice' : '_PackingList').($descSource === 'master' ? '_Master' : '_Customer');
+        $filename = ($packingForm->doc_no ?: 'Doc').$suffix.'_'.date('Ymd').'.xlsx';
+
+        return Excel::download(new PackingDocumentExport($packingForm, $variant, $descSource, $custDescMap), $filename);
+    }
+
+    private function streamPlPdf($id, string $variant, string $descSource = 'customer')
+    {
+        $permission = Help::CheckPermissionMenu($this->current_menu, 'r');
+        if (!$permission) {
+            return redirect('/admin/PermissionDenined');
+        }
+
+        [$packingForm, $custDescMap] = $this->loadPackingWithDescMap($id, $descSource);
 
         $view = $variant === 'accounting'
             ? 'admin.PackingForm.packing_form_pdf_accounting'

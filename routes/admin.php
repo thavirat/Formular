@@ -235,6 +235,7 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::get('/PackingForm/ExportList', 'Admin\PackingFormController@exportList');
                 Route::post('/PackingForm/Import', 'Admin\PackingFormController@import');
                 Route::get('/PackingForm/SearchPiProduct', 'Admin\PackingFormController@searchPiProduct');
+                Route::get('/PackingForm/{id}/excel', 'Admin\PackingFormController@exportDocumentExcel');
                 Route::get('/PackingForm/{id}/pdf', 'Admin\PackingFormController@pdf');
                 Route::get('/PackingForm/{id}/pdf/customer', 'Admin\PackingFormController@pdfCustomer');
                 Route::get('/PackingForm/{id}/pdf/accounting', 'Admin\PackingFormController@pdfAccounting');
