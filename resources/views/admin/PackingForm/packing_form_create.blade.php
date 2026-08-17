@@ -71,6 +71,22 @@
                 </div>
                 <button type="button" class="btn btn-sm btn-outline-primary mb-3" id="btn-add-row"><i class="fa fa-plus"></i> เพิ่มแถว (Add Row)</button>
 
+                {{-- ค่าบริการอื่น (แสดงบน Invoice) — เพิ่มได้หลายรายการ --}}
+                <div class="mt-2">
+                    <label class="text-90 text-bold d-block">Other Service Charges <span class="text-muted text-90">(แสดงบน Invoice · เพิ่มได้หลายรายการ)</span></label>
+                    <table class="table table-bordered table-sm" id="serviceTable" style="max-width:640px;">
+                        <thead>
+                            <tr>
+                                <th>รายการ (Service)</th>
+                                <th width="160">จำนวนเงิน (Amount)</th>
+                                <th width="46"></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <button type="button" class="btn btn-sm btn-outline-info mb-3" id="btn-add-service"><i class="fa fa-plus"></i> เพิ่มค่าบริการ</button>
+                </div>
+
                 <div class="text-center mt-2">
                     <button type="submit" class="btn btn-success btn-lg px-5"><i class="fa fa-save"></i> บันทึก Packing List</button>
                 </div>
@@ -318,6 +334,24 @@ $(document).ready(function() {
             ajaxFail(xhr, form);
         });
     });
+});
+</script>
+<script>
+$(function(){
+    function addServiceRow(name, amount){
+        var $tr = $(
+            '<tr>' +
+            '<td><input type="text" name="service_name[]" class="form-control form-control-sm"></td>' +
+            '<td><input type="text" name="service_amount[]" class="form-control form-control-sm text-right"></td>' +
+            '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-remove-service" tabindex="-1"><i class="fa fa-trash"></i></button></td>' +
+            '</tr>'
+        );
+        $tr.find('input[name="service_name[]"]').val(name || '');
+        $tr.find('input[name="service_amount[]"]').val(amount || '');
+        $('#serviceTable tbody').append($tr);
+    }
+    $('#btn-add-service').on('click', function(){ addServiceRow('', ''); });
+    $('#serviceTable').on('click', '.btn-remove-service', function(){ $(this).closest('tr').remove(); });
 });
 </script>
 @endpush

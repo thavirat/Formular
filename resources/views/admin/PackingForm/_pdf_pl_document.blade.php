@@ -145,6 +145,13 @@
         }
     }
 
+    // ค่าบริการอื่น (แสดงบน Invoice) + ยอดรวมสุทธิ
+    $servicesTotal = 0.0;
+    foreach ($packingForm->services as $sv) {
+        $servicesTotal += (float) $sv->amount;
+    }
+    $grandTotal = $sumAmount + $servicesTotal;
+
     $docTitle = $isAccounting ? 'INVOICE' : 'PACKING LIST';
 @endphp
 <!DOCTYPE html>
@@ -458,12 +465,26 @@
 
 @if($isAccounting)
 <table width="100%" style="margin-top:6px;">
+    @if($packingForm->services->count() > 0)
+        <tr>
+            <td></td>
+            <td width="22%" class="text-right">SUBTOTAL</td>
+            <td width="16%" class="text-right">{{ $curSymbol }} {{ $fmt($sumAmount) }}</td>
+        </tr>
+        @foreach($packingForm->services as $sv)
+        <tr>
+            <td></td>
+            <td class="text-right">{{ $sv->name }}</td>
+            <td class="text-right">{{ $curSymbol }} {{ $fmt($sv->amount) }}</td>
+        </tr>
+        @endforeach
+    @endif
     <tr>
         <td class="text-bold">
-            SAY {{ \App\Help::numberToWords($sumAmount, ($curSymbol === 'USD' ? 'US DOLLARS' : strtoupper($curSymbol ?: 'DOLLARS'))) }} ONLY.
+            SAY {{ \App\Help::numberToWords($grandTotal, ($curSymbol === 'USD' ? 'US DOLLARS' : strtoupper($curSymbol ?: 'DOLLARS'))) }} ONLY.
         </td>
         <td width="22%" class="text-right text-bold">TOTAL</td>
-        <td width="16%" class="text-right text-bold">{{ $curSymbol }} {{ $fmt($sumAmount) }}</td>
+        <td width="16%" class="text-right text-bold">{{ $curSymbol }} {{ $fmt($grandTotal) }}</td>
     </tr>
 </table>
 @else

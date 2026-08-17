@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Menu;
 use App\Models\PackingForm;
 use App\Models\PackingFormDetail;
+use App\Models\PackingFormService;
 use App\Models\ProformaInvoiceProduct;
 use App\Services\PackingListImportService;
 use DataTables;
@@ -196,6 +197,7 @@ class PackingFormController extends AdminController
             'details.piProduct.pi.remarks',
             'details.piProduct.product.unitProduct',
             'details.piProduct.product.category',
+            'services',
         ])->findOrFail($id);
 
         $view = $variant === 'accounting'
@@ -371,6 +373,7 @@ class PackingFormController extends AdminController
                 }
             }
 
+            $this->savePackingServices($form, $request);
             $this->recalcProducedQty($affectedPiProductIds ?? []);
 
             DB::commit();
@@ -397,6 +400,7 @@ class PackingFormController extends AdminController
             },
             'details.piProduct.pi',
             'details.piProduct.product',
+            'services',
         ])->findOrFail($id);
         $data['admin_lang_slash'] = in_array($request->segment(2), ['th', 'en', 'ch'], true)
             ? $request->segment(2).'/'
@@ -561,6 +565,7 @@ class PackingFormController extends AdminController
                 ->pluck('pi_product_id')
                 ->toArray();
 
+            $this->savePackingServices($form, $request);
             $this->recalcProducedQty(array_merge($oldPiProductIds, $newPiProductIds));
 
             DB::commit();
@@ -607,6 +612,28 @@ class PackingFormController extends AdminController
      * Recalculate produced_qty for given PI product IDs
      * by summing qty from all packing_form_details linked to each pi_product_id.
      */
+    /** บันทึกค่าบริการอื่น (หลายรายการ) ของ Packing/Invoice — ลบของเดิมก่อน แล้วเก็บใหม่ตามลำดับแถว */
+    private function savePackingServices(PackingForm $form, Request $request): void
+    {
+        PackingFormService::where('packing_form_id', $form->id)->delete();
+        $names = (array) $request->input('service_name', []);
+        $amounts = (array) $request->input('service_amount', []);
+        $seq = 1;
+        foreach ($names as $i => $name) {
+            $name = trim((string) $name);
+            $amount = (float) str_replace(',', '', (string) ($amounts[$i] ?? 0));
+            if ($name === '' && $amount == 0) {
+                continue;
+            }
+            PackingFormService::create([
+                'packing_form_id' => $form->id,
+                'seq' => $seq++,
+                'name' => $name,
+                'amount' => $amount,
+            ]);
+        }
+    }
+
     private function recalcProducedQty(array $piProductIds): void
     {
         $ids = array_filter(array_unique(array_map('intval', $piProductIds)));

@@ -52,4 +52,9 @@ class PackingForm extends Model
     {
         return $this->hasMany(PackingFormDetail::class, 'packing_form_id')->orderBy('excel_row')->orderBy('id');
     }
+
+    public function services(): HasMany
+    {
+        return $this->hasMany(PackingFormService::class, 'packing_form_id')->orderBy('seq');
+    }
 }
