@@ -247,10 +247,17 @@ class PackingListImportService
         $form->to = $this->cellStr($sheet, 'D2') ?: null;
         $form->customer_name = $this->cellStr($sheet, 'D3') ?: null;
         $form->country = $this->cellStr($sheet, 'D4') ?: null;
-        // Shipping Mark (Marks & No.) จาก G3 — ตั้งเฉพาะเมื่อมีค่า เพื่อไม่ลบค่าที่พิมพ์เองตอน re-import
-        $marksG3 = $this->cellStr($sheet, 'G3');
-        if ($marksG3 !== '') {
-            $form->marks = $marksG3;
+        // Shipping Mark (Marks & No.) = บล็อกใต้หัว "MARKS & NO." (G2) คอลัมน์ G แถว 3-7 รวมหลายบรรทัด
+        // ตำแหน่งไม่คงที่ (บางไฟล์เริ่ม G3, บางไฟล์ G3 ว่างเริ่ม G4) จึงอ่านรวมทั้งบล็อก ตั้งเฉพาะเมื่อมีค่า
+        $markLines = [];
+        for ($r = 3; $r <= 7; $r++) {
+            $val = trim((string) $sheet->getCell('G'.$r)->getFormattedValue());
+            if ($val !== '') {
+                $markLines[] = $val;
+            }
+        }
+        if (!empty($markLines)) {
+            $form->marks = implode("\n", $markLines);
         }
         $form->doc_date = $this->cellDate($sheet, 'A7') ?? now()->toDateString();
         $form->pkg = $this->cellInt($sheet, 'M8');
