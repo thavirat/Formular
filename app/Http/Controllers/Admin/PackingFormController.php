@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Menu;
+use App\Models\CustomerProductDescription;
 use App\Models\PackingForm;
 use App\Models\PackingFormDetail;
 use App\Models\PackingFormService;
@@ -65,8 +66,14 @@ class PackingFormController extends AdminController
                 $d = Help::CheckPermissionMenu($this->current_menu, 'd');
                 $r = Help::CheckPermissionMenu($this->current_menu, 'r');
                 if ($r) {
-                    $str .= '<a href="'.url('admin/'.$lang.'/PackingForm/'.$rec->id.'/pdf/customer').'" class="btn btn-xs btn-info" title="Packing List" target="_blank"><i class="fa fa-box"></i> PL</a> ';
-                    $str .= '<a href="'.url('admin/'.$lang.'/PackingForm/'.$rec->id.'/pdf/accounting').'" class="btn btn-xs btn-success" title="Invoice" target="_blank"><i class="fa fa-file-invoice-dollar"></i> INV</a> ';
+                    $plUrl = url('admin/'.$lang.'/PackingForm/'.$rec->id.'/pdf/customer');
+                    $invUrl = url('admin/'.$lang.'/PackingForm/'.$rec->id.'/pdf/accounting');
+                    // description ของลูกค้า (ค่าเริ่มต้น)
+                    $str .= '<a href="'.$plUrl.'" class="btn btn-xs btn-info" title="Packing List (description ลูกค้า)" target="_blank"><i class="fa fa-box"></i> PL</a> ';
+                    $str .= '<a href="'.$invUrl.'" class="btn btn-xs btn-success" title="Invoice (description ลูกค้า)" target="_blank"><i class="fa fa-file-invoice-dollar"></i> INV</a> ';
+                    // description จาก master สินค้า
+                    $str .= '<a href="'.$plUrl.'?desc=master" class="btn btn-xs btn-outline-info" title="Packing List (description master)" target="_blank"><i class="fa fa-box"></i> PL-M</a> ';
+                    $str .= '<a href="'.$invUrl.'?desc=master" class="btn btn-xs btn-outline-success" title="Invoice (description master)" target="_blank"><i class="fa fa-file-invoice-dollar"></i> INV-M</a> ';
                 }
                 if ($u) {
                     $str .= '<a href="'.url('admin/'.$lang.'/PackingForm/'.$rec->id.'/edit').'" class="btn btn-xs btn-warning" title="แก้ไข"><i class="fa fa-edit"></i></a> ';
@@ -169,20 +176,26 @@ class PackingFormController extends AdminController
 
     public function pdf(Request $request, $id)
     {
-        return $this->streamPlPdf($id, 'customer');
+        return $this->streamPlPdf($id, 'customer', $this->descSourceFrom($request));
     }
 
     public function pdfCustomer(Request $request, $id)
     {
-        return $this->streamPlPdf($id, 'customer');
+        return $this->streamPlPdf($id, 'customer', $this->descSourceFrom($request));
     }
 
     public function pdfAccounting(Request $request, $id)
     {
-        return $this->streamPlPdf($id, 'accounting');
+        return $this->streamPlPdf($id, 'accounting', $this->descSourceFrom($request));
     }
 
-    private function streamPlPdf($id, string $variant)
+    /** อ่านแหล่ง description จาก query ?desc=master|customer (ค่าเริ่มต้น customer) */
+    private function descSourceFrom(Request $request): string
+    {
+        return $request->query('desc') === 'master' ? 'master' : 'customer';
+    }
+
+    private function streamPlPdf($id, string $variant, string $descSource = 'customer')
     {
         $permission = Help::CheckPermissionMenu($this->current_menu, 'r');
         if (!$permission) {
@@ -200,12 +213,35 @@ class PackingFormController extends AdminController
             'services',
         ])->findOrFail($id);
 
+        // แผนที่ description ของลูกค้า: [customer_id][product_id] => description (สำหรับ PDF แบบ "ลูกค้า")
+        $custDescMap = [];
+        if ($descSource === 'customer') {
+            $pairs = [];
+            foreach ($packingForm->details as $d) {
+                $cid = $d->piProduct?->pi?->customer_id;
+                $pid = $d->piProduct?->product_id;
+                if ($cid && $pid) {
+                    $pairs[$cid][$pid] = true;
+                }
+            }
+            foreach ($pairs as $cid => $pids) {
+                $rows = CustomerProductDescription::where('customer_id', $cid)
+                    ->whereIn('product_id', array_keys($pids))
+                    ->get(['product_id', 'description']);
+                foreach ($rows as $r) {
+                    $custDescMap[$cid][$r->product_id] = $r->description;
+                }
+            }
+        }
+
         $view = $variant === 'accounting'
             ? 'admin.PackingForm.packing_form_pdf_accounting'
             : 'admin.PackingForm.packing_form_pdf_customer';
 
         $pdf = \PDF::loadView($view, [
             'packingForm' => $packingForm,
+            'descSource' => $descSource,
+            'custDescMap' => $custDescMap,
         ], [], [
             'format' => 'A4',
             'margin_left' => 8,
@@ -216,6 +252,7 @@ class PackingFormController extends AdminController
         ]);
 
         $suffix = $variant === 'accounting' ? '_Invoice' : '_PackingList';
+        $suffix .= $descSource === 'master' ? '_Master' : '_Customer';
         $filename = ($packingForm->doc_no ?: 'Doc').$suffix.'_'.date('Ymd').'.pdf';
 
         return $pdf->stream($filename);
@@ -374,6 +411,7 @@ class PackingFormController extends AdminController
             }
 
             $this->savePackingServices($form, $request);
+            $this->saveCustomerDescriptions($form);
             $this->recalcProducedQty($affectedPiProductIds ?? []);
 
             DB::commit();
@@ -566,6 +604,7 @@ class PackingFormController extends AdminController
                 ->toArray();
 
             $this->savePackingServices($form, $request);
+            $this->saveCustomerDescriptions($form);
             $this->recalcProducedQty(array_merge($oldPiProductIds, $newPiProductIds));
 
             DB::commit();
@@ -612,6 +651,31 @@ class PackingFormController extends AdminController
      * Recalculate produced_qty for given PI product IDs
      * by summing qty from all packing_form_details linked to each pi_product_id.
      */
+    /**
+     * บันทึก description ที่ผู้ใช้แก้ ให้เป็น master ของ (ลูกค้า + สินค้า) เพื่อใช้ซ้ำครั้งหน้า
+     * customer_id resolve จาก PI ของแต่ละแถว (packing form ไม่ได้เก็บ customer_id)
+     */
+    private function saveCustomerDescriptions(PackingForm $form): void
+    {
+        $details = PackingFormDetail::with('piProduct.pi')
+            ->where('packing_form_id', $form->id)
+            ->whereNotNull('pi_product_id')
+            ->get();
+
+        foreach ($details as $d) {
+            $cid = $d->piProduct?->pi?->customer_id;
+            $pid = $d->piProduct?->product_id;
+            $desc = trim((string) ($d->description ?? ''));
+            if (!$cid || !$pid || $desc === '') {
+                continue;
+            }
+            CustomerProductDescription::updateOrCreate(
+                ['customer_id' => $cid, 'product_id' => $pid],
+                ['description' => $desc]
+            );
+        }
+    }
+
     /** บันทึกค่าบริการอื่น (หลายรายการ) ของ Packing/Invoice — ลบของเดิมก่อน แล้วเก็บใหม่ตามลำดับแถว */
     private function savePackingServices(PackingForm $form, Request $request): void
     {

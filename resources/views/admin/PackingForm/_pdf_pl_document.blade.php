@@ -4,6 +4,27 @@
     $variant = $variant ?? 'customer';
     $isAccounting = $variant === 'accounting';
 
+    /** @var string $descSource master|customer — เลือกว่า description ใช้ master ของสินค้า หรือ master ของลูกค้า */
+    $descSource = $descSource ?? 'customer';
+    $custDescMap = $custDescMap ?? [];
+
+    // ข้อความ description ต่อแถว ตามแหล่งที่เลือก
+    $descText = function ($line) use ($descSource, $custDescMap) {
+        $p = $line->piProduct?->product;
+        $master = trim((string) ($p?->name_th ?: $p?->name_en ?: ''));
+        if ($descSource === 'master') {
+            return $master;
+        }
+        // customer: master ของลูกค้า (ถ้ามี) -> description ที่คีย์ในใบ -> ชื่อ master
+        $cid = $line->piProduct?->pi?->customer_id;
+        $pid = $line->piProduct?->product_id;
+        if ($cid && $pid && isset($custDescMap[$cid][$pid]) && trim((string) $custDescMap[$cid][$pid]) !== '') {
+            return trim((string) $custDescMap[$cid][$pid]);
+        }
+        $own = trim((string) ($line->description ?? ''));
+        return $own !== '' ? $own : $master;
+    };
+
     $logo = null;
     if (isset($settings['logo'])) {
         $logoFiles = json_decode($settings['logo']);
@@ -31,9 +52,9 @@
         }
         return '';
     };
-    $customerDesc = function ($line) {
+    $customerDesc = function ($line) use ($descText) {
         $part = trim((string) ($line->part_no ?? ''));
-        $desc = trim((string) ($line->description ?? ''));
+        $desc = trim((string) $descText($line));
         if ($desc === '') {
             return $part;
         }
@@ -408,7 +429,7 @@
                 <td align="center">{{ $isAccounting ? $k : $markNo($line) }}</td>
                 <td>
                     @if($isAccounting)
-                        {{ trim(($line->part_no ?? '').' '.($line->description ?? '')) }}
+                        {{ trim(($line->part_no ?? '').' '.$descText($line)) }}
                     @else
                         {{ $customerDesc($line) }}
                     @endif
