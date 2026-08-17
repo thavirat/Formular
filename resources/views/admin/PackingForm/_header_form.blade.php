@@ -98,22 +98,28 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="form-group mb-0">
                 <label class="text-90">L/C No.</label>
                 <input type="text" name="lc_no" class="form-control form-control-sm packing-tab" value="{{ $packingForm->lc_no }}">
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="form-group mb-0">
                 <label class="text-90">Port of Discharge</label>
                 <input type="text" name="port_of_discharge" class="form-control form-control-sm packing-tab" value="{{ $packingForm->port_of_discharge }}">
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="form-group mb-0">
                 <label class="text-90">Terms of Payment</label>
                 <input type="text" name="term_of_payment" class="form-control form-control-sm packing-tab" value="{{ $packingForm->term_of_payment }}" placeholder="เช่น T/T, L/C at sight, 30 days">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group mb-0">
+                <label class="text-90">Declaration No. <span class="text-muted">(Invoice)</span></label>
+                <input type="text" name="declaration_no" class="form-control form-control-sm packing-tab" value="{{ $packingForm->declaration_no }}">
             </div>
         </div>
     </div>

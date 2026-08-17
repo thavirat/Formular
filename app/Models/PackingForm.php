@@ -27,6 +27,7 @@ class PackingForm extends Model
         'issued_by',
         'doc_no',
         'invoice_no',
+        'declaration_no',
         'run_no',
         'pkg',
         'qty',

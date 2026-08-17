@@ -247,6 +247,7 @@ class PackingFormController extends AdminController
             'country' => 'nullable|string|max:255',
             'to' => 'nullable|string|max:255',
             'invoice_no' => 'nullable|string|max:100',
+            'declaration_no' => 'nullable|string|max:100',
             'place_of_issue' => 'nullable|string|max:100',
             'customer_address' => 'nullable|string',
             'customer_phone' => 'nullable|string|max:100',
@@ -295,6 +296,7 @@ class PackingFormController extends AdminController
             $form->country = $request->input('country');
             $form->to = $request->input('to');
             $form->invoice_no = $request->input('invoice_no');
+            $form->declaration_no = $request->input('declaration_no');
             $form->place_of_issue = $request->input('place_of_issue');
             $form->customer_address = $request->input('customer_address');
             $form->customer_phone = $request->input('customer_phone');
@@ -416,6 +418,7 @@ class PackingFormController extends AdminController
             'country' => 'nullable|string|max:255',
             'to' => 'nullable|string|max:255',
             'invoice_no' => 'nullable|string|max:100',
+            'declaration_no' => 'nullable|string|max:100',
             'place_of_issue' => 'nullable|string|max:100',
             'customer_address' => 'nullable|string',
             'customer_phone' => 'nullable|string|max:100',
@@ -463,6 +466,7 @@ class PackingFormController extends AdminController
             $form->country = $request->input('country');
             $form->to = $request->input('to');
             $form->invoice_no = $request->input('invoice_no');
+            $form->declaration_no = $request->input('declaration_no');
             $form->place_of_issue = $request->input('place_of_issue');
             $form->customer_address = $request->input('customer_address');
             $form->customer_phone = $request->input('customer_phone');

@@ -324,6 +324,12 @@
                     <td class="lbl">Invoice No.</td>
                     <td>{{ $packingForm->invoice_no ?: $packingForm->doc_no ?: '-' }}</td>
                 </tr>
+                @if($isAccounting)
+                <tr>
+                    <td class="lbl">Declaration No.</td>
+                    <td>{{ $packingForm->declaration_no ?: '-' }}</td>
+                </tr>
+                @endif
                 <tr>
                     <td class="lbl">Port of Loading</td>
                     <td>{{ $packingForm->shipped_from ?: '-' }}</td>
