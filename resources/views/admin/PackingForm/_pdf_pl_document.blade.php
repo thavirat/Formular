@@ -105,6 +105,17 @@
         $groups[$key][] = $line;
     }
 
+    // จำนวนคาร์ตันรวม = ผลรวมจำนวนกล่องทุกแถว Σ(to − from + 1) — คำนวณสด ไม่พึ่งค่า pkg (M8)
+    $totalCartons = 0;
+    foreach ($packingForm->details as $line) {
+        if ($line->from !== null && $line->to !== null) {
+            $pk = (int) $line->to - (int) $line->from + 1;
+            if ($pk > 0) {
+                $totalCartons += $pk;
+            }
+        }
+    }
+
     // ยอดรวมเงิน (สำหรับ Invoice)
     $sumAmount = 0.0;
     $curSymbol = '';
@@ -354,11 +365,11 @@
     </thead>
     <tbody>
         @php $k = 0; @endphp
-        @if(trim((string) $packingForm->marks) !== '' || $packingForm->pkg)
+        @if(trim((string) $packingForm->marks) !== '' || $totalCartons)
         <tr>
             <td style="vertical-align:top; font-weight:bold;">{!! nl2br(e(trim((string) $packingForm->marks))) !!}</td>
             <td colspan="{{ $isAccounting ? 4 : 6 }}" style="vertical-align:bottom;">
-                @if($packingForm->pkg)(TOTAL NO. OF PACKAGES : {{ number_format($packingForm->pkg) }} CARTONS)@endif
+                @if($totalCartons)(TOTAL NO. OF PACKAGES : {{ number_format($totalCartons) }} CARTONS)@endif
             </td>
         </tr>
         @endif
@@ -412,13 +423,14 @@
         {{-- สรุปจำนวนแยกตามหน่วย: 1 แถวต่อ 1 หน่วย ในคอลัมน์ TOTAL QTY (เหมือนหน้า PI) --}}
         @foreach($qtyByUom as $uom => $total)
         <tr class="row-qty-summary">
-            <td colspan="4" @if($loop->first) style="border-top:1px solid #000;" @endif></td>
-            <td class="text-right text-bold" @if($loop->first) style="border-top:1px solid #000;" @endif>{{ $fmtInt($total) }} {{ $uom }}</td>
+            <td colspan="2" class="text-center text-bold" @if($loop->first) style="border-top:1px solid #000;" @endif>***** TOTAL *****</td>
+            <td colspan="2" @if($loop->first) style="border-top:1px solid #000;" @endif></td>
+            <td class="text-right text-bold" @if($loop->first) style="border-top:1px solid #000;" @endif>{{ $fmt($total) }} {{ $uom }}</td>
             <td colspan="2" @if($loop->first) style="border-top:1px solid #000;" @endif></td>
         </tr>
         @endforeach
         <tr class="row-total">
-            <td colspan="5" class="text-right">TOTAL</td>
+            <td colspan="5" class="text-bold">TOTAL : {{ number_format($totalCartons) }} CARTONS</td>
             <td class="text-right">{{ $fmt($sumDetailNw) }}</td>
             <td class="text-right">{{ $fmt($sumDetailGw) }}</td>
         </tr>
@@ -448,7 +460,7 @@
         <td width="16%" class="text-bold text-center">QTY</td>
     </tr>
     <tr>
-        <td class="text-center">{{ $fmtInt($packingForm->pkg) }}</td>
+        <td class="text-center">{{ $fmtInt($totalCartons) }}</td>
         <td class="text-center">{{ $fmt($packingForm->weight_nw) }}</td>
         <td class="text-center">{{ $fmt($packingForm->weight_gw) }}</td>
         <td class="text-center">{{ $fmt($packingForm->weight_nt) }}</td>
