@@ -72,7 +72,7 @@
     <div class="row">
         <div class="col-md-3">
             <div class="form-group mb-2">
-                <label class="text-90">Sailing on/about</label>
+                <label class="text-90">Estimated Time of Departure</label>
                 <div class="input-group input-group-sm">
                     <input type="text" name="sailing_date" id="packing_sailing_date" class="form-control form-control-sm init-date packing-tab" value="{{ $packingForm->sailing_date ? $packingForm->sailing_date->format('Y-m-d') : '' }}" readonly>
                     <div class="input-group-append remove_date_time">
@@ -86,13 +86,13 @@
         </div>
         <div class="col-md-5">
             <div class="form-group mb-2">
-                <label class="text-90">Shipped from</label>
-                <input type="text" name="shipped_from" class="form-control form-control-sm packing-tab" value="{{ $packingForm->shipped_from }}" placeholder="LAEM CHABANG, THAILAND to AJMAN, U.A.E.">
+                <label class="text-90">Port of Loading</label>
+                <input type="text" name="shipped_from" class="form-control form-control-sm packing-tab" value="{{ $packingForm->shipped_from }}" placeholder="LAEM CHABANG, THAILAND">
             </div>
         </div>
         <div class="col-md-4">
             <div class="form-group mb-2">
-                <label class="text-90">Per (เรือ/ขนส่ง)</label>
+                <label class="text-90">Vessel Name</label>
                 <input type="text" name="per_vessel" class="form-control form-control-sm packing-tab" value="{{ $packingForm->per_vessel }}">
             </div>
         </div>
@@ -106,8 +106,8 @@
         </div>
         <div class="col-md-8">
             <div class="form-group mb-0">
-                <label class="text-90">Issued by</label>
-                <input type="text" name="issued_by" class="form-control form-control-sm packing-tab" value="{{ $packingForm->issued_by }}">
+                <label class="text-90">Port of Discharge</label>
+                <input type="text" name="port_of_discharge" class="form-control form-control-sm packing-tab" value="{{ $packingForm->port_of_discharge }}">
             </div>
         </div>
     </div>

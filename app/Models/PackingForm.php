@@ -20,6 +20,7 @@ class PackingForm extends Model
         'doc_date',
         'sailing_date',
         'shipped_from',
+        'port_of_discharge',
         'per_vessel',
         'lc_no',
         'issued_by',

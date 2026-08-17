@@ -251,6 +251,7 @@ class PackingFormController extends AdminController
             'customer_phone' => 'nullable|string|max:100',
             'sailing_date' => 'nullable|date',
             'shipped_from' => 'nullable|string|max:255',
+            'port_of_discharge' => 'nullable|string|max:255',
             'per_vessel' => 'nullable|string|max:255',
             'lc_no' => 'nullable|string|max:100',
             'issued_by' => 'nullable|string|max:255',
@@ -297,6 +298,7 @@ class PackingFormController extends AdminController
             $form->customer_phone = $request->input('customer_phone');
             $form->sailing_date = $request->input('sailing_date') ?: null;
             $form->shipped_from = $request->input('shipped_from');
+            $form->port_of_discharge = $request->input('port_of_discharge');
             $form->per_vessel = $request->input('per_vessel');
             $form->lc_no = $request->input('lc_no');
             $form->issued_by = $request->input('issued_by');
@@ -416,6 +418,7 @@ class PackingFormController extends AdminController
             'customer_phone' => 'nullable|string|max:100',
             'sailing_date' => 'nullable|date',
             'shipped_from' => 'nullable|string|max:255',
+            'port_of_discharge' => 'nullable|string|max:255',
             'per_vessel' => 'nullable|string|max:255',
             'lc_no' => 'nullable|string|max:100',
             'issued_by' => 'nullable|string|max:255',
@@ -461,6 +464,7 @@ class PackingFormController extends AdminController
             $form->customer_phone = $request->input('customer_phone');
             $form->sailing_date = $request->input('sailing_date') ?: null;
             $form->shipped_from = $request->input('shipped_from');
+            $form->port_of_discharge = $request->input('port_of_discharge');
             $form->per_vessel = $request->input('per_vessel');
             $form->lc_no = $request->input('lc_no');
             $form->issued_by = $request->input('issued_by');

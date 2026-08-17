@@ -262,8 +262,7 @@
             <span class="company-addr">119 MOTORWAY ROAD THAP CHANG, SAPHAN SUNG, BANGKOK 10250, THAILAND.</span>
         </td>
         <td width="130" valign="top" class="text-right company-addr">
-            TEL. : 063-525-2242<br>
-            FAX. : -
+            TEL. : 063-525-2242
         </td>
     </tr>
 </table>
@@ -295,7 +294,7 @@
         <td width="45%">
             <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                    <td class="lbl" width="38%">{{ $packingForm->place_of_issue ?: 'Bangkok' }}</td>
+                    <td class="lbl" width="38%">Invoice Date</td>
                     <td>{{ $packingForm->doc_date ? $packingForm->doc_date->format('d/m/Y') : '' }}</td>
                 </tr>
                 <tr>
@@ -303,24 +302,24 @@
                     <td>{{ $packingForm->invoice_no ?: $packingForm->doc_no ?: '-' }}</td>
                 </tr>
                 <tr>
-                    <td class="lbl">Sailing on/about</td>
-                    <td>{{ $packingForm->sailing_date ? $packingForm->sailing_date->format('d/m/Y') : '-' }}</td>
-                </tr>
-                <tr>
-                    <td class="lbl">Shipped from</td>
+                    <td class="lbl">Port of Loading</td>
                     <td>{{ $packingForm->shipped_from ?: '-' }}</td>
                 </tr>
                 <tr>
-                    <td class="lbl">Per</td>
+                    <td class="lbl">Port of Discharge</td>
+                    <td>{{ $packingForm->port_of_discharge ?: '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="lbl">Estimated Time of Departure</td>
+                    <td>{{ optional($packingForm->sailing_date ?: $packingForm->doc_date)->format('d/m/Y') ?: '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="lbl">Vessel Name</td>
                     <td>{{ $packingForm->per_vessel ?: '-' }}</td>
                 </tr>
                 <tr>
                     <td class="lbl">L/C No.</td>
                     <td>{{ $packingForm->lc_no ?: '' }}</td>
-                </tr>
-                <tr>
-                    <td class="lbl">Issued by</td>
-                    <td>{{ $packingForm->issued_by ?: '' }}</td>
                 </tr>
             </table>
         </td>
