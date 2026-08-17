@@ -321,6 +321,10 @@
                     <td class="lbl">L/C No.</td>
                     <td>{{ $packingForm->lc_no ?: '' }}</td>
                 </tr>
+                <tr>
+                    <td class="lbl">Terms of Payment</td>
+                    <td>{{ $packingForm->term_of_payment ?: '' }}</td>
+                </tr>
             </table>
         </td>
     </tr>

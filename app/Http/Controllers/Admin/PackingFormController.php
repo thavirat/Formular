@@ -254,6 +254,7 @@ class PackingFormController extends AdminController
             'port_of_discharge' => 'nullable|string|max:255',
             'per_vessel' => 'nullable|string|max:255',
             'lc_no' => 'nullable|string|max:100',
+            'term_of_payment' => 'nullable|string|max:255',
             'issued_by' => 'nullable|string|max:255',
             'marks' => 'nullable|string',
             'pkg' => 'nullable|integer|min:0',
@@ -301,6 +302,7 @@ class PackingFormController extends AdminController
             $form->port_of_discharge = $request->input('port_of_discharge');
             $form->per_vessel = $request->input('per_vessel');
             $form->lc_no = $request->input('lc_no');
+            $form->term_of_payment = $request->input('term_of_payment');
             $form->issued_by = $request->input('issued_by');
             $form->marks = $request->input('marks');
             $form->pkg = $request->filled('pkg') ? (int) $request->input('pkg') : null;
@@ -421,6 +423,7 @@ class PackingFormController extends AdminController
             'port_of_discharge' => 'nullable|string|max:255',
             'per_vessel' => 'nullable|string|max:255',
             'lc_no' => 'nullable|string|max:100',
+            'term_of_payment' => 'nullable|string|max:255',
             'issued_by' => 'nullable|string|max:255',
             'marks' => 'nullable|string',
             'pkg' => 'nullable|integer|min:0',
@@ -467,6 +470,7 @@ class PackingFormController extends AdminController
             $form->port_of_discharge = $request->input('port_of_discharge');
             $form->per_vessel = $request->input('per_vessel');
             $form->lc_no = $request->input('lc_no');
+            $form->term_of_payment = $request->input('term_of_payment');
             $form->issued_by = $request->input('issued_by');
             $form->marks = $request->input('marks');
             $form->pkg = $request->filled('pkg') ? (int) $request->input('pkg') : null;

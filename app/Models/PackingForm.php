@@ -23,6 +23,7 @@ class PackingForm extends Model
         'port_of_discharge',
         'per_vessel',
         'lc_no',
+        'term_of_payment',
         'issued_by',
         'doc_no',
         'invoice_no',
