@@ -22,6 +22,7 @@ use App\Models\AdminUser;
 use App\Models\ContactChannel;
 use App\Models\Comment;
 use App\Services\PackingListExcelExportService;
+use App\Services\ProformaInvoiceImportService;
 use Maatwebsite\Excel\Facades\Excel;
 use Auth;
 use DataTables;
@@ -56,6 +57,10 @@ class ProformaInvoiceController extends AdminController
         $data['proforma_invoice_statuses'] = ProformaInvoiceStatus::orderBy('name')->get();
         $data['admins'] = AdminUser::orderBy('nickname')->get();
         $data['Customers'] = Customer::orderBy('company_name')->get();
+        // สำหรับ modal นำเข้า PI (เลือกข้อมูลที่ไฟล์ไม่มี)
+        $data['Currencies'] = Currency::orderBy('name')->get();
+        $data['Incoterms'] = Incoterm::orderBy('code')->get();
+        $data['CreditPayments'] = CreditPayment::orderBy('name')->get();
         $data['url_pi_create'] = $this->proformaInvoiceCreateUrl($request);
         $data['app_debug'] = (bool) config('app.debug');
         if ($data['app_debug']) {
@@ -116,6 +121,55 @@ class ProformaInvoiceController extends AdminController
         }
 
         return view('admin.ProformaInvoice.proforma_invoice_create', $data);
+    }
+
+    /** นำเข้า PI จากไฟล์ fic2fi (.xls/.xlsx) — ข้อมูลที่ไฟล์ไม่มีให้เลือกจากฟอร์ม */
+    public function importPi(Request $request, ProformaInvoiceImportService $service)
+    {
+        if (!Help::CheckPermissionMenu($this->current_menu, 'c')) {
+            return response()->json(['status' => 0, 'title' => 'ไม่มีสิทธิ์', 'content' => 'Permission denied'], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|file|mimes:xls,xlsx',
+            'currency_id' => 'required',
+            'doc_date' => 'nullable|date',
+            'doc_no' => 'nullable|string|max:50',
+        ], [], ['file' => 'ไฟล์', 'currency_id' => 'สกุลเงิน']);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 0, 'title' => 'ข้อมูลไม่ถูกต้อง', 'content' => $validator->errors()->first()]);
+        }
+
+        try {
+            $docDate = $request->input('doc_date') ?: date('Y-m-d');
+            $res = $service->import($request->file('file'), [
+                'currency_id'       => $request->input('currency_id') ?: null,
+                'incoterm_id'       => $request->input('incoterm_id') ?: null,
+                'credit_payment_id' => $request->input('credit_payment_id') ?: null,
+                'doc_date'          => $docDate,
+                'doc_no'            => $request->input('doc_no'),
+                'generated_doc_no'  => $this->suggestProformaInvoiceDocNo($docDate)['doc_no'],
+            ]);
+
+            if (($res['status'] ?? 0) !== 1) {
+                return response()->json(['status' => 0, 'title' => 'นำเข้าไม่สำเร็จ', 'content' => $res['message'] ?? 'เกิดข้อผิดพลาด']);
+            }
+
+            $content = 'สร้าง PI '.$res['doc_no'].' ('.$res['items'].' รายการ) เรียบร้อย';
+            if (!empty($res['warnings'])) {
+                $content .= "\n\n⚠ ".implode("\n⚠ ", $res['warnings']);
+            }
+
+            return response()->json([
+                'status' => 1,
+                'title' => 'นำเข้าสำเร็จ',
+                'content' => $content,
+                'pi_id' => $res['pi_id'],
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json(['status' => 0, 'title' => 'เกิดข้อผิดพลาด', 'content' => $e->getMessage()]);
+        }
     }
 
     public function suggestDocNo(Request $request)

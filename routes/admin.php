@@ -179,6 +179,7 @@ Route::middleware('authAdmin:admin')->group(function () {
     Route::post('/ProformaInvoice/RequestApproval', 'Admin\ProformaInvoiceController@RequestApproval');
     Route::post('/ProformaInvoice/Approve', 'Admin\ProformaInvoiceController@Approve');
     Route::post('/ProformaInvoice/Lists', 'Admin\ProformaInvoiceController@lists');
+    Route::post('/ProformaInvoice/ImportPi', 'Admin\ProformaInvoiceController@importPi');
     Route::post('/ProformaInvoice/SaveComment', 'Admin\ProformaInvoiceController@save_comment');
     Route::get('/ProformaInvoice/ExportPDF', 'Admin\ProformaInvoiceController@export_pdf');
     Route::get('/ProformaInvoice/ExportExcel', 'Admin\ProformaInvoiceController@export_excel');

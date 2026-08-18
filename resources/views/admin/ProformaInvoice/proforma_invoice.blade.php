@@ -88,6 +88,10 @@
                 <i class="fa fa-industry text-110 w-2 h-2"></i>
             </a>
             @if( $my_menu_permission[$currentMenu->url]['c'] == 'T' )
+                <button type="button" id="btn-open-import-pi" class="btn btn-light-primary btn-h-primary btn-a-primary border-0 radius-3 py-2 text-600 text-90" title="นำเข้า PI จากไฟล์ fic2fi (.xls/.xlsx)">
+                    <span class="d-none d-sm-inline mr-1">นำเข้า PI (Excel)</span>
+                    <i class="fa fa-file-import text-110 w-2 h-2"></i>
+                </button>
                 <a href="{{ $url_pi_create ?? url('admin/ProformaInvoice/create') }}" class="btn btn-light-green btn-h-green btn-a-green border-0 radius-3 py-2 text-600 text-90">
                     <span class="d-none d-sm-inline mr-1">
                         เพิ่มข้อมูล
@@ -261,6 +265,79 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary px-4" data-dismiss="modal"> <i class="fa fa-window-close"></i> ปิด </button>
                         <button type="submit" class="btn btn-primary"> <i class="fa fa-save"></i> บันทึก </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== Modal นำเข้า PI จากไฟล์ fic2fi ===== --}}
+    <div class="modal fade" id="ModalImportPi" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form id="FormImportPi" enctype="multipart/form-data">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-primary-d3"><i class="fa fa-file-import mr-1"></i> นำเข้า PI จากไฟล์ Excel (fic2fi)</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>ไฟล์ Excel (.xls / .xlsx) <span class="text-danger">*</span></label>
+                            <input type="file" name="file" id="import_pi_file" class="form-control" accept=".xls,.xlsx" required>
+                            <small class="text-muted">รูปแบบ fic2fi — ลูกค้า, PO, ผู้ขาย, รายการสินค้า, หมายเหตุ อ่านจากไฟล์อัตโนมัติ</small>
+                        </div>
+                        <div class="alert alert-light border text-90 py-2">ข้อมูลที่ไฟล์ไม่มี ให้เลือกด้านล่าง</div>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="form-group">
+                                    <label>สกุลเงิน <span class="text-danger">*</span></label>
+                                    <select name="currency_id" class="form-control" required>
+                                        @foreach($Currencies as $cur)
+                                            <option value="{{ $cur->id }}">{{ $cur->symbol ?: $cur->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group">
+                                    <label>วันที่เอกสาร</label>
+                                    <input type="date" name="doc_date" class="form-control" value="{{ date('Y-m-d') }}">
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group">
+                                    <label>Incoterm</label>
+                                    <select name="incoterm_id" class="form-control">
+                                        <option value="">— ไม่ระบุ —</option>
+                                        @foreach($Incoterms as $it)
+                                            <option value="{{ $it->id }}">{{ $it->code }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group">
+                                    <label>Credit Payment</label>
+                                    <select name="credit_payment_id" class="form-control">
+                                        <option value="">— ไม่ระบุ —</option>
+                                        @foreach($CreditPayments as $cp)
+                                            <option value="{{ $cp->id }}">{{ $cp->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group mb-0">
+                                    <label>เลขที่เอกสาร (Doc No.)</label>
+                                    <input type="text" name="doc_no" class="form-control" placeholder="เว้นว่าง = ใช้เลขจากไฟล์ (FA → PI)">
+                                    <small class="text-muted">เว้นว่าง = ยึดเลขจากไฟล์ Excel · ระบุเอง = ใช้ค่านี้แทน</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary px-4" data-dismiss="modal"><i class="fa fa-window-close"></i> ปิด</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-file-import"></i> นำเข้า</button>
                     </div>
                 </form>
             </div>
@@ -527,5 +604,39 @@
         });
     });
 
+</script>
+<script type="text/javascript">
+$(function(){
+    $('#btn-open-import-pi').on('click', function(){
+        $('#FormImportPi')[0].reset();
+        $('#ModalImportPi').modal('show');
+    });
+    $('#FormImportPi').on('submit', function(e){
+        e.preventDefault();
+        var form = $(this);
+        var btn = form.find('button[type=submit]');
+        loadingButton(btn);
+        var fd = new FormData(this);
+        fd.append('_token', $('meta[name="csrf-token"]').attr('content'));
+        $.ajax({
+            method: 'POST',
+            url: url_gb + '/admin/ProformaInvoice/ImportPi',
+            data: fd, processData: false, contentType: false, dataType: 'json'
+        }).done(function(res){
+            resetButton(btn);
+            if (res.status == 1){
+                $('#ModalImportPi').modal('hide');
+                Swal.fire({ title: res.title, text: res.content, icon: 'success' }).then(function(){
+                    tableProformaInvoice.api().ajax.reload(null, false);
+                });
+            } else {
+                Swal.fire(res.title || 'ผิดพลาด', res.content || '', 'error');
+            }
+        }).fail(function(xhr){
+            resetButton(btn);
+            ajaxFail(xhr, form);
+        });
+    });
+});
 </script>
 @endpush
