@@ -244,6 +244,7 @@ class PackingFormController extends AdminController
             },
             'details.piProduct.pi.currency',
             'details.piProduct.pi.remarks',
+            'details.piProduct.pi.incoterm',
             'details.piProduct.product.unitProduct',
             'details.piProduct.product.category',
             'services',
@@ -310,7 +311,7 @@ class PackingFormController extends AdminController
             'format' => 'A4',
             'margin_left' => 8,
             'margin_right' => 8,
-            'margin_top' => 60,   // เว้นบนให้หัวเอกสารที่ซ้ำทุกหน้า (กันบรรทัด Issued by ล้นทับตาราง)
+            'margin_top' => 68,   // เว้นบนให้หัวเอกสารที่ซ้ำทุกหน้า (หัวโตขึ้นจาก Declaration/Port of Discharge/Terms of Payment)
             'margin_header' => 5,
             'margin_bottom' => 10,
         ]);

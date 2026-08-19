@@ -127,13 +127,22 @@
     }
 
     // จำนวนคาร์ตันรวม = ผลรวมจำนวนกล่องทุกแถว Σ(to − from + 1) — คำนวณสด ไม่พึ่งค่า pkg (M8)
+    // + ผลรวมน้ำหนัก NET/GROSS (สำหรับ Invoice) + incoterm จาก PI (บรรทัด FOB)
     $totalCartons = 0;
+    $sumWeightNw = 0.0;
+    $sumWeightGw = 0.0;
+    $incotermCode = '';
     foreach ($packingForm->details as $line) {
         if ($line->from !== null && $line->to !== null) {
             $pk = (int) $line->to - (int) $line->from + 1;
             if ($pk > 0) {
                 $totalCartons += $pk;
             }
+        }
+        $sumWeightNw += (float) ($line->weight_nw ?? 0);
+        $sumWeightGw += (float) ($line->weight_gw ?? 0);
+        if ($incotermCode === '') {
+            $incotermCode = (string) ($line->piProduct?->pi?->incoterm?->code ?? '');
         }
     }
 
@@ -413,9 +422,12 @@
         @php $k = 0; @endphp
         @if(trim((string) $packingForm->marks) !== '' || $totalCartons)
         <tr>
-            <td style="vertical-align:top; font-weight:bold;">{!! nl2br(e(trim((string) $packingForm->marks))) !!}</td>
-            <td colspan="{{ $isAccounting ? 4 : 6 }}" style="vertical-align:bottom;">
-                @if($totalCartons)(TOTAL NO. OF PACKAGES : {{ number_format($totalCartons) }} CARTONS)@endif
+            <td style="vertical-align:top; font-weight:bold; {{ $isAccounting ? 'border-right:none;' : '' }}">
+                {!! nl2br(e(trim((string) $packingForm->marks))) !!}
+                @if($isAccounting && $totalCartons)<br>(TOTAL NO. OF PACKAGES : {{ number_format($totalCartons) }} CARTONS)@endif
+            </td>
+            <td colspan="{{ $isAccounting ? 4 : 6 }}" style="vertical-align:bottom; {{ $isAccounting ? 'border-left:none;' : '' }}">
+                @if(!$isAccounting && $totalCartons)(TOTAL NO. OF PACKAGES : {{ number_format($totalCartons) }} CARTONS)@endif
             </td>
         </tr>
         @endif
@@ -501,12 +513,16 @@
         @endforeach
     @endif
     <tr>
-        <td class="text-bold">
-            SAY {{ \App\Help::numberToWords($grandTotal, ($curSymbol === 'USD' ? 'US DOLLARS' : strtoupper($curSymbol ?: 'DOLLARS'))) }} ONLY.
-        </td>
-        <td width="22%" class="text-right text-bold">TOTAL</td>
+        <td></td>
+        <td width="42%" class="text-right text-bold">{{ $incotermCode ?: 'FOB' }} - {{ $packingForm->shipped_from ?: '(Port of Loading)' }} to {{ $packingForm->port_of_discharge ?: '(Port of Discharge)' }}</td>
         <td width="16%" class="text-right text-bold">{{ $curSymbol }} {{ $fmt($grandTotal) }}</td>
     </tr>
+</table>
+<table width="100%" style="margin-top:4px;">
+    <tr><td class="text-bold">COUNTRY OF ORIGIN : THAILAND</td></tr>
+    <tr><td class="text-bold">NET WEIGHT : {{ $fmt($sumWeightNw) }} KGS.</td></tr>
+    <tr><td class="text-bold">GROSS WEIGHT : {{ $fmt($sumWeightGw) }} KGS.</td></tr>
+    <tr><td class="text-bold" style="padding-top:4px;">TOTAL : EX: {{ \App\Help::numberToWords($grandTotal, ($curSymbol === 'USD' ? 'US DOLLARS' : strtoupper($curSymbol ?: 'DOLLARS'))) }}</td></tr>
 </table>
 @else
 <table class="totals">
