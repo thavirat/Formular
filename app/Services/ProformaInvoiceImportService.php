@@ -53,9 +53,10 @@ class ProformaInvoiceImportService
         $shipRemark = implode("\n", $markLines) ?: null;
 
         // ข้อมูลระดับเอกสาร (ซ้ำทุกแถว ใช้จากแถวแรก)
-        $custPo   = $this->str($sheet, 'A'.self::FIRST_ITEM_ROW);
+        $custPo   = $this->str($sheet, 'A'.self::FIRST_ITEM_ROW);   // Cust PO No (ใช้ derive doc_no FA->PI)
         $saleName = $this->str($sheet, 'B'.self::FIRST_ITEM_ROW);
         $shipDate = $this->cellDate($sheet, 'C'.self::FIRST_ITEM_ROW);
+        $shipToPo = $this->str($sheet, 'D'.self::FIRST_ITEM_ROW);   // Ship To PO -> REF. P/O
 
         // อ่านรายการสินค้า
         $items = [];
@@ -91,10 +92,11 @@ class ProformaInvoiceImportService
             $remarks[] = preg_replace('/^\s*\d+\.\s*/', '', $v);
         }
 
-        // resolve ลูกค้า จาก Cust_Code
-        $customer = $custCode !== '' ? Customer::where('code', $custCode)->first() : null;
+        // resolve ลูกค้า: code (ในไฟล์คนละรูปแบบ มักไม่ตรง) -> ชื่อจากไฟล์ (exact -> prefix)
+        // เพื่อดึง บริษัท + ที่อยู่ จาก master ของลูกค้าในระบบ
+        $customer = $this->resolveCustomer($custCode, $shipToName);
         if (!$customer) {
-            $warnings[] = 'ไม่พบลูกค้ารหัส "'.$custCode.'" ในระบบ — ใช้ชื่อจากไฟล์แทน (บริษัท/ที่อยู่/เลขภาษีจะว่าง)';
+            $warnings[] = 'ไม่พบลูกค้า "'.($shipToName ?: $custCode).'" ในระบบ — ใช้ชื่อจากไฟล์แทน (ที่อยู่/เลขภาษีจะว่าง)';
         }
 
         // resolve ผู้ขาย จากชื่อ
@@ -116,14 +118,12 @@ class ProformaInvoiceImportService
             return ['status' => 0, 'message' => 'เลขที่เอกสาร "'.$docNo.'" มีอยู่แล้วในระบบ กรุณาระบุเลขอื่น'];
         }
 
+        // ราคาในไฟล์เป็น "ทุนโรงงาน" ไม่ใช่ราคาขาย -> ไม่ดึงราคา ให้แอดมินใส่ราคาขายเอง (ยอด = 0)
         $subtotal = 0.0;
-        foreach ($items as $it) {
-            $subtotal += $it['qty'] * $it['unit_price'];
-        }
 
         return DB::transaction(function () use (
             $opts, $customer, $shipToName, $custCode, $shipToCode, $shipRemark, $cno,
-            $custPo, $shipDate, $saleBy, $docNo, $items, $remarks, $subtotal, $warnings
+            $custPo, $shipToPo, $shipDate, $saleBy, $docNo, $items, $remarks, $subtotal, $warnings
         ) {
             $pi = new ProformaInvoice();
             $pi->quotation_id      = null;
@@ -143,7 +143,7 @@ class ProformaInvoiceImportService
             $pi->ship_to_code      = $shipToCode ?: null;
             $pi->ship_remark       = $shipRemark;
             $pi->cno               = $cno;
-            $pi->customer_po       = $custPo ?: null;
+            $pi->customer_po       = ($shipToPo !== '' ? $shipToPo : ($custPo ?: null)); // REF. P/O = Ship To PO (fallback Cust PO)
             $pi->subtotal          = $subtotal;
             $pi->total             = $subtotal;
             $pi->created_by        = optional(Auth::guard('admin')->user())->id;
@@ -160,11 +160,12 @@ class ProformaInvoiceImportService
                 $item->seq            = is_numeric($it['itm']) ? (int) $it['itm'] : $seq;
                 $item->drawing        = $it['drawing'] ?: null;
                 $item->cus_code       = $it['cus_code'] ?: null;
-                $item->detail_eng     = $it['desc'] ?: null;
-                $item->detail_thai    = $it['desc'] ?: null;
+                // DESCRIPTION: ใช้ชื่ออังกฤษจาก master สินค้า (ถ้าไม่เจอ product -> ปล่อยว่าง)
+                $item->detail_eng     = $prod?->name_en ?: null;
+                $item->detail_thai    = $prod?->name_th ?: null;
                 $item->qty            = $it['qty'];
-                $item->price_per_item = $it['unit_price'];
-                $item->total_price    = $it['qty'] * $it['unit_price'];
+                $item->price_per_item = 0; // ไม่ดึงราคาทุนจากไฟล์ (แอดมินใส่ราคาขายเอง)
+                $item->total_price    = 0;
                 $item->save();
                 $seq++;
             }
@@ -181,6 +182,35 @@ class ProformaInvoiceImportService
                 'warnings' => $warnings,
             ];
         });
+    }
+
+    /** resolve ลูกค้า: code -> ชื่อ (exact แบบ normalize) -> prefix (เฉพาะเจอตัวเดียว) */
+    private function resolveCustomer(string $custCode, string $shipToName): ?Customer
+    {
+        $custCode = trim($custCode);
+        if ($custCode !== '') {
+            $byCode = Customer::where('code', $custCode)->first();
+            if ($byCode) {
+                return $byCode;
+            }
+        }
+        $name = trim($shipToName);
+        if ($name === '') {
+            return null;
+        }
+        // exact แบบ normalize (ตัดจุด/จุลภาค, uppercase, trim)
+        $target = mb_strtoupper(trim(str_replace(['.', ','], '', $name)));
+        $exact = Customer::whereRaw("UPPER(TRIM(REPLACE(REPLACE(company_name,'.',''),',',''))) = ?", [$target])->first();
+        if ($exact) {
+            return $exact;
+        }
+        // prefix: company_name ขึ้นต้นด้วยชื่อจากไฟล์ — ใช้ต่อเมื่อได้ผลลัพธ์เดียว (กันแมพผิด)
+        $prefix = Customer::where('company_name', 'like', $name.'%')->limit(2)->get();
+        if ($prefix->count() === 1) {
+            return $prefix->first();
+        }
+
+        return null;
     }
 
     private function resolveSale(string $name): ?int
