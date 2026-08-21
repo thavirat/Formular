@@ -26,7 +26,7 @@ class ImportMasters extends Command
         @set_time_limit(0);
 
         $what = strtolower((string) $this->argument('what'));
-        $valid = ['factories', 'content', 'dimensions', 'brands', 'units', 'cost', 'coilcost', 'all'];
+        $valid = ['factories', 'content', 'dimensions', 'brands', 'units', 'cost', 'coilcost', 'drawings', 'all'];
         if (!in_array($what, $valid, true)) {
             $this->error("ค่าไม่ถูกต้อง: {$what} (ใช้ได้: " . implode(', ', $valid) . ')');
             return 1;
@@ -53,6 +53,9 @@ class ImportMasters extends Command
             }
             if ($what === 'coilcost') { // ไม่รวมใน all (เป็นชุด COIL เฉพาะกลุ่ม)
                 $this->importCoilCost();
+            }
+            if ($what === 'drawings') { // ไม่รวมใน all (อัปเดตเฉพาะกิจ)
+                $this->importDrawings();
             }
             $this->info('=== เสร็จสมบูรณ์ ===');
             return 0;
@@ -300,6 +303,46 @@ class ImportMasters extends Command
             $total += count($chunk);
         }
         return $total;
+    }
+
+    /**
+     * ----- drawing (แผนผัง) : Prod_Join_Cate_Join_Design_Join_Group V2.xlsx -----
+     * ชีท "All in": J(index 9)=GoodCode -> products.code, N(index 13)=GoodMarketName -> products.drawing
+     * ข้ามค่าว่าง/NULL (ไม่ลบ drawing เดิม) ; ค่าที่มี = เขียนทับ
+     */
+    private function importDrawings(): void
+    {
+        $path = $this->findFile([
+            'Prod_Join_Cate_Join_Design_Join_Group V2.xlsx',
+            'Prod_Join_Cate_Join_Design_Join_Group.xlsx',
+            'product_drawings.xlsx',
+        ]);
+        if (!$path) {
+            $this->warn('ข้าม drawings: ไม่พบไฟล์ Prod_Join_Cate_Join_Design_Join_Group V2.xlsx (วางที่ database/imports/masters/ หรือ storage/app/imports/)');
+            return;
+        }
+        $this->info('นำเข้า drawing (แผนผัง)...');
+
+        $reader = IOFactory::createReaderForFile($path);
+        $reader->setReadDataOnly(true);
+        $rows = $reader->load($path)->getSheet(0)->toArray(null, true, false, false);
+
+        $codesSet = $this->productCodeSet();
+        $drawByCode = []; $notFound = 0; $blank = 0;
+        foreach ($rows as $i => $r) {
+            if ($i === 0) continue; // header
+            $code = isset($r[9]) ? trim((string) $r[9]) : '';    // J = GoodCode
+            if ($code === '' || strtoupper($code) === 'NULL') continue;
+            $draw = isset($r[13]) ? trim((string) $r[13]) : '';  // N = GoodMarketName (drawing)
+            if ($draw === '' || strtoupper($draw) === 'NULL') { $blank++; continue; } // ข้ามค่าว่าง/NULL
+            if (!isset($codesSet[$code])) { $notFound++; continue; }
+            $drawByCode[$code] = $draw; // code ไม่ซ้ำ; ถ้าซ้ำใช้ค่าล่าสุด
+        }
+
+        DB::beginTransaction();
+        $matched = $this->bulkUpdateValues('drawing', $drawByCode);
+        DB::commit();
+        $this->info("  drawing: อัปเดต {$matched} รายการ | ข้ามค่าว่าง/NULL {$blank} | ไม่พบ code {$notFound}");
     }
 
     /** ----- ราคาทุน : product_cost.xlsx (ชีทแรก: DWG, Part No., cost) -> products.cost ----- */
