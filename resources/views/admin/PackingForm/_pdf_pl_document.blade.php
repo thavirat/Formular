@@ -117,14 +117,26 @@
         }
     }
 
-    // จัดกลุ่มรายการตามหมวดสินค้า (Product Category) — คงลำดับเดิมภายในกลุ่ม
-    $groups = [];
+    // FA ต่อรายการ = doc_no ของ PI ที่ผูก สลับ PI -> FA (เลขเต็ม); ไม่มี PI = ''
+    $faOf = function ($line) {
+        $doc = $line->piProduct?->pi?->doc_no;
+        if (!$doc) {
+            return '';
+        }
+        return \Illuminate\Support\Str::startsWith($doc, 'PI') ? 'FA'.substr($doc, 2) : $doc;
+    };
+
+    // จัดกลุ่มซ้อน: FA (หัวใหญ่) -> Product Category (ย่อย) -> รายการ; คงลำดับเดิม
+    $faGroups = [];
     foreach ($packingForm->details as $line) {
+        $fa = $faOf($line);
         $cat = $line->piProduct?->product?->category?->name_en
             ?: ($line->piProduct?->product?->category?->name ?? '');
-        $key = $cat !== '' ? $cat : '__NONE__';
-        $groups[$key][] = $line;
+        $catKey = $cat !== '' ? $cat : '__NONE__';
+        $faGroups[$fa][$catKey][] = $line;
     }
+    // เลข FA ที่ไม่ซ้ำ (ไว้เติมใน marks)
+    $faList = array_values(array_filter(array_keys($faGroups), fn($f) => $f !== ''));
 
     // จำนวนคาร์ตันรวม = ผลรวมจำนวนกล่องทุกแถว Σ(to − from + 1) — คำนวณสด ไม่พึ่งค่า pkg (M8)
     // + ผลรวมน้ำหนัก NET/GROSS (สำหรับ Invoice) + incoterm จาก PI (บรรทัด FOB)
@@ -200,6 +212,7 @@
         }
         .doc-title { font-size: 15px; font-weight: bold; text-align: center; }
         .marks-block { font-weight: bold; margin: 4px 0 6px 0; line-height: 1.4; }
+        .items .fa-row td { font-weight: bold; text-align: left; background: #dcdcdc; }
         .items .cat-row td { font-weight: bold; text-align: left; background: #f1f1f1; }
         .header-top {
             width: 100%;
@@ -425,6 +438,7 @@
         <tr>
             <td style="vertical-align:top; font-weight:bold; {{ $isAccounting ? 'border-right:none;' : '' }}">
                 {!! nl2br(e(trim((string) $packingForm->marks))) !!}
+                @if(count($faList))<br>{{ implode(' , ', $faList) }}@endif
                 @if($isAccounting && $totalCartons)<br>(TOTAL NO. OF PACKAGES : {{ number_format($totalCartons) }} CARTONS)@endif
             </td>
             <td colspan="{{ $isAccounting ? 4 : 6 }}" style="vertical-align:bottom; {{ $isAccounting ? 'border-left:none;' : '' }}">
@@ -432,7 +446,11 @@
             </td>
         </tr>
         @endif
-        @forelse($groups as $catKey => $catLines)
+        @forelse($faGroups as $fa => $cats)
+            @if($fa !== '')
+            <tr class="fa-row"><td colspan="{{ $isAccounting ? 5 : 7 }}">MARK &amp; NO. : {{ $fa }}</td></tr>
+            @endif
+            @foreach($cats as $catKey => $catLines)
             @if($catKey !== '__NONE__')
             <tr class="cat-row"><td colspan="{{ $isAccounting ? 5 : 7 }}">{{ $catKey }}</td></tr>
             @endif
@@ -470,6 +488,7 @@
                 <td class="text-right">{{ $fmt($line->weight_gw) }}</td>
                 @endif
             </tr>
+            @endforeach
             @endforeach
         @empty
             <tr>
