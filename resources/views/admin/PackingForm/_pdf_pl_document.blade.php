@@ -329,8 +329,9 @@
 
 <table width="100%" style="margin-bottom:4px;">
     <tr>
-        <td width="78%" class="doc-title">{{ $docTitle }}</td>
-        <td width="22%" class="text-right">PAGE {PAGENO} / {nbpg}</td>
+        <td width="22%"></td>
+        <td width="56%" class="doc-title">{{ $docTitle }}</td>
+        <td width="22%" class="text-right" style="vertical-align:middle;">PAGE {PAGENO} / {nbpg}</td>
     </tr>
 </table>
 
