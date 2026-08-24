@@ -354,11 +354,11 @@
         <td width="45%">
             <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                    <td class="lbl" width="38%">Invoice Date</td>
+                    <td class="lbl" width="38%">{{ $isAccounting ? 'Invoice Date' : 'Packing List Date' }}</td>
                     <td>{{ $packingForm->doc_date ? $packingForm->doc_date->format('d/m/Y') : '' }}</td>
                 </tr>
                 <tr>
-                    <td class="lbl">Invoice No.</td>
+                    <td class="lbl">{{ $isAccounting ? 'Invoice No.' : 'Packing List No.' }}</td>
                     <td>{{ $packingForm->invoice_no ?: $packingForm->doc_no ?: '-' }}</td>
                 </tr>
                 @if($isAccounting)
