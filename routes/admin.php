@@ -242,6 +242,14 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::get('/PackingForm/{id}/pdf/accounting', 'Admin\PackingFormController@pdfAccounting');
                 Route::resource('/PackingForm', Admin\PackingFormController::class)->except(['show']);
 
+                // ===== Credit Note / Debit Note =====
+                Route::post('/CreditNote/Lists', 'Admin\CreditNoteController@lists');
+                Route::get('/CreditNote/CustomerInvoices', 'Admin\CreditNoteController@customerInvoices');
+                Route::get('/CreditNote/InvoiceProducts', 'Admin\CreditNoteController@invoiceProducts');
+                Route::get('/CreditNote/SuggestDocNo', 'Admin\CreditNoteController@suggestDocNoAjax');
+                Route::get('/CreditNote/{id}/pdf', 'Admin\CreditNoteController@pdf');
+                Route::resource('/CreditNote', Admin\CreditNoteController::class)->except(['show']);
+
                 Route::post('/AccountCredit/Lists', 'Admin\AccountCreditController@lists');
     Route::get('/AccountCredit/ExportPDF', 'Admin\AccountCreditController@export_pdf');
     Route::get('/AccountCredit/ExportExcel', 'Admin\AccountCreditController@export_excel');
