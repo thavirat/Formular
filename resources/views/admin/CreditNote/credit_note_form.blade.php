@@ -144,6 +144,12 @@ $(function(){
     var invoicesCache = [];   // PI ของลูกค้าที่เลือก
     var existing = @json($isEdit ? $creditNote->items : []);
 
+    // เปิด select2 (ค้นหาได้) สำหรับลูกค้า + ผู้อนุมัติ
+    try {
+        $('#customer_id').select2({ width: '100%', placeholder: '— เลือกลูกค้า —' });
+        $('#authorized_by').select2({ width: '100%', placeholder: '—' });
+    } catch (e) {}
+
     /* ---------- เลข doc_no ตามชนิด ---------- */
     function refreshDocNo(){
         @if(!$isEdit)
