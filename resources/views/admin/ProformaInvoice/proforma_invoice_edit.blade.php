@@ -457,10 +457,50 @@ $(document).ready(function() {
         }
     }
 
+    function fillRowFromItem(data, row) {
+        row.find('.part-no-input').val(data.code);
+        row.find('.product-id').val(data.id);
+        row.find('.drawing').val(data.drawing);
+        row.find('.customer_code').val(data.cus_code);
+        row.find('.description').val(data.description);
+        var price = parseFloat(data.price) || 0;
+        row.find('.unit_price').val(price.toFixed(2));
+        $('#customer_id, #currency_id').attr('readonly', true).css('pointer-events', 'none');
+    }
+
+    // Drawing ตรงกันหลายรายการ → ให้เลือก Part (FML-36)
+    function promptSelectPart(items, row, currentClass) {
+        var html = '<div class="list-group text-left">';
+        items.forEach(function(it, i) {
+            html += '<button type="button" class="list-group-item list-group-item-action part-pick" data-idx="' + i + '">'
+                + '<b>' + (it.code || '') + '</b>'
+                + (it.cus_code ? ' <span class="text-muted">(' + it.cus_code + ')</span>' : '')
+                + '<br><small class="text-muted">' + (it.description || '') + '</small>'
+                + '</button>';
+        });
+        html += '</div>';
+        Swal.fire({
+            title: 'เลือก Part (Drawing ตรงกันหลายรายการ)',
+            html: html, showConfirmButton: false, showCloseButton: true, width: 600
+        });
+        $(document).off('click.partpick').on('click.partpick', '.part-pick', function() {
+            var idx = parseInt($(this).data('idx'));
+            fillRowFromItem(items[idx], row);
+            calculateRow(row);
+            Swal.close();
+            focusNextInput(row, currentClass);
+        });
+    }
+
     function searchProduct(input, row) {
         var query = input.val().trim();
         var isPartNo = input.hasClass('part-no-input');
         var currentClass = isPartNo ? 'part-no-input' : 'drawing';
+
+        // ค้นจากช่อง Drawing แต่ Part No. มีข้อมูลแล้ว → ไม่ต้องค้น (FML-35)
+        if (!isPartNo && row.find('.part-no-input').val().trim() !== '') {
+            focusNextInput(row, currentClass); return;
+        }
 
         if (isPartNo && query.length < 3) {
             focusNextInput(row, currentClass); return;
@@ -493,19 +533,13 @@ $(document).ready(function() {
             var items = res.items ? res.items : res;
 
             if (items && items.length > 0) {
-                var data = items[0];
+                // ค้นจาก Drawing แล้วเจอหลายรายการ → ให้เลือก Part (FML-36)
+                if (!isPartNo && items.length > 1) {
+                    promptSelectPart(items, row, currentClass);
+                    return;
+                }
 
-                row.find('.part-no-input').val(data.code);
-                row.find('.product-id').val(data.id);
-                row.find('.drawing').val(data.drawing);
-                row.find('.customer_code').val(data.cus_code);
-                row.find('.description').val(data.description);
-
-                var price = parseFloat(data.price) || 0;
-                row.find('.unit_price').val(price.toFixed(2));
-
-                $('#customer_id, #currency_id').attr('readonly', true).css('pointer-events', 'none');
-
+                fillRowFromItem(items[0], row);
                 calculateRow(row);
                 focusNextInput(row, currentClass);
             } else {
