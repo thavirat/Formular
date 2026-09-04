@@ -217,7 +217,10 @@
                                             <td><input type="number" class="form-control qty" name="qty[]" value="{{ $item->qty }}" step="any"></td>
                                             <td><input type="number" class="form-control unit_price text-right" name="unit_price[]" value="{{ $item->price_per_item }}" step="any"></td>
                                             <td><input type="text" class="form-control amount text-right" name="amount[]" value="{{ $item->total_price }}" readonly tabindex="-1"></td>
-                                            <td class="text-center align-middle"><button type="button" class="btn btn-outline-danger btn-sm removeRow" tabindex="-1"><i class="fa fa-trash"></i></button></td>
+                                            <td class="text-center align-middle text-nowrap">
+                                                <button type="button" class="btn btn-outline-success btn-sm insertRow" tabindex="-1" title="แทรกแถวด้านล่าง"><i class="fa fa-plus"></i></button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm removeRow" tabindex="-1"><i class="fa fa-trash"></i></button>
+                                            </td>
                                         </tr>
                                         @endforeach
                                     </tbody>
@@ -340,8 +343,8 @@ $(document).ready(function() {
         }
     });
 
-    $('#addRow').click(function() {
-        var newRow = `
+    function productRowHtml() {
+        return `
             <tr>
                 <td class="text-center align-middle">
                     <div class="d-flex align-items-center justify-content-center">
@@ -359,13 +362,25 @@ $(document).ready(function() {
                 <td><input type="number" class="form-control qty" name="qty[]" value="1" step="any"></td>
                 <td><input type="number" class="form-control unit_price text-right" name="unit_price[]" value="0.00" step="any" min="0"></td>
                 <td><input type="text" class="form-control amount text-right" name="amount[]" readonly tabindex="-1"></td>
-                <td class="text-center align-middle">
+                <td class="text-center align-middle text-nowrap">
+                    <button type="button" class="btn btn-outline-success btn-sm insertRow" tabindex="-1" title="แทรกแถวด้านล่าง"><i class="fa fa-plus"></i></button>
                     <button type="button" class="btn btn-outline-danger btn-sm removeRow" tabindex="-1"><i class="fa fa-trash"></i></button>
                 </td>
             </tr>`;
-        $('#productTable tbody').append(newRow);
+    }
+
+    $('#addRow').click(function() {
+        $('#productTable tbody').append(productRowHtml());
         updateSequence();
         $('#productTable tbody tr:last').find('.part-no-input').focus();
+    });
+
+    // แทรกแถวใหม่ต่อจากแถวที่กดปุ่ม (แทรกกลางตารางได้)
+    $('body').on('click', '.insertRow', function() {
+        var $row = $(this).closest('tr');
+        $(productRowHtml()).insertAfter($row);
+        updateSequence();
+        $row.next('tr').find('.part-no-input').focus();
     });
 
     $('body').on('click', '.removeRow', function() {
