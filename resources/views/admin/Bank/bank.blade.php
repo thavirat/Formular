@@ -108,6 +108,13 @@
                                 </div>
                             </div>
 
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="add_swift_code">Swift Code</label>
+                                    <input type="text" name="swift_code" id="add_swift_code" class="form-control" >
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -147,6 +154,13 @@
                                 <div class="form-group">
                                     <label for="edit_name_en">Name ENG</label>
                                     <input type="text" name="name_en" id="edit_name_en" class="form-control " >
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="edit_swift_code">Swift Code</label>
+                                    <input type="text" name="swift_code" id="edit_swift_code" class="form-control" >
                                 </div>
                             </div>
 
@@ -291,7 +305,9 @@
             dataType: 'json',
         }).done(function( res ) {
             resetButton(btn);
-                                    $("#edit_name_th").val(res.content.name_th);                                                $("#edit_name_en").val(res.content.name_en);
+            $("#edit_name_th").val(res.content.name_th);
+            $("#edit_name_en").val(res.content.name_en);
+            $("#edit_swift_code").val(res.content.swift_code);
             $('#ModalEdit').modal('show');
         }).fail(function(res){
             ajaxFail(res , "");

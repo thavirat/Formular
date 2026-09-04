@@ -69,6 +69,7 @@ class BankController extends AdminController
                 $Bank = new Bank;
                 $Bank->name_th = $name_th;
                 $Bank->name_en = $name_en;
+                $Bank->swift_code = $request->input('swift_code');
                 $Bank->save();
                 DB::commit();
                 $return['status'] = 1;
@@ -141,6 +142,7 @@ class BankController extends AdminController
                 $Bank = Bank::find($id);
                 $Bank->name_th = $name_th;
                 $Bank->name_en = $name_en;
+                $Bank->swift_code = $request->input('swift_code');
                 $Bank->save();
                 DB::commit();
                 $return['status'] = 1;
