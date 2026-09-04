@@ -84,6 +84,8 @@ class CustomerController extends AdminController
                 $Customer->contact_name = $contact_name;
                 $Customer->company_name = $company_name;
                 $Customer->address = $address;
+                $Customer->country = $request->input('country');
+                $Customer->region = $request->input('region');
                 $Customer->tax_id = $tax_id;
                 $Customer->phone = $phone;
                 $Customer->mobile = $mobile;
@@ -170,6 +172,8 @@ class CustomerController extends AdminController
                 $Customer->contact_name = $contact_name;
                 $Customer->company_name = $company_name;
                 $Customer->address = $address;
+                $Customer->country = $request->input('country');
+                $Customer->region = $request->input('region');
                 $Customer->tax_id = $tax_id;
                 $Customer->phone = $phone;
                 $Customer->mobile = $mobile;

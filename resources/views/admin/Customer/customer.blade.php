@@ -131,7 +131,25 @@
                                 <label for="add_address">Address</label>
                                 <textarea name="address" id="add_address" rows="5" class="form-control " ></textarea>
                             </div>
-                        </div>                            <div class="col-md-6 col-sm-12">
+                        </div>
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="add_country">Country (ประเทศ)</label>
+                                    <input type="text" name="country" id="add_country" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="add_region">Region (ภูมิภาค)</label>
+                                    <select name="region" id="add_region" class="form-control">
+                                        <option value="">— ไม่ระบุ —</option>
+                                        <option value="ASIA">ASIA</option>
+                                        <option value="MIDDLEAST">MIDDLE EAST</option>
+                                        <option value="EUROPE">EUROPE</option>
+                                        <option value="CHAMP">CHAMP</option>
+                                        <option value="OTHER">OTHER</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-sm-12">
                                 <div class="form-group">
                                     <label for="add_tax_id">Tax ID</label>
                                     <input type="text" name="tax_id" id="add_tax_id" class="form-control " >
@@ -226,7 +244,25 @@
                                 <label for="edit_address">Address</label>
                                 <textarea name="address" id="edit_address" rows="5" class="form-control " ></textarea>
                             </div>
-                        </div>                            <div class="col-md-6 col-sm-12">
+                        </div>
+                            <div class="col-md-6 col-sm-12">
+                                <div class="form-group">
+                                    <label for="edit_country">Country (ประเทศ)</label>
+                                    <input type="text" name="country" id="edit_country" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_region">Region (ภูมิภาค)</label>
+                                    <select name="region" id="edit_region" class="form-control">
+                                        <option value="">— ไม่ระบุ —</option>
+                                        <option value="ASIA">ASIA</option>
+                                        <option value="MIDDLEAST">MIDDLE EAST</option>
+                                        <option value="EUROPE">EUROPE</option>
+                                        <option value="CHAMP">CHAMP</option>
+                                        <option value="OTHER">OTHER</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-sm-12">
                                 <div class="form-group">
                                     <label for="edit_tax_id">Tax ID</label>
                                     <input type="text" name="tax_id" id="edit_tax_id" class="form-control " >
@@ -403,6 +439,8 @@
             $("#edit_contact_name").val(res.content.contact_name);
             $("#edit_company_name").val(res.content.company_name);
             $("#edit_address").val(res.content.address);
+            $("#edit_country").val(res.content.country);
+            $("#edit_region").val(res.content.region);
             $("#edit_tax_id").val(res.content.tax_id);
             $("#edit_phone").val(res.content.phone);
             $("#edit_mobile").val(res.content.mobile);
