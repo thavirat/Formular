@@ -46,6 +46,11 @@
 
     // วิธีการขนส่งทั้งหมด (ไว้แสดงเป็น checkbox + ติ๊กตัวที่เลือก)
     $shipmentMethods = \App\Models\ShipmentMethod::where('active', 'T')->orderBy('seq')->get();
+
+    // SHIPPING MARKS: ตัดช่องว่างนำหน้าแต่ละบรรทัดให้ชิดซ้าย
+    $shipMark = collect(preg_split('/\r\n|\r|\n/', (string) $pi->ship_remark))
+        ->map(fn ($l) => ltrim($l))
+        ->implode("\n");
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -134,8 +139,8 @@
             </td>
             <td width="33%">
                 <span class="bold">SHIPPING MARKS</span><br>
-                {{-- ป้ายมาร์ค: ใช้ ship_remark (คีย์ได้หลายบรรทัด) --}}
-                {!! nl2br(e($pi->ship_remark)) !!}
+                {{-- ป้ายมาร์ค: ใช้ ship_remark (คีย์ได้หลายบรรทัด) ตัดช่องว่างนำหน้าให้ชิดซ้าย --}}
+                {!! nl2br(e($shipMark)) !!}
             </td>
             <td width="25%">
                 PAGE&nbsp;&nbsp;{PAGENO}/{nbpg}<br><br>

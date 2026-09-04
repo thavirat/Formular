@@ -17,6 +17,11 @@
     // ผู้ขายจริง: ใช้ sale_by ถ้าไม่มี fallback เป็นคนสร้าง — แหล่งเดียวกับหน้า pdfFactory (firstname + lastname)
     $seller = $pi->saleBy ?: $pi->createdBy;
     $saleName = trim(optional($seller)->firstname . ' ' . optional($seller)->lastname);
+
+    // SHIPPING MARKS: ตัดช่องว่างนำหน้าแต่ละบรรทัดให้ชิดซ้าย
+    $shipMark = collect(preg_split('/\r\n|\r|\n/', (string) $pi->ship_remark))
+        ->map(fn ($l) => ltrim($l))
+        ->implode("\n");
 @endphp
 <!DOCTYPE html>
 <html lang="th">
@@ -41,12 +46,16 @@
         .box { width: 100%; border-collapse: collapse; }
         .box td { border: 1px solid #00008b; padding: 3px 6px; vertical-align: top; font-size: 11px; }
 
-        .items { width: 100%; border-collapse: collapse; font-size: 10.5px; }
-        .items th, .items td { border: 1px solid #000; padding: 2px 4px; }
+        .items { width: 100%; border-collapse: collapse; font-size: 10.5px; border: 1px solid #000; }
+        /* หัวตาราง: เส้นครบทุกด้าน (มีเส้นใต้หัว) */
+        .items th { border: 1px solid #000; padding: 2px 4px; }
+        /* เนื้อหา: เส้นแนวตั้งเฉพาะคอลัมน์ ไม่มีเส้นนอนระหว่างแถว */
+        .items td { border-left: 1px solid #000; border-right: 1px solid #000; padding: 2px 4px; }
         .items thead th { text-align: center; vertical-align: middle; font-weight: bold; }
 
-        .remark-list { margin: 6px 0 0 0; padding-left: 16px; font-size: 11px; }
-        .remark-list li { margin-bottom: 2px; }
+        /* หมายเหตุ: ไม่มีเลขรันอัตโนมัติ (ลูกค้าคีย์เลขเอง) */
+        .remark-list { margin: 6px 0 0 0; padding: 0; font-size: 11px; list-style: none; }
+        .remark-list li { margin-bottom: 2px; list-style: none; }
         .sign td { padding-top: 18px; font-size: 11px; }
     </style>
 </head>
@@ -101,7 +110,7 @@
         <tr>
             <td rowspan="5" valign="top">
                 <span class="bold">SHIPPING MARKS</span><br>
-                &nbsp;&nbsp;{!! nl2br(e($pi->ship_remark)) !!}
+                {!! nl2br(e($shipMark)) !!}
             </td>
             <td><span class="bold">PAYMENT BY :</span> {{ optional($pi->creditPayment)->name }}</td>
         </tr>
@@ -144,11 +153,11 @@
 
 {{-- ===================== หมายเหตุการผลิต + ลงนาม (ให้อยู่หน้าเดียวกัน) ===================== --}}
 <div style="page-break-inside: avoid;">
-<ol class="remark-list">
+<ul class="remark-list">
     @foreach($pi->remarks as $rm)
         <li>{{ $rm->remark }}</li>
     @endforeach
-</ol>
+</ul>
 
 {{-- ===================== วันที่พิมพ์ + ลงนาม ===================== --}}
 <table width="100%" style="margin-top:10px;">
