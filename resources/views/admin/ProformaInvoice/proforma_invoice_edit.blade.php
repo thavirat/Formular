@@ -279,7 +279,8 @@
                                                 </tr>
                                                 @endforeach
                                             </tbody>
-                                            <tfoot><tr><td colspan="3"><button type="button" class="btn btn-outline-primary btn-sm" id="addRemark"><i class="fa fa-plus"></i> {{__('Add Remark')}}</button></td></tr></tfoot>
+                                            <tfoot><tr><td colspan="3"><button type="button" class="btn btn-outline-primary btn-sm" id="addRemark"><i class="fa fa-plus"></i> {{__('Add Remark')}}</button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm ml-1" id="loadCustomerRemarks" title="แทนที่ด้วยหมายเหตุจาก PI ล่าสุดของลูกค้า"><i class="fa fa-history"></i> โหลด remark ล่าสุดของลูกค้า</button></td></tr></tfoot>
                                         </table>
                                     </div>
                                 </div>
@@ -573,6 +574,32 @@ $(document).ready(function() {
     $('#addRemark').on('click', function() { $('#remarkTable tbody').append(remarkRow()); });
     $('body').on('click', '.removeRemark', function() { $(this).closest('tr').remove(); });
     if ($('#remarkTable tbody').sortable) { $('#remarkTable tbody').sortable({ handle: '.remark-handle', placeholder: 'ui-state-highlight' }); }
+
+    // โหลด remark จาก PI ล่าสุดของลูกค้ามาแทนที่ (ยืนยันก่อน เพราะทับของเดิม)
+    $('#loadCustomerRemarks').on('click', function() {
+        var customer_id = $('#customer_id').val();
+        if (!customer_id) { return; }
+        $.get(url_gb + "/admin/ProformaInvoice/CustomerRemarks/" + customer_id).done(function(res) {
+            if (!(res.status == 1 && res.remarks && res.remarks.length)) {
+                Swal.fire({ icon: 'info', title: 'ไม่พบหมายเหตุ', text: 'ลูกค้ารายนี้ยังไม่มีหมายเหตุจาก PI ก่อนหน้า' });
+                return;
+            }
+            Swal.fire({
+                icon: 'question', title: 'แทนที่หมายเหตุ?',
+                text: 'จะแทนที่หมายเหตุปัจจุบันด้วยหมายเหตุจาก PI ล่าสุด (' + (res.doc_no || '') + ') จำนวน ' + res.remarks.length + ' รายการ',
+                showCancelButton: true, confirmButtonText: 'แทนที่', cancelButtonText: 'ยกเลิก'
+            }).then(function(r) {
+                if (!r.value) { return; }
+                var $body = $('#remarkTable tbody');
+                $body.empty();
+                res.remarks.forEach(function(txt) {
+                    var $x = $(remarkRow());
+                    $x.find('input[name="remark_text[]"]').val(txt);
+                    $body.append($x);
+                });
+            });
+        });
+    });
 
     if ($('#customer_id').val()) {
         $('#customer_id, #currency_id').attr('readonly', true).css('pointer-events', 'none');

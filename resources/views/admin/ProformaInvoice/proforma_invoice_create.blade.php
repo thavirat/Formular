@@ -443,8 +443,25 @@
                             $('#fax_no').val(data.fax_no);
                         }
                     });
+                    loadCustomerRemarks(customer_id);
                 }
             });
+
+            // ดึง remark ที่เคยคีย์ให้ลูกค้ารายนี้ (จาก PI ล่าสุด) มาเติมอัตโนมัติ
+            function loadCustomerRemarks(customer_id) {
+                $.get(url_gb + "/admin/ProformaInvoice/CustomerRemarks/" + customer_id)
+                    .done(function(res) {
+                        if (res.status == 1 && res.remarks && res.remarks.length) {
+                            var $body = $('#remarkTable tbody');
+                            $body.empty();
+                            res.remarks.forEach(function(txt) {
+                                var $r = $(remarkRow());
+                                $r.find('input[name="remark_text[]"]').val(txt);
+                                $body.append($r);
+                            });
+                        }
+                    });
+            }
 
             $('#currency_id').on('change', function(){
                 $('.show_currency').text($(this).find('option:selected').text());

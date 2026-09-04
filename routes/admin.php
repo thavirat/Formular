@@ -193,6 +193,7 @@ Route::middleware('authAdmin:admin')->group(function () {
     Route::get('/ProformaInvoice/OutstandingReport', 'Admin\ProformaInvoiceController@outstandingReport');
     Route::post('/ProformaInvoice/OutstandingReport/Lists', 'Admin\ProformaInvoiceController@outstandingReportLists');
     Route::get('/ProformaInvoice/SuggestDocNo', 'Admin\ProformaInvoiceController@suggestDocNo');
+    Route::get('/ProformaInvoice/CustomerRemarks/{customer_id}', 'Admin\ProformaInvoiceController@customerRemarks');
     Route::resource('/ProformaInvoice', Admin\ProformaInvoiceController::class);
 
     Route::get('/FactoryPayment', 'Admin\FactoryPaymentController@index');

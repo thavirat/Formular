@@ -189,6 +189,34 @@ class ProformaInvoiceController extends AdminController
     }
 
     /**
+     * ดึงหมายเหตุ (remark) ที่เคยคีย์ให้ลูกค้ารายนี้จาก PI ล่าสุด
+     * ใช้ auto-fill ตาราง remark ในหน้า create/edit เมื่อเลือกลูกค้า
+     */
+    public function customerRemarks(Request $request, $customer_id)
+    {
+        $lastPi = ProformaInvoice::where('customer_id', $customer_id)
+            ->orderByDesc('doc_date')
+            ->orderByDesc('id')
+            ->first();
+
+        $remarks = [];
+        if ($lastPi) {
+            $remarks = ProformaInvoiceRemark::where('pi_id', $lastPi->id)
+                ->orderBy('seq')
+                ->pluck('remark')
+                ->filter(fn ($r) => trim((string) $r) !== '')
+                ->values()
+                ->all();
+        }
+
+        return response()->json([
+            'status'  => 1,
+            'doc_no'  => $lastPi->doc_no ?? null,
+            'remarks' => $remarks,
+        ]);
+    }
+
+    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
