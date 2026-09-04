@@ -260,6 +260,12 @@
             @endif
         </tbody>
         <tfoot>
+            @php $sumQty = $Quotation->products->sum('qty'); @endphp
+            <tr style="background-color: #f2f2f2;">
+                <td colspan="4" class="text-right text-bold">Total Qty</td>
+                <td class="text-right text-bold">{{ number_format($sumQty , 0) }}</td>
+                <td colspan="2"></td>
+            </tr>
             <tr style="background-color: #eee;">
                 <td colspan="4" style="vertical-align: middle; border: none; padding-top: 5px;">
                     <span class="text-bold">Total in Words:</span>

@@ -146,7 +146,10 @@
                                     <tbody>
                                         @foreach($Quotation->products as $item)
                                         <tr>
-                                            <td class="text-center align-middle">{{ $loop->iteration }}</td>
+                                            <td class="text-center align-middle text-nowrap">
+                                                <i class="fas fa-grip-vertical cursor-move text-muted mr-1" title="ลากเพื่อจัดลำดับ" style="cursor:move"></i>
+                                                <span class="row-seq">{{ $loop->iteration }}</span>
+                                            </td>
                                             <td>
                                                 <input type="text" class="form-control part-no-input" name="part_no[]" value="{{ $item->part_no }}" placeholder="Type Part No & Enter" autocomplete="off">
                                                 <input type="hidden" name="product[]" class="product-id" value="{{ $item->product_id }}">
@@ -198,8 +201,17 @@
 @endsection
 
 @push('scripts')
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<style>.ui-state-highlight{height:38px;background:#fff3cd}</style>
 <script type="text/javascript">
 $(document).ready(function() {
+
+    // จัดลำดับรายการใหม่ (ITM) — ใช้ร่วมทั้งตอนลาก/ลบ/เพิ่ม
+    function renumberRows() {
+        $('#productTable tbody tr').each(function(index){
+            $(this).find('.row-seq').text(index + 1);
+        });
+    }
 
     // ทำให้ dropdown ลูกค้าค้นหาได้ (ค้นด้วยรหัส/ชื่อบริษัท/ชื่อผู้ติดต่อ)
     $('#customer_id').select2({
@@ -235,10 +247,12 @@ $(document).ready(function() {
 
     // --- 2. Table Rows Management ---
     $('#addRow').click(function() {
-        var rowCount = $('#productTable tbody tr').length + 1;
         var newRow = `
             <tr>
-                <td class="text-center align-middle">${rowCount}</td>
+                <td class="text-center align-middle text-nowrap">
+                    <i class="fas fa-grip-vertical cursor-move text-muted mr-1" title="ลากเพื่อจัดลำดับ" style="cursor:move"></i>
+                    <span class="row-seq"></span>
+                </td>
                 <td>
                     <input type="text" class="form-control part-no-input" name="part_no[]" placeholder="Type Part No & Enter" autocomplete="off">
                     <input type="hidden" name="product[]" class="product-id">
@@ -254,15 +268,20 @@ $(document).ready(function() {
                 </td>
             </tr>`;
         $('#productTable tbody').append(newRow);
-
+        renumberRows();
         $('#productTable tbody tr:last').find('.part-no-input').focus();
+    });
+
+    // drag & drop จัดลำดับรายการสินค้า (สะท้อนไปใน PDF ตามลำดับที่บันทึก)
+    $('#productTable tbody').sortable({
+        handle: '.cursor-move',
+        placeholder: 'ui-state-highlight',
+        stop: function(){ renumberRows(); }
     });
 
     $('body').on('click', '.removeRow', function(){
         $(this).closest('tr').remove();
-        $('#productTable tbody tr').each(function(index){
-            $(this).find('td:first').text(index + 1);
-        });
+        renumberRows();
         calculateGrandTotal();
     });
 
