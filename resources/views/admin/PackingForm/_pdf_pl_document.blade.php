@@ -264,18 +264,21 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 9px;
+            border: 1px solid #000;   /* กรอบนอกตาราง */
         }
-        .items th,
-        .items td {
+        /* หัวตาราง: เส้นครบทุกด้าน (มีเส้นใต้หัว) */
+        .items th {
             border: 1px solid #000;
             vertical-align: top;
-        }
-        .items th {
             padding: 4px 3px;
             text-align: center;
             font-weight: bold;
         }
+        /* เนื้อหา: เส้นแนวตั้งเฉพาะคอลัมน์ ไม่มีเส้นนอนระหว่างแถว */
         .items td {
+            border-left: 1px solid #000;
+            border-right: 1px solid #000;
+            vertical-align: top;
             padding: 3px 3px;
         }
         /* ตารางซ้อนในเซลล์ (เช่น UNIT PRICE) ไม่ต้องมีเส้น */
@@ -439,10 +442,9 @@
             <td style="vertical-align:top; font-weight:bold; {{ $isAccounting ? 'border-right:none;' : '' }}">
                 {!! nl2br(e(trim((string) $packingForm->marks))) !!}
                 @if(count($faList))<br>{{ implode(' , ', $faList) }}@endif
-                @if($isAccounting && $totalCartons)<br>(TOTAL NO. OF PACKAGES : {{ number_format($totalCartons) }} CARTONS)@endif
             </td>
             <td colspan="{{ $isAccounting ? 4 : 6 }}" style="vertical-align:bottom; {{ $isAccounting ? 'border-left:none;' : '' }}">
-                @if(!$isAccounting && $totalCartons)(TOTAL NO. OF PACKAGES : {{ number_format($totalCartons) }} CARTONS)@endif
+                @if($totalCartons)(TOTAL NO. OF PACKAGES : {{ number_format($totalCartons) }} CARTONS)@endif
             </td>
         </tr>
         @endif
@@ -542,7 +544,7 @@
     <tr><td class="text-bold">COUNTRY OF ORIGIN : THAILAND</td></tr>
     <tr><td class="text-bold">NET WEIGHT : {{ $fmt($sumWeightNw) }} KGS.</td></tr>
     <tr><td class="text-bold">GROSS WEIGHT : {{ $fmt($sumWeightGw) }} KGS.</td></tr>
-    <tr><td class="text-bold" style="padding-top:4px;">TOTAL : EX: {{ \App\Help::numberToWords($grandTotal, ($curSymbol === 'USD' ? 'US DOLLARS' : strtoupper($curSymbol ?: 'DOLLARS'))) }}</td></tr>
+    <tr><td class="text-bold" style="padding-top:4px;">TOTAL : {{ \App\Help::numberToWords($grandTotal, ($curSymbol === 'USD' ? 'US DOLLARS' : strtoupper($curSymbol ?: 'DOLLARS'))) }}</td></tr>
 </table>
 @else
 <table class="totals">
