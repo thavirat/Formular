@@ -250,6 +250,12 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::get('/CreditNote/{id}/pdf', 'Admin\CreditNoteController@pdf');
                 Route::resource('/CreditNote', Admin\CreditNoteController::class)->except(['show']);
 
+                // ===== รายงาน (Reports) =====
+                Route::get('/Report', 'Admin\ReportController@index');
+                Route::get('/Report/ExportOrder', 'Admin\ReportController@exportOrder');
+                Route::get('/Report/ExportOrder/Data', 'Admin\ReportController@exportOrderData');
+                Route::get('/Report/ExportOrder/Excel', 'Admin\ReportController@exportOrderExcel');
+
                 // ===== ลูกหนี้การค้า (AR) =====
                 Route::get('/AccountReceivable', 'Admin\AccountReceivableController@index');
                 Route::post('/AccountReceivable/Lists', 'Admin\AccountReceivableController@lists');
