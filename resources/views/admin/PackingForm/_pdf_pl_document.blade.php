@@ -274,12 +274,16 @@
             text-align: center;
             font-weight: bold;
         }
-        /* เนื้อหา: เส้นแนวตั้งเฉพาะคอลัมน์ ไม่มีเส้นนอนระหว่างแถว */
+        /* เนื้อหา: เส้นครบทุกด้าน (หัว/ท้าย/หัวกลุ่ม/ยอดรวม คงเส้นไว้) */
         .items td {
-            border-left: 1px solid #000;
-            border-right: 1px solid #000;
+            border: 1px solid #000;
             vertical-align: top;
             padding: 3px 3px;
+        }
+        /* เฉพาะแถว "รายการสินค้า": ตัดเส้นนอนระหว่างแถวออก (คงเส้นตั้ง) */
+        .items tr.item-row td {
+            border-top: none;
+            border-bottom: none;
         }
         /* ตารางซ้อนในเซลล์ (เช่น UNIT PRICE) ไม่ต้องมีเส้น */
         .items td table td,
@@ -458,7 +462,7 @@
             @endif
             @foreach($catLines as $line)
             @php($price = $linePricing($line)) @php($k++)
-            <tr>
+            <tr class="item-row">
                 <td align="center">{{ $isAccounting ? $k : $markNo($line) }}</td>
                 <td>
                     @if($isAccounting)
