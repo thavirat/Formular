@@ -1,3 +1,9 @@
+@php
+    // Cust PO No. column ให้แสดงเลข FA (เลข PI เปลี่ยนตัวหน้า PI -> FA)
+    $faNo = \Illuminate\Support\Str::startsWith($ProformaInvoice->doc_no ?? '', 'PI')
+        ? 'FA' . substr($ProformaInvoice->doc_no, 2)
+        : ($ProformaInvoice->doc_no ?? '-');
+@endphp
 <table>
 
     <tr>
@@ -89,13 +95,13 @@
     </tr>
     @foreach($ProformaInvoice->products as $product)
     <tr>
-        <td>{{ $ProformaInvoice->doc_no ?? '-' }}</td>
+        <td>{{ $faNo }}</td>
         <td>{{ $ProformaInvoice->createdBy->firstname ?? '-' }} {{ $ProformaInvoice->createdBy->firstname ?? '-' }}</td>
         <td>{{ $ProformaInvoice->ship_date ?? '-' }}</td>
         <td>{{ $ProformaInvoice->customer_po ?? '-' }}</td>
         <td>{{ $product->part_no }}</td>
         <td>{{ $product->qty }}</td>
-        <td>{{ $product->price_per_item }}</td>
+        <td>{{ $product->product_cost }}</td>
         <td>{{ $product->customer_part }}</td>
         <td>{{ $product->detail_eng }}</td>
         <td>{{ $product->unit_name }}</td>
