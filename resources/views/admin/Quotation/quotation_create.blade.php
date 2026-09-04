@@ -178,7 +178,6 @@
 @endsection
 
 @push('scripts')
-<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 <style>.ui-state-highlight{height:38px;background:#fff3cd}</style>
 <script type="text/javascript">
 $(document).ready(function() {
