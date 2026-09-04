@@ -156,10 +156,6 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label for="cno">C/NO.</label>
-                                    <input type="text" name="cno" id="cno" class="form-control" value="{{ $ProformaInvoice->cno }}" placeholder="เช่น 1-UP">
-                                </div>
-                                <div class="form-group">
                                     <label for="customer_po">{{__('Customer PO')}}</label>
                                     <input type="text" name="customer_po" id="customer_po" class="form-control" value="{{ $ProformaInvoice->customer_po }}">
                                 </div>

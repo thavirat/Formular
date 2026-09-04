@@ -153,11 +153,6 @@
                                         <input type="text" name="ship_to_code" id="ship_to_code" class="form-control">
                                     </div>
                                     <div class="form-group">
-                                        <label for="cno">C/NO.</label>
-                                        <input type="text" name="cno" id="cno" class="form-control"
-                                            value="1-UP" placeholder="เช่น 1-UP">
-                                    </div>
-                                    <div class="form-group">
                                         <label for="ship_remark">{{ __('Ship Remark') }} (Shipping Marks)</label>
                                         <textarea name="ship_remark" id="ship_remark" class="form-control" rows="3" placeholder="พิมพ์ได้หลายบรรทัด"></textarea>
                                     </div>
