@@ -235,7 +235,7 @@
                 <td class="text-center">{{ $loop->iteration }}</td>
                 <td>
                     <div class="text-bold">{{ $product->part_no }}</div>
-                    <div style="font-size: 8px; color: #666;">Cus: {{ $product->cus_code }}</div>
+                    <div style="color: #666;">Cus: {{ $product->cus_code }}</div>
                 </td>
                 <td class="text-center">{{ $product->drawing ?: '-' }}</td>
                 <td>{{ $product->detail_eng }}</td>
