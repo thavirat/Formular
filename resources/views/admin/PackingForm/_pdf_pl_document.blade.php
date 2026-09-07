@@ -535,7 +535,11 @@
         @endforeach
         @if(!$isAccounting)
         <tr class="row-total">
-            <td colspan="5" class="text-bold">TOTAL : {{ number_format($totalCartons) }} CARTONS</td>
+            <td></td>
+            <td class="text-bold">TOTAL : {{ number_format($totalCartons) }} CARTONS</td>
+            <td class="col-qty-num"></td>
+            <td class="col-qty-uom"></td>
+            <td></td>
             <td class="text-right">{{ $fmt($sumDetailNw) }}</td>
             <td class="text-right">{{ $fmt($sumDetailGw) }}</td>
         </tr>
