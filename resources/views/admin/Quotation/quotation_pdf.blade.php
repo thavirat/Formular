@@ -235,7 +235,9 @@
                 <td class="text-center">{{ $loop->iteration }}</td>
                 <td>
                     <div class="text-bold">{{ $product->part_no }}</div>
+                    @if(trim((string) $product->cus_code) !== '')
                     <div style="color: #666;">Cus: {{ $product->cus_code }}</div>
+                    @endif
                 </td>
                 <td class="text-center">{{ $product->drawing ?: '-' }}</td>
                 <td>{{ $product->detail_eng }}</td>
