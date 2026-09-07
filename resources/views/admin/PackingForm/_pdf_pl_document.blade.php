@@ -296,8 +296,11 @@
         /* คอลัมน์ย่อย QUANTITY (จำนวน | หน่วย) รวมเป็นช่องเดียว ไม่มีเส้นแบ่งกลาง */
         .items .col-qty-num { border-right: none; }
         .items .col-qty-uom { border-left: none; }
+        /* แถวสรุป (***** TOTAL *****): ไม่มีเส้นบน/ล่าง ไหลต่อจากรายการสินค้า (เหลือเส้นปิดแถวสุดท้ายเส้นเดียว) */
         .items tfoot td {
             font-weight: bold;
+            border-top: none;
+            border-bottom: none;
         }
         .items .mark-row td {
             border-bottom: none;
@@ -510,18 +513,18 @@
     </tbody>
     @if(count($qtyByUom) > 0)
     <tfoot>
-        {{-- สรุปจำนวนแยกตามหน่วย: 1 แถวต่อ 1 หน่วย (Invoice = คอลัมน์ QUANTITY, Packing List = คอลัมน์ TOTAL QTY) --}}
+        {{-- สรุปจำนวนแยกตามหน่วย: ไม่มีเส้นบน/ล่าง (Invoice = คอลัมน์ QUANTITY, Packing List = คอลัมน์ TOTAL QTY) --}}
         @foreach($qtyByUom as $uom => $total)
         <tr class="row-qty-summary">
             @if($isAccounting)
-            <td colspan="2" class="text-center text-bold" @if($loop->first) style="border-top:1px solid #000;" @endif>***** TOTAL *****</td>
-            <td class="text-center text-bold" @if($loop->first) style="border-top:1px solid #000;" @endif>{{ $fmt($total) }} {{ $uom }}</td>
-            <td colspan="2" @if($loop->first) style="border-top:1px solid #000;" @endif></td>
+            <td colspan="2" class="text-center text-bold">***** TOTAL *****</td>
+            <td class="text-center text-bold">{{ $fmt($total) }} {{ $uom }}</td>
+            <td colspan="2"></td>
             @else
-            <td colspan="2" class="text-center text-bold" @if($loop->first) style="border-top:1px solid #000;" @endif>***** TOTAL *****</td>
-            <td colspan="2" @if($loop->first) style="border-top:1px solid #000;" @endif></td>
-            <td class="text-right text-bold" @if($loop->first) style="border-top:1px solid #000;" @endif>{{ $fmt($total) }} {{ $uom }}</td>
-            <td colspan="2" @if($loop->first) style="border-top:1px solid #000;" @endif></td>
+            <td colspan="2" class="text-center text-bold">***** TOTAL *****</td>
+            <td colspan="2"></td>
+            <td class="text-right text-bold">{{ $fmt($total) }} {{ $uom }}</td>
+            <td colspan="2"></td>
             @endif
         </tr>
         @endforeach
@@ -532,6 +535,8 @@
             <td class="text-right">{{ $fmt($sumDetailGw) }}</td>
         </tr>
         @endif
+        {{-- เส้นปิดแถวสุดท้ายเส้นเดียว --}}
+        <tr><td colspan="{{ $isAccounting ? 5 : 7 }}" style="border:none; border-top:1px solid #000; padding:0; height:1px; line-height:1px;"></td></tr>
     </tfoot>
     @endif
 </table>
