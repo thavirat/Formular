@@ -93,7 +93,8 @@
         .items td { padding: 2px 4px; }
         .items td.vline { border-left: 1px solid #000; border-right: 1px solid #000; }
         .items td.text-right { white-space: nowrap; }
-        .cat-row td { font-weight: bold; text-align: left; border-left: 1px solid #000; border-right: 1px solid #000; }
+        /* หัวกลุ่มหมวด: แถบเทาเต็มความกว้าง (เหมือนฝั่ง Invoice) */
+        .cat-row td { font-weight: bold; text-align: left; background: #f1f1f1; }
 
         /* ---------- ท้ายเอกสาร ---------- */
         .terms { width: 100%; font-size: 11px; margin-top: 4px; }
@@ -169,20 +170,16 @@
         @php $itm = 0; @endphp
         @forelse($groups as $catName => $items)
             <tr class="cat-row">
-                <td></td>
-                <td colspan="4">{{ $catName }}</td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td colspan="8">{{ $catName }}</td>
             </tr>
             @foreach($items as $item)
                 @php $itm++; @endphp
                 <tr>
                     <td class="text-center vline">{{ $itm }}</td>
-                    <td>{{ $item->part_no ?: optional($item->product)->code }}</td>
-                    <td>{{ $item->detail_eng }}</td>
-                    <td class="text-center">{{ $item->drawing }}</td>
-                    <td class="text-center">{{ $item->cus_code }}</td>
+                    <td class="vline">{{ $item->part_no ?: optional($item->product)->code }}</td>
+                    <td class="vline">{{ $item->detail_eng }}</td>
+                    <td class="text-center vline">{{ $item->drawing }}</td>
+                    <td class="text-center vline">{{ $item->cus_code }}</td>
                     <td class="text-right vline">{{ number_format($item->qty, 0) }} {{ $unitOf($item) }}</td>
                     <td class="vline">
                         <table width="100%" style="border:none; border-collapse:collapse;"><tr>
@@ -202,12 +199,15 @@
             <tr><td colspan="8" class="text-center" style="padding:15px;">ไม่มีรายการสินค้า</td></tr>
         @endforelse
 
-        {{-- ยอดรวมจำนวนแยกตามหน่วย --}}
+        {{-- ยอดรวมจำนวนแยกตามหน่วย: แยกเซลล์ทุกคอลัมน์ (เส้นตั้งครบ) ปิดเส้นล่างแถวสุดท้าย --}}
         @foreach($unitTotals as $unit => $sumQty)
-            @php $bb = $loop->last ? 'border-bottom:1px solid #000;' : ''; @endphp
+            @php($bb = $loop->last ? 'border-bottom:1px solid #000;' : '')
             <tr>
                 <td class="vline" style="{{ $bb }}"></td>
-                <td class="text-center bold" colspan="4" style="{{ $bb }}">********** TOTAL **********</td>
+                <td class="vline" style="{{ $bb }}"></td>
+                <td class="text-center bold vline" style="{{ $bb }}">***** TOTAL *****</td>
+                <td class="vline" style="{{ $bb }}"></td>
+                <td class="vline" style="{{ $bb }}"></td>
                 <td class="text-center bold vline" style="{{ $bb }}">{{ number_format($sumQty, 0) }} {{ $unit }}</td>
                 <td class="vline" style="{{ $bb }}"></td>
                 <td class="vline" style="{{ $bb }}"></td>
