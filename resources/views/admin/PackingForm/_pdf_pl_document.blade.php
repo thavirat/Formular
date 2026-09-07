@@ -513,24 +513,23 @@
     </tbody>
     @if(count($qtyByUom) > 0)
     <tfoot>
-        {{-- สรุปจำนวนแยกตามหน่วย: แยกเซลล์ทุกคอลัมน์ (เส้นตั้งครบ), แถวแรกมีเส้นบน = เส้นล่างของรายการสินค้าแถวสุดท้าย --}}
+        {{-- สรุปจำนวนแยกตามหน่วย: แยกเซลล์ทุกคอลัมน์ (เส้นตั้งครบ) ไม่มีเส้นนอน (เหลือเส้นปิดแถวสุดท้าย) --}}
         @foreach($qtyByUom as $uom => $total)
-        @php($bt = $loop->first ? 'border-top:1px solid #000;' : '')
         <tr class="row-qty-summary">
             @if($isAccounting)
-            <td style="{{ $bt }}"></td>
-            <td class="text-center text-bold" style="{{ $bt }}">***** TOTAL *****</td>
-            <td class="text-center text-bold" style="{{ $bt }}">{{ $fmt($total) }} {{ $uom }}</td>
-            <td style="{{ $bt }}"></td>
-            <td style="{{ $bt }}"></td>
+            <td></td>
+            <td class="text-center text-bold">***** TOTAL *****</td>
+            <td class="text-center text-bold">{{ $fmt($total) }} {{ $uom }}</td>
+            <td></td>
+            <td></td>
             @else
-            <td style="{{ $bt }}"></td>
-            <td class="text-center text-bold" style="{{ $bt }}">***** TOTAL *****</td>
-            <td class="col-qty-num" style="{{ $bt }}"></td>
-            <td class="col-qty-uom" style="{{ $bt }}"></td>
-            <td class="text-right text-bold" style="{{ $bt }}">{{ $fmt($total) }} {{ $uom }}</td>
-            <td style="{{ $bt }}"></td>
-            <td style="{{ $bt }}"></td>
+            <td></td>
+            <td class="text-center text-bold">***** TOTAL *****</td>
+            <td class="col-qty-num"></td>
+            <td class="col-qty-uom"></td>
+            <td class="text-right text-bold">{{ $fmt($total) }} {{ $uom }}</td>
+            <td></td>
+            <td></td>
             @endif
         </tr>
         @endforeach
