@@ -88,8 +88,8 @@
                 <i class="fa fa-industry text-110 w-2 h-2"></i>
             </a>
             @if( $my_menu_permission[$currentMenu->url]['c'] == 'T' )
-                <button type="button" id="btn-open-import-pi" class="btn btn-light-primary btn-h-primary btn-a-primary border-0 radius-3 py-2 text-600 text-90" title="นำเข้า PI จากไฟล์ fic2fi (.xls/.xlsx)">
-                    <span class="d-none d-sm-inline mr-1">นำเข้า PI (Excel)</span>
+                <button type="button" id="btn-open-import-pi" class="btn btn-light-primary btn-h-primary btn-a-primary border-0 radius-3 py-2 text-600 text-90" title="นำเข้า PI จากไฟล์ CSV (ใบสั่งจอง)">
+                    <span class="d-none d-sm-inline mr-1">นำเข้า PI (CSV)</span>
                     <i class="fa fa-file-import text-110 w-2 h-2"></i>
                 </button>
                 <a href="{{ $url_pi_create ?? url('admin/ProformaInvoice/create') }}" class="btn btn-light-green btn-h-green btn-a-green border-0 radius-3 py-2 text-600 text-90">
@@ -277,21 +277,22 @@
             <div class="modal-content">
                 <form id="FormImportPi" enctype="multipart/form-data">
                     <div class="modal-header">
-                        <h5 class="modal-title text-primary-d3"><i class="fa fa-file-import mr-1"></i> นำเข้า PI จากไฟล์ Excel (fic2fi)</h5>
+                        <h5 class="modal-title text-primary-d3"><i class="fa fa-file-import mr-1"></i> นำเข้า PI จากไฟล์ CSV (ใบสั่งจอง)</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
-                            <label>ไฟล์ Excel (.xls / .xlsx) <span class="text-danger">*</span></label>
-                            <input type="file" name="file" id="import_pi_file" class="form-control" accept=".xls,.xlsx" required>
-                            <small class="text-muted">รูปแบบ fic2fi — ลูกค้า, PO, ผู้ขาย, รายการสินค้า, หมายเหตุ อ่านจากไฟล์อัตโนมัติ</small>
+                            <label>ไฟล์ CSV (ใบสั่งจอง) <span class="text-danger">*</span></label>
+                            <input type="file" name="file" id="import_pi_file" class="form-control" accept=".csv" required>
+                            <small class="text-muted">อ่านตามหัวคอลัมน์ — ลูกค้า, สินค้า, <b>ราคา</b>, ผู้ขาย, เลขเอกสาร, สกุลเงิน อ่านจากไฟล์อัตโนมัติ</small>
                         </div>
-                        <div class="alert alert-light border text-90 py-2">ข้อมูลที่ไฟล์ไม่มี ให้เลือกด้านล่าง</div>
+                        <div class="alert alert-light border text-90 py-2">ข้อมูลด้านล่าง = ใช้ทับค่าจากไฟล์ (เว้นว่าง = ใช้จากไฟล์)</div>
                         <div class="row">
                             <div class="col-6">
                                 <div class="form-group">
-                                    <label>สกุลเงิน <span class="text-danger">*</span></label>
-                                    <select name="currency_id" class="form-control" required>
+                                    <label>สกุลเงิน</label>
+                                    <select name="currency_id" class="form-control">
+                                        <option value="">— ใช้จากไฟล์ —</option>
                                         @foreach($Currencies as $cur)
                                             <option value="{{ $cur->id }}">{{ $cur->symbol ?: $cur->name }}</option>
                                         @endforeach

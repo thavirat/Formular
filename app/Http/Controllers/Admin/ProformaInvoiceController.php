@@ -131,14 +131,19 @@ class ProformaInvoiceController extends AdminController
         }
 
         $validator = Validator::make($request->all(), [
-            'file' => 'required|file|mimes:xls,xlsx',
-            'currency_id' => 'required',
+            'file' => 'required|file',
+            'currency_id' => 'nullable',
             'doc_date' => 'nullable|date',
             'doc_no' => 'nullable|string|max:50',
-        ], [], ['file' => 'ไฟล์', 'currency_id' => 'สกุลเงิน']);
+        ], [], ['file' => 'ไฟล์']);
 
         if ($validator->fails()) {
             return response()->json(['status' => 0, 'title' => 'ข้อมูลไม่ถูกต้อง', 'content' => $validator->errors()->first()]);
+        }
+
+        $ext = strtolower($request->file('file')->getClientOriginalExtension());
+        if (!in_array($ext, ['csv', 'txt'], true)) {
+            return response()->json(['status' => 0, 'title' => 'ไฟล์ไม่ถูกต้อง', 'content' => 'กรุณาอัปโหลดไฟล์ CSV (ใบสั่งจอง)']);
         }
 
         try {
