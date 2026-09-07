@@ -472,7 +472,7 @@
                     @endif
                 </td>
                 @if($isAccounting)
-                <td class="text-center">{{ $line->qty }}</td>
+                <td class="text-center">{{ $line->qty }} {{ $lineUom($line) }}</td>
                 <td>
                     <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
@@ -501,6 +501,10 @@
                 <td colspan="{{ $isAccounting ? 5 : 7 }}" class="text-center">ไม่มีรายการ</td>
             </tr>
         @endforelse
+        {{-- Invoice ไม่มี tfoot: ปิดเส้นล่างใต้แถวสุดท้าย (item-row ตัด border-bottom ไว้) --}}
+        @if($isAccounting && count($faGroups))
+        <tr><td colspan="5" style="border:none; border-top:1px solid #000; padding:0; height:1px; line-height:1px;"></td></tr>
+        @endif
     </tbody>
     @if(!$isAccounting && count($qtyByUom) > 0)
     <tfoot>
