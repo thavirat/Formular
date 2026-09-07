@@ -102,19 +102,21 @@
 
         return $qty;
     };
+    // รวมจำนวนแยกตามหน่วย (แสดงแถว ***** TOTAL ***** ล่างตาราง ทั้ง Packing List และ Invoice)
+    // - Invoice (accounting): รวม qty ตามที่แสดงในคอลัมน์ QUANTITY (= $line->qty)
+    // - Packing List: รวมจำนวนรวมต่อแถว (คูณช่วงกล่อง from-to)
     $qtyByUom = [];
     $sumDetailNw = 0.0;
     $sumDetailGw = 0.0;
-    if (!$isAccounting) {
-        foreach ($packingForm->details as $line) {
-            $uom = $lineUom($line);
-            if ($uom === '') {
-                continue;
-            }
-            $qtyByUom[$uom] = ($qtyByUom[$uom] ?? 0) + $lineTotalQty($line);
-            $sumDetailNw += (float) ($line->weight_nw ?? 0);
-            $sumDetailGw += (float) ($line->weight_gw ?? 0);
+    foreach ($packingForm->details as $line) {
+        $uom = $lineUom($line);
+        if ($uom === '') {
+            continue;
         }
+        $qtyVal = $isAccounting ? (float) ($line->qty ?? 0) : $lineTotalQty($line);
+        $qtyByUom[$uom] = ($qtyByUom[$uom] ?? 0) + $qtyVal;
+        $sumDetailNw += (float) ($line->weight_nw ?? 0);
+        $sumDetailGw += (float) ($line->weight_gw ?? 0);
     }
 
     // FA ต่อรายการ = doc_no ของ PI ที่ผูก สลับ PI -> FA (เลขเต็ม); ไม่มี PI = ''
@@ -501,27 +503,35 @@
                 <td colspan="{{ $isAccounting ? 5 : 7 }}" class="text-center">ไม่มีรายการ</td>
             </tr>
         @endforelse
-        {{-- Invoice ไม่มี tfoot: ปิดเส้นล่างใต้แถวสุดท้าย (item-row ตัด border-bottom ไว้) --}}
-        @if($isAccounting && count($faGroups))
+        {{-- Invoice: ถ้าไม่มีหน่วยให้สรุป ปิดเส้นล่างใต้แถวสุดท้ายเอง (item-row ตัด border-bottom ไว้) --}}
+        @if($isAccounting && count($faGroups) && count($qtyByUom) === 0)
         <tr><td colspan="5" style="border:none; border-top:1px solid #000; padding:0; height:1px; line-height:1px;"></td></tr>
         @endif
     </tbody>
-    @if(!$isAccounting && count($qtyByUom) > 0)
+    @if(count($qtyByUom) > 0)
     <tfoot>
-        {{-- สรุปจำนวนแยกตามหน่วย: 1 แถวต่อ 1 หน่วย ในคอลัมน์ TOTAL QTY (เหมือนหน้า PI) --}}
+        {{-- สรุปจำนวนแยกตามหน่วย: 1 แถวต่อ 1 หน่วย (Invoice = คอลัมน์ QUANTITY, Packing List = คอลัมน์ TOTAL QTY) --}}
         @foreach($qtyByUom as $uom => $total)
         <tr class="row-qty-summary">
+            @if($isAccounting)
+            <td colspan="2" class="text-center text-bold" @if($loop->first) style="border-top:1px solid #000;" @endif>***** TOTAL *****</td>
+            <td class="text-center text-bold" @if($loop->first) style="border-top:1px solid #000;" @endif>{{ $fmt($total) }} {{ $uom }}</td>
+            <td colspan="2" @if($loop->first) style="border-top:1px solid #000;" @endif></td>
+            @else
             <td colspan="2" class="text-center text-bold" @if($loop->first) style="border-top:1px solid #000;" @endif>***** TOTAL *****</td>
             <td colspan="2" @if($loop->first) style="border-top:1px solid #000;" @endif></td>
             <td class="text-right text-bold" @if($loop->first) style="border-top:1px solid #000;" @endif>{{ $fmt($total) }} {{ $uom }}</td>
             <td colspan="2" @if($loop->first) style="border-top:1px solid #000;" @endif></td>
+            @endif
         </tr>
         @endforeach
+        @if(!$isAccounting)
         <tr class="row-total">
             <td colspan="5" class="text-bold">TOTAL : {{ number_format($totalCartons) }} CARTONS</td>
             <td class="text-right">{{ $fmt($sumDetailNw) }}</td>
             <td class="text-right">{{ $fmt($sumDetailGw) }}</td>
         </tr>
+        @endif
     </tfoot>
     @endif
 </table>
