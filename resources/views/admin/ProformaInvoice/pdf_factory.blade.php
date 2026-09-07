@@ -170,7 +170,12 @@
         @php $itm = 0; @endphp
         @forelse($groups as $catName => $items)
             <tr class="cat-row">
-                <td colspan="8">{{ $catName }}</td>
+                <td colspan="3" class="vline">{{ $catName }}</td>
+                <td class="vline"></td>
+                <td class="vline"></td>
+                <td class="vline"></td>
+                <td class="vline"></td>
+                <td class="vline"></td>
             </tr>
             @foreach($items as $item)
                 @php $itm++; @endphp
