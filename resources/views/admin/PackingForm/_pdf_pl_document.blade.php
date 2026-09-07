@@ -515,7 +515,7 @@
     <tfoot>
         {{-- สรุปจำนวนแยกตามหน่วย: แยกเซลล์ทุกคอลัมน์ (เส้นตั้งครบ), แถวแรกมีเส้นบน = เส้นล่างของรายการสินค้าแถวสุดท้าย --}}
         @foreach($qtyByUom as $uom => $total)
-        @php $bt = $loop->first ? 'border-top:1px solid #000;' : ''; @endphp
+        @php($bt = $loop->first ? 'border-top:1px solid #000;' : '')
         <tr class="row-qty-summary">
             @if($isAccounting)
             <td style="{{ $bt }}"></td>
