@@ -443,16 +443,23 @@
     </thead>
     <tbody>
         @php $k = 0; @endphp
-        @if(trim((string) $packingForm->marks) !== '' || $totalCartons)
+        @php $hasMarkHead = trim((string) $packingForm->marks) !== '' || count($faList); @endphp
+        @if($hasMarkHead || $totalCartons)
+        {{-- แถว Marks + FA (เต็มความกว้าง เริ่มคอลัมน์แรก ชิดซ้าย) --}}
+        @if($hasMarkHead)
         <tr>
-            <td style="vertical-align:top; font-weight:bold; {{ $isAccounting ? 'border-right:none;' : '' }}">
+            <td colspan="{{ $isAccounting ? 5 : 7 }}" style="vertical-align:top; font-weight:bold; text-align:left; {{ $totalCartons ? 'border-bottom:none;' : '' }}">
                 {!! nl2br(e(trim((string) $packingForm->marks))) !!}
                 @if(count($faList))<br>{{ implode(' , ', $faList) }}@endif
             </td>
-            <td colspan="{{ $isAccounting ? 4 : 6 }}" style="vertical-align:bottom; {{ $isAccounting ? 'border-left:none;' : '' }}">
-                @if($totalCartons)(TOTAL NO. OF PACKAGES : {{ number_format($totalCartons) }} CARTONS)@endif
-            </td>
         </tr>
+        @endif
+        {{-- แถว TOTAL NO. OF PACKAGES (เต็มความกว้าง เริ่มคอลัมน์แรก ชิดซ้ายสุด) --}}
+        @if($totalCartons)
+        <tr>
+            <td colspan="{{ $isAccounting ? 5 : 7 }}" style="text-align:left; {{ $hasMarkHead ? 'border-top:none;' : '' }}">(TOTAL NO. OF PACKAGES : {{ number_format($totalCartons) }} CARTONS)</td>
+        </tr>
+        @endif
         @endif
         @forelse($faGroups as $fa => $cats)
             @if($fa !== '')
@@ -475,14 +482,7 @@
                 </td>
                 @if($isAccounting)
                 <td class="text-center">{{ $line->qty }} {{ $lineUom($line) }}</td>
-                <td>
-                    <table width="100%" cellpadding="0" cellspacing="0">
-                        <tr>
-                            <td width="32%">{{ $price['symbol'] }}</td>
-                            <td class="text-right" style="white-space:nowrap;">{{ $price['unit_price'] }}</td>
-                        </tr>
-                    </table>
-                </td>
+                <td class="text-right" style="white-space:nowrap;">{{ trim(($price['symbol'] ?? '').' '.($price['unit_price'] ?? '')) }}</td>
                 <td class="text-right" style="white-space:nowrap;">{{ $price['amount'] }}</td>
                 @else
                 <td class="text-right col-qty-num" width="8%">
