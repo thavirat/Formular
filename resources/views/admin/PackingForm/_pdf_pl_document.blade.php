@@ -534,14 +534,15 @@
         </tr>
         @endforeach
         @if(!$isAccounting)
+        {{-- เส้นคั่นเต็มความกว้างเหนือแถว TOTAL CARTONS --}}
         <tr class="row-total">
-            <td></td>
-            <td class="text-bold">TOTAL : {{ number_format($totalCartons) }} CARTONS</td>
-            <td class="col-qty-num"></td>
-            <td class="col-qty-uom"></td>
-            <td></td>
-            <td class="text-right">{{ $fmt($sumDetailNw) }}</td>
-            <td class="text-right">{{ $fmt($sumDetailGw) }}</td>
+            <td style="border-top:1px solid #000;"></td>
+            <td class="text-bold" style="border-top:1px solid #000;">TOTAL : {{ number_format($totalCartons) }} CARTONS</td>
+            <td class="col-qty-num" style="border-top:1px solid #000;"></td>
+            <td class="col-qty-uom" style="border-top:1px solid #000;"></td>
+            <td style="border-top:1px solid #000;"></td>
+            <td class="text-right" style="border-top:1px solid #000;">{{ $fmt($sumDetailNw) }}</td>
+            <td class="text-right" style="border-top:1px solid #000;">{{ $fmt($sumDetailGw) }}</td>
         </tr>
         @endif
         {{-- เส้นปิดแถวสุดท้ายเส้นเดียว --}}
