@@ -153,7 +153,10 @@
 
 {{-- ===================== หมายเหตุการผลิต + ลงนาม (ให้อยู่หน้าเดียวกัน) ===================== --}}
 <div style="page-break-inside: avoid;">
-<ul class="remark-list">
+@if($pi->remarks->count())
+<div class="bold" style="margin-top:6px;">Remark :</div>
+@endif
+<ul class="remark-list" style="margin-top:2px;">
     @foreach($pi->remarks as $rm)
         <li>{{ $rm->remark }}</li>
     @endforeach

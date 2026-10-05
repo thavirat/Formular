@@ -107,19 +107,13 @@
             <td width="14%" style="border-bottom: 1px solid #999; padding-top: 5px; padding-bottom: 5px;" align="center" valign="top">{{ $product->cus_code }}</td>
         </tr>
         @endforeach
-        {{-- สรุปจำนวนรวมของ fac นี้ (อยู่คอลัมน์เดียวกับ Qty) --}}
-        <tr>
-            <td colspan="4" align="right" style="border-top: 2px solid #333;"><b>รวม Fac {{ $facNo }}</b></td>
-            <td align="center" style="border-top: 2px solid #333;"><b>{{ number_format($items->sum('qty'), 0) }}</b></td>
-            <td style="border-top: 2px solid #333;"></td>
-        </tr>
         {{-- หมายเหตุ ต่อท้ายกลุ่ม fac (ไม่ขึ้นหน้าใหม่ ประหยัดกระดาษ) --}}
         @if($ProformaInvoice->remarks->count())
         <tr>
             <td colspan="6" style="padding: 4px 8px;">
-                <b>หมายเหตุ :</b>
+                <b>Remark :</b>
                 @foreach($ProformaInvoice->remarks as $rm)
-                    <div style="padding-left: 12px;">{{ $loop->iteration }}. {{ $rm->remark }}</div>
+                    <div style="padding-left: 12px;">{{ $rm->remark }}</div>
                 @endforeach
             </td>
         </tr>
