@@ -31,7 +31,7 @@
     <td><input type="number" class="form-control form-control-sm packing-tab" name="lenght[]" value="{{ $detail?->lenght }}" min="0" step="0.01"></td>
     <td><input type="number" class="form-control form-control-sm packing-tab" name="height[]" value="{{ $detail?->height }}" min="0" step="0.01"></td>
     <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_qty[]" value="{{ $detail?->qty ?? 0 }}" min="0" step="1" required></td>
-    <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_cubic_meter[]" value="{{ $detail?->cubic_meter }}" min="0" step="0.01"></td>
+    <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_cubic_meter[]" value="{{ $detail?->cubic_meter }}" min="0" step="0.001"></td>
     <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_weight_nw[]" value="{{ $detail?->weight_nw }}" min="0" step="0.01"></td>
     <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_weight_gw[]" value="{{ $detail?->weight_gw }}" min="0" step="0.01"></td>
     <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_weight_nt[]" value="{{ $detail?->weight_nt }}" min="0" step="0.01"></td>

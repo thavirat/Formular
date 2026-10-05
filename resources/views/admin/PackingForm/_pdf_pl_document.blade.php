@@ -596,7 +596,7 @@
         <td class="text-center">{{ $fmt($packingForm->weight_gw) }}</td>
         <td class="text-center">{{ $fmt($packingForm->weight_nt) }}</td>
         <td class="text-center">{{ $fmt($packingForm->weight_gt) }}</td>
-        <td class="text-center">{{ $fmt($packingForm->cubic_meter) }}</td>
+        <td class="text-center">{{ $fmt($packingForm->cubic_meter, 3) }}</td>
         <td class="text-center">{{ $fmtInt($packingForm->qty) }}</td>
     </tr>
 </table>

@@ -191,7 +191,7 @@
             <td><b>{{ number_format($sumGw, 2) }}</b></td>
         </tr>
         <tr>
-            <td colspan="{{ $cols }}">PKG: {{ number_format($totalCartons) }} | Qty: {{ number_format((int) $packingForm->qty) }} | CBM: {{ number_format((float) $packingForm->cubic_meter, 2) }} | N.T.: {{ number_format((float) $packingForm->weight_nt, 2) }} | G.T.: {{ number_format((float) $packingForm->weight_gt, 2) }}</td>
+            <td colspan="{{ $cols }}">PKG: {{ number_format($totalCartons) }} | Qty: {{ number_format((int) $packingForm->qty) }} | CBM: {{ number_format((float) $packingForm->cubic_meter, 3) }} | N.T.: {{ number_format((float) $packingForm->weight_nt, 2) }} | G.T.: {{ number_format((float) $packingForm->weight_gt, 2) }}</td>
         </tr>
     @endif
 </table>

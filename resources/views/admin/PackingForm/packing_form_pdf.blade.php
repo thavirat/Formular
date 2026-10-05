@@ -165,7 +165,7 @@
                 <td class="text-right">{{ $fmt($line->lenght) }}</td>
                 <td class="text-right">{{ $fmt($line->height) }}</td>
                 <td class="text-right">{{ $fmtInt($line->qty) }}</td>
-                <td class="text-right">{{ $fmt($line->cubic_meter) }}</td>
+                <td class="text-right">{{ $fmt($line->cubic_meter, 3) }}</td>
                 <td class="text-right">{{ $fmt($line->weight_nw) }}</td>
                 <td class="text-right">{{ $fmt($line->weight_gw) }}</td>
                 <td class="text-right">{{ $fmt($line->weight_nt) }}</td>
@@ -197,7 +197,7 @@
         <td class="text-center text-bold">{{ $fmt($packingForm->weight_gw) }}</td>
         <td class="text-center text-bold">{{ $fmt($packingForm->weight_nt) }}</td>
         <td class="text-center text-bold">{{ $fmt($packingForm->weight_gt) }}</td>
-        <td class="text-center text-bold">{{ $fmt($packingForm->cubic_meter) }}</td>
+        <td class="text-center text-bold">{{ $fmt($packingForm->cubic_meter, 3) }}</td>
         <td class="text-center text-bold">{{ $fmtInt($packingForm->qty) }}</td>
     </tr>
 </table>

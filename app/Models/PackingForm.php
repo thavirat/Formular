@@ -41,7 +41,7 @@ class PackingForm extends Model
     protected $casts = [
         'doc_date' => 'date',
         'sailing_date' => 'date',
-        'cubic_meter' => 'decimal:2',
+        'cubic_meter' => 'decimal:3',
         'weight_nw' => 'decimal:2',
         'weight_gw' => 'decimal:2',
         'weight_nt' => 'decimal:2',

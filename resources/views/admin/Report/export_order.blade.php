@@ -39,7 +39,7 @@
         <div class="col-md-3 col-6 mb-2"><div class="card dcard"><div class="card-body py-2 text-center">
             <div class="text-90 text-muted">จำนวน Shipment</div><div class="text-170 text-primary-d1 font-bolder" id="s_count">0</div></div></div></div>
         <div class="col-md-3 col-6 mb-2"><div class="card dcard"><div class="card-body py-2 text-center">
-            <div class="text-90 text-muted">CBM รวม</div><div class="text-170 text-info-d1 font-bolder" id="s_cbm">0.00</div></div></div></div>
+            <div class="text-90 text-muted">CBM รวม</div><div class="text-170 text-info-d1 font-bolder" id="s_cbm">0.000</div></div></div></div>
         <div class="col-md-3 col-6 mb-2"><div class="card dcard"><div class="card-body py-2 text-center">
             <div class="text-90 text-muted">น้ำหนักรวม (G.W.)</div><div class="text-170 text-secondary-d1 font-bolder" id="s_weight">0.00</div></div></div></div>
         <div class="col-md-3 col-6 mb-2"><div class="card dcard"><div class="card-body py-2">
@@ -83,12 +83,13 @@ $(function(){
         return { year:$('#f_year').val(), region:$('#f_region').val(), customer:$('#f_customer').val(), start_date:$('#f_start').val(), end_date:$('#f_end').val() };
     }
     function fnum(n){ return Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+    function fcbm(n){ return Number(n).toLocaleString(undefined,{minimumFractionDigits:3,maximumFractionDigits:3}); }
 
     function load(){
         $.get(base + "/Data", params()).done(function(d){
             // summary
             $('#s_count').text(d.summary.count);
-            $('#s_cbm').text(fnum(d.summary.cbm));
+            $('#s_cbm').text(fcbm(d.summary.cbm));
             $('#s_weight').text(fnum(d.summary.weight));
             var ah = (d.summary.by_currency||[]).map(function(c){ return '<div><b>'+(c.currency||'-')+'</b> '+fnum(c.amount)+'</div>'; }).join('');
             $('#s_amount').html(ah || '<span class="text-muted">-</span>');
@@ -122,7 +123,7 @@ $(function(){
                   + '<td>'+ (r.doc_date||'') +'</td><td>'+ (r.etd||'') +'</td>'
                   + '<td>'+ $('<div>').text(r.customer||'').html() +'</td>'
                   + '<td>'+ (r.country||'') +'</td><td>'+ (r.region||'') +'</td>'
-                  + '<td class="text-right">'+ fnum(r.cbm) +'</td>'
+                  + '<td class="text-right">'+ fcbm(r.cbm) +'</td>'
                   + '<td class="text-right">'+ fnum(r.weight) +'</td>'
                   + '<td class="text-right font-bolder">'+ (r.currency||'') +' '+ fnum(r.amount) +'</td>'
                   + '</tr>';

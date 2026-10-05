@@ -150,7 +150,7 @@
     <div class="col-md-2">
         <div class="form-group">
             <label class="text-90">CBM รวม</label>
-            <input type="number" name="cubic_meter" class="form-control form-control-sm packing-tab" value="" min="0" step="0.01">
+            <input type="number" name="cubic_meter" class="form-control form-control-sm packing-tab" value="" min="0" step="0.001">
         </div>
     </div>
     <div class="col-md-2">

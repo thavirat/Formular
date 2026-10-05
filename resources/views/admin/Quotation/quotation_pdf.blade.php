@@ -350,7 +350,7 @@
                     <td class="text-right">{{ number_format($height, 2) }}</td>
                     <td class="text-center">{{ $content > 0 ? number_format($content, 0) : '-' }}</td>
                     <td class="text-right">{{ number_format($qty, 0) }}</td>
-                    <td class="text-right">{{ number_format($lineCube, 4) }}</td>
+                    <td class="text-right">{{ number_format($lineCube, 3) }}</td>
                 </tr>
             @empty
                 <tr>
@@ -361,7 +361,7 @@
         <tfoot>
             <tr style="background:#f7f7f7;">
                 <td colspan="8" class="text-right text-bold">Total Volume (CBM)</td>
-                <td class="text-right text-bold">{{ number_format($grandCube, 4) }}</td>
+                <td class="text-right text-bold">{{ number_format($grandCube, 3) }}</td>
             </tr>
         </tfoot>
     </table>

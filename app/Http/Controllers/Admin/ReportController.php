@@ -99,7 +99,7 @@ class ReportController extends AdminController
         // สรุป
         $summary = [
             'count' => $rows->count(),
-            'cbm' => round($rows->sum('cubic_meter'), 2),
+            'cbm' => round($rows->sum('cubic_meter'), 3),
             'weight' => round($rows->sum('weight_gw'), 2),
             'by_currency' => [],
         ];
@@ -110,14 +110,14 @@ class ReportController extends AdminController
         // รายเดือน (CBM + จำนวน)
         $monthly = [];
         foreach ($rows->groupBy(fn ($r) => $r->doc_date ? Carbon::parse($r->doc_date)->format('Y-m') : '-') as $ym => $g) {
-            $monthly[] = ['month' => $ym, 'cbm' => round($g->sum('cubic_meter'), 2), 'count' => $g->count()];
+            $monthly[] = ['month' => $ym, 'cbm' => round($g->sum('cubic_meter'), 3), 'count' => $g->count()];
         }
         usort($monthly, fn ($a, $b) => strcmp($a['month'], $b['month']));
 
         // ตามภูมิภาค (CBM + จำนวน)
         $byRegion = [];
         foreach ($rows->groupBy(fn ($r) => $r->region ?: 'ไม่ระบุ') as $rg => $g) {
-            $byRegion[] = ['region' => $rg, 'cbm' => round($g->sum('cubic_meter'), 2), 'count' => $g->count()];
+            $byRegion[] = ['region' => $rg, 'cbm' => round($g->sum('cubic_meter'), 3), 'count' => $g->count()];
         }
 
         // แถวตาราง

@@ -268,7 +268,7 @@ $(document).ready(function() {
             <td><input type="number" class="form-control form-control-sm packing-tab" name="lenght[]" min="0" step="0.01"></td>
             <td><input type="number" class="form-control form-control-sm packing-tab" name="height[]" min="0" step="0.01"></td>
             <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_qty[]" value="0" min="0" step="1" required></td>
-            <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_cubic_meter[]" min="0" step="0.01"></td>
+            <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_cubic_meter[]" min="0" step="0.001"></td>
             <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_weight_nw[]" min="0" step="0.01"></td>
             <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_weight_gw[]" min="0" step="0.01"></td>
             <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_weight_nt[]" min="0" step="0.01"></td>

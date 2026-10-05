@@ -34,7 +34,7 @@ class PackingFormDetail extends Model
         'width' => 'decimal:2',
         'lenght' => 'decimal:2',
         'height' => 'decimal:2',
-        'cubic_meter' => 'decimal:2',
+        'cubic_meter' => 'decimal:3',
         'weight_nw' => 'decimal:2',
         'weight_gw' => 'decimal:2',
         'weight_nt' => 'decimal:2',
