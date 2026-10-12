@@ -185,6 +185,12 @@ class PackingListImportService
 
             $firstCustomerId = null;
 
+            // ---------- รวม product ซ้ำให้เป็นแถวเดียว ----------
+            // key = pi_product_id (PI+Part) ถ้าหาไม่เจอใช้ part_no; รวม qty/น้ำหนัก/CBM, ช่วงกล่อง = min..max
+            $merged = [];   // key => ข้อมูลรวม
+            $order = [];    // คงลำดับที่พบครั้งแรก
+            $mergedCount = 0;
+
             foreach ($rowsPayload as $payload) {
                 $row = $payload['row'];
                 $piProductId = $this->resolvePiProductId($payload['pi_doc'], $payload['part']);
@@ -199,28 +205,103 @@ class PackingListImportService
                     }
                 }
 
+                $key = $piProductId !== null
+                    ? 'pi:'.$piProductId
+                    : ($payload['part'] !== '' ? 'part:'.$payload['part'] : 'row:'.$payload['excel_row']);
+
+                $from = $this->intOrNull($row[self::COL_FROM] ?? null);
+                $to   = $this->intOrNull($row[self::COL_TO] ?? null);
+                $qty  = (int) ($this->decimalOrNull($row[self::COL_QTY] ?? null) ?? 0);
+                $cbm  = (float) ($this->decimalOrNull($row[self::COL_CBM] ?? null) ?? 0);
+                $nw   = (float) ($this->decimalOrNull($row[self::COL_NW] ?? null) ?? 0);
+                $gw   = (float) ($this->decimalOrNull($row[self::COL_GW] ?? null) ?? 0);
+                $nt   = (float) ($this->decimalOrNull($row[self::COL_NT] ?? null) ?? 0);
+                $gt   = (float) ($this->decimalOrNull($row[self::COL_GT] ?? null) ?? 0);
+
+                if (!isset($merged[$key])) {
+                    $order[] = $key;
+                    $merged[$key] = [
+                        'excel_row'       => $payload['excel_row'],
+                        'from'            => $from,
+                        'to'              => $to,
+                        'pi_product_id'   => $piProductId,
+                        'part_no'         => $payload['part'] ?: null,
+                        'cus_part_no'     => $this->str($row[self::COL_CUS_PART] ?? null) ?: null,
+                        'description'     => $this->str($row[self::COL_DESC] ?? null) ?: null,
+                        'formular_number' => $this->str($row[self::COL_FORMULAR] ?? null) ?: null,
+                        'width'           => $this->decimalOrNull($row[self::COL_WIDTH] ?? null),
+                        'lenght'          => $this->decimalOrNull($row[self::COL_LENGTH] ?? null),
+                        'height'          => $this->decimalOrNull($row[self::COL_HEIGHT] ?? null),
+                        'qty'             => $qty,
+                        'cubic_meter'     => $cbm,
+                        'weight_nw'       => $nw,
+                        'weight_gw'       => $gw,
+                        'weight_nt'       => $nt,
+                        'weight_gt'       => $gt,
+                        'uom'             => $this->str($row[self::COL_UOM] ?? null) ?: null,
+                        'from_co'         => $this->str($row[self::COL_FROM_CO] ?? null) ?: null,
+                    ];
+                } else {
+                    $mergedCount++;
+                    $m = &$merged[$key];
+                    $m['from']        = ($m['from'] === null) ? $from : ($from === null ? $m['from'] : min($m['from'], $from));
+                    $m['to']          = ($m['to'] === null) ? $to : ($to === null ? $m['to'] : max($m['to'], $to));
+                    $m['qty']        += $qty;
+                    $m['cubic_meter'] = (float) $m['cubic_meter'] + $cbm;
+                    $m['weight_nw']   = (float) $m['weight_nw'] + $nw;
+                    $m['weight_gw']   = (float) $m['weight_gw'] + $gw;
+                    $m['weight_nt']   = (float) $m['weight_nt'] + $nt;
+                    $m['weight_gt']   = (float) $m['weight_gt'] + $gt;
+                    // เติมค่าข้อความ/ขนาดกล่องที่ยังว่างด้วยค่าที่เจอทีหลัง
+                    foreach (['cus_part_no', 'description', 'formular_number', 'width', 'lenght', 'height', 'uom', 'from_co'] as $f) {
+                        if (($m[$f] === null || $m[$f] === '')) {
+                            $cand = match ($f) {
+                                'width'  => $this->decimalOrNull($row[self::COL_WIDTH] ?? null),
+                                'lenght' => $this->decimalOrNull($row[self::COL_LENGTH] ?? null),
+                                'height' => $this->decimalOrNull($row[self::COL_HEIGHT] ?? null),
+                                'cus_part_no'     => $this->str($row[self::COL_CUS_PART] ?? null) ?: null,
+                                'description'     => $this->str($row[self::COL_DESC] ?? null) ?: null,
+                                'formular_number' => $this->str($row[self::COL_FORMULAR] ?? null) ?: null,
+                                'uom'     => $this->str($row[self::COL_UOM] ?? null) ?: null,
+                                'from_co' => $this->str($row[self::COL_FROM_CO] ?? null) ?: null,
+                            };
+                            if ($cand !== null && $cand !== '') {
+                                $m[$f] = $cand;
+                            }
+                        }
+                    }
+                    unset($m);
+                }
+            }
+
+            foreach ($order as $key) {
+                $v = $merged[$key];
                 $detail = new PackingFormDetail();
                 $detail->packing_form_id = $form->id;
-                $detail->excel_row = $payload['excel_row'];
-                $detail->from = $this->intOrNull($row[self::COL_FROM] ?? null);
-                $detail->to = $this->intOrNull($row[self::COL_TO] ?? null);
-                $detail->pi_product_id = $piProductId;
-                $detail->part_no = $payload['part'] ?: null;
-                $detail->cus_part_no = $this->str($row[self::COL_CUS_PART] ?? null) ?: null;
-                $detail->description = $this->str($row[self::COL_DESC] ?? null) ?: null;
-                $detail->formular_number = $this->str($row[self::COL_FORMULAR] ?? null) ?: null;
-                $detail->width = $this->decimalOrNull($row[self::COL_WIDTH] ?? null);
-                $detail->lenght = $this->decimalOrNull($row[self::COL_LENGTH] ?? null);
-                $detail->height = $this->decimalOrNull($row[self::COL_HEIGHT] ?? null);
-                $detail->qty = (int) ($this->decimalOrNull($row[self::COL_QTY] ?? null) ?? 0);
-                $detail->cubic_meter = $this->decimalOrNull($row[self::COL_CBM] ?? null);
-                $detail->weight_nw = $this->decimalOrNull($row[self::COL_NW] ?? null);
-                $detail->weight_gw = $this->decimalOrNull($row[self::COL_GW] ?? null);
-                $detail->weight_nt = $this->decimalOrNull($row[self::COL_NT] ?? null);
-                $detail->weight_gt = $this->decimalOrNull($row[self::COL_GT] ?? null);
-                $detail->uom = $this->str($row[self::COL_UOM] ?? null) ?: null;
-                $detail->from_co = $this->str($row[self::COL_FROM_CO] ?? null) ?: null;
+                $detail->excel_row       = $v['excel_row'];
+                $detail->from            = $v['from'];
+                $detail->to              = $v['to'];
+                $detail->pi_product_id   = $v['pi_product_id'];
+                $detail->part_no         = $v['part_no'];
+                $detail->cus_part_no     = $v['cus_part_no'];
+                $detail->description     = $v['description'];
+                $detail->formular_number = $v['formular_number'];
+                $detail->width           = $v['width'];
+                $detail->lenght          = $v['lenght'];
+                $detail->height          = $v['height'];
+                $detail->qty             = $v['qty'];
+                $detail->cubic_meter     = $v['cubic_meter'];
+                $detail->weight_nw       = $v['weight_nw'];
+                $detail->weight_gw       = $v['weight_gw'];
+                $detail->weight_nt       = $v['weight_nt'];
+                $detail->weight_gt       = $v['weight_gt'];
+                $detail->uom             = $v['uom'];
+                $detail->from_co         = $v['from_co'];
                 $detail->save();
+            }
+
+            if ($mergedCount > 0) {
+                $warnings[] = "รวม product ซ้ำ {$mergedCount} แถวเข้ากับรายการเดิม (บวก qty/น้ำหนัก/CBM, ช่วงกล่อง min–max)";
             }
 
             $form->save();
@@ -235,7 +316,7 @@ class PackingListImportService
             return [
                 'status' => 1,
                 'title' => 'นำเข้าสำเร็จ',
-                'content' => 'สร้าง Packing List '.$form->doc_no.' จำนวน '.count($rowsPayload).' แถว',
+                'content' => 'สร้าง Packing List '.$form->doc_no.' จำนวน '.count($order).' รายการ'.($mergedCount > 0 ? ' (รวม product ซ้ำแล้ว)' : ''),
                 'packing_form_id' => $form->id,
                 'warnings' => $warnings,
             ];
