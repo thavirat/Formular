@@ -148,7 +148,6 @@ var TableList = null;
 $(function(){
 
     TableList = $('#TableList').dataTable({
-        scrollY : height-380,
         scrollX : true,
         "pageLength": 50,
         "ajax": {
