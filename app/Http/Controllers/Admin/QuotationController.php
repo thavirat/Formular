@@ -1157,9 +1157,8 @@ class QuotationController extends AdminController
 
     /**
      * หาเลขเอกสารสุดท้ายที่จะบันทึกจริง โดยเลี่ยงเลขซ้ำ
-     * - เลขที่ผู้ใช้กรอกมาและยังว่าง -> ใช้ตามนั้น
-     * - เลขอัตโนมัติ (QT-xxxxxx) ที่ดันซ้ำ (ฟอร์มค้าง) -> ขยับเป็นเลขว่างถัดไปอัตโนมัติ
-     * - เลขที่ผู้ใช้ตั้งเองและซ้ำ -> คงไว้ให้ validator แจ้ง duplicate ชัดเจน
+     * - เลขที่กรอกมาและยังว่าง -> ใช้ตามนั้น
+     * - เลขซ้ำ (ไม่ว่าจะ auto หรือพิมพ์เอง) -> รันเป็นเลขว่างถัดไปอัตโนมัติเสมอ ไม่ error
      *
      * @return array{run_no: int, doc_no: string}
      */
@@ -1177,12 +1176,8 @@ class QuotationController extends AdminController
             return ['doc_no' => $submitted, 'run_no' => $tail ?: $suggested['run_no']];
         }
 
-        // ซ้ำแล้ว + เป็นรูปแบบเลขอัตโนมัติ -> ใช้เลขว่างถัดไป
-        if (preg_match('/^QT-\d{6,7}$/', $submitted)) {
-            return $suggested;
-        }
-
-        return ['doc_no' => $submitted, 'run_no' => $suggested['run_no']];
+        // ซ้ำ -> รันเป็นเลขว่างถัดไปอัตโนมัติเสมอ
+        return $suggested;
     }
 
     private function parseExcelDateValue($value): ?string
