@@ -132,7 +132,7 @@
                                     <select name="filter_status" id="filter_status" class="form-control">
                                         <option value="all">{{ __('All Status') }}</option>
                                         @foreach ($quotation_statuses as $status)
-                                            <option value="{{ $status->id }}">{{ $status->name }}</option>
+                                            <option value="{{ $status->id }}" {{ $status->id == 3 ? 'selected' : '' }}>{{ $status->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -245,7 +245,7 @@
                 },
                 {
                     "data": "status_name",
-                    "name": "quotation_statuses.name",
+                    "name": "quotations.approve_date",
                     "class": "text-right align-middle text-600 text-success-d1",
 
                 },
@@ -265,7 +265,7 @@
                 }
             ],
             "order": [
-                [1, "desc"]
+                [4, "desc"]
             ]
         });
 
