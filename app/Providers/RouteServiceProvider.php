@@ -35,6 +35,10 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function map()
     {
+        // ลงทะเบียน catalog ก่อน web เพราะผูกกับโดเมนเฉพาะ (catalog.fml)
+        // จะ match เฉพาะ host นั้น ไม่ชนกับ route ของ CRM ที่ไม่มี domain constraint
+        $this->mapCatalogRoutes();
+
         $this->mapApiRoutes();
 
         $this->mapWebRoutes();
@@ -44,6 +48,28 @@ class RouteServiceProvider extends ServiceProvider
         $this->mapAdminRoutes();
 
         //
+    }
+
+    /**
+     * Routes ของเว็บ catalog (หน้าบ้านสาธารณะ) — แยกโดเมน/namespace/middleware จาก CRM.
+     *
+     * ปลอดภัยแบบ additive: ถ้าไม่ได้เซ็ต config('app.catalog_domain') จะไม่ลงทะเบียน
+     * route ใด ๆ เลย => CRM ทำงานเหมือนเดิมทุกประการ
+     *
+     * @return void
+     */
+    protected function mapCatalogRoutes()
+    {
+        $domain = config('app.catalog_domain');
+
+        if (empty($domain)) {
+            return;
+        }
+
+        Route::domain($domain)
+             ->middleware('catalog')
+             ->namespace($this->namespace . '\Catalog')
+             ->group(base_path('routes/catalog.php'));
     }
 
     /**

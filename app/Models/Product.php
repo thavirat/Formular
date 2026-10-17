@@ -51,4 +51,15 @@ class Product extends Model
     {
         return $this->belongsTo(ProductCategory::class, 'category_id');
     }
+
+    // Catalog: รถที่รองรับ (fitment) + เลข OE  — ดู CATALOG_PLAN.md
+    public function fitments()
+    {
+        return $this->hasMany(ProductFitment::class, 'product_id');
+    }
+
+    public function oeNumbers()
+    {
+        return $this->hasMany(ProductOeNumber::class, 'product_id');
+    }
 }
