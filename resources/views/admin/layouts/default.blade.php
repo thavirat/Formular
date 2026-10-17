@@ -298,7 +298,7 @@
 
 
     <script src="{{asset('assets/global/js/modal.js')}}"></script>
-    <script src="{{asset('assets/admin/js/function.js')}}?v=3"></script>
+    <script src="{{asset('assets/admin/js/function.js')}}?v=4"></script>
 
     {{-- Jquery Validate --}}
     <script src="{{asset('assets/admin/node_modules/jquery-validation/dist/jquery.validate.js')}}"></script>
@@ -310,9 +310,11 @@
 
     @yield('js')
     <script>
-        // setInterval(function() {
-        //     fetch('/keep-alive'); // สร้าง Route เปล่าๆ ไว้รับค่านี้
-        // }, 1000); // ทุก 10 นาที
+        // ต่ออายุ session + รีเฟรช CSRF token ทุก 5 นาที กันหน้าที่เปิดค้างไว้นาน
+        // (เช่น ฟอร์ม Quotation หลายแถว) save แล้วเจอ 419 CSRF token mismatch
+        if (typeof refreshCsrfToken === 'function') {
+            setInterval(refreshCsrfToken, 5 * 60 * 1000);
+        }
 
         $.fn.modal.Constructor.prototype._enforceFocus = function() {};
     </script>

@@ -28,6 +28,8 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::resource('SettingSystem', 'Admin\SettingSystemController');
                 Route::get('Logout', 'Admin\LoginController@logout');
                 Route::get('PermissionDenined', 'Admin\HomeController@permissionDenined');
+                // ต่ออายุ session + คืน CSRF token ใหม่ (กัน 419 ตอนฟอร์มเปิดค้างนาน)
+                Route::get('KeepAlive', 'Admin\HomeController@keepAlive');
                 // file
                 Route::post('/upload_file', 'Admin\UploadFileController@index');
                 Route::post('/checkUploadFile', 'Admin\UploadFileController@store');

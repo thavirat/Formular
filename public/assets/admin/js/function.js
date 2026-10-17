@@ -4,6 +4,21 @@ $.ajaxSetup({
     }
 });
 
+// ต่ออายุ session + ดึง CSRF token ชุดใหม่มาใส่หน้า (meta / header / input[name=_token])
+// เรียกเป็นระยะจาก layout และเรียกซ้ำเมื่อเจอ 419 เพื่อให้ save ได้โดยไม่ต้องคีย์ใหม่
+function refreshCsrfToken() {
+    if (typeof url_gb === 'undefined') { return $.Deferred().reject().promise(); }
+    return $.get(url_gb + '/admin/KeepAlive').done(function (res) {
+        var token = (res && res.token) ? res.token : null;
+        if (token) {
+            $('meta[name="csrf-token"]').attr('content', token);
+            $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': token } });
+            $('input[name="_token"]').val(token);
+            if (window.Laravel) { window.Laravel.csrfToken = token; }
+        }
+    });
+}
+
 $.extend( true, $.fn.dataTable.defaults, {
     "pageLength": 50,
     "oClasses": {
@@ -114,6 +129,18 @@ $('.modal').on('shown.bs.modal', function() {
   });
 
 function ajaxFail(res, form) {
+    // 419 = CSRF token mismatch (session/token หมดอายุ เพราะเปิดหน้าค้างไว้นาน)
+    // ต่ออายุ token ให้ใหม่ แล้วบอกผู้ใช้กด Save ซ้ำ — ข้อมูลในหน้ายังอยู่ครบ ไม่ต้องคีย์ใหม่
+    if (res && res.status === 419) {
+        refreshCsrfToken();
+        Swal.fire(
+            'เซสชันหมดอายุ',
+            'ระบบต่ออายุการใช้งานให้ใหม่แล้ว กรุณากดบันทึกอีกครั้ง (ข้อมูลในหน้านี้ยังอยู่ครบ ไม่ต้องกรอกใหม่)',
+            'warning'
+        );
+        if (form) { resetButton(form.find('button[type=submit]')); }
+        return;
+    }
     try {
         var response = $.parseJSON(res.responseText);
         var str = "กรุณาถ่ายรูปหน้าจอนี้ให้กับเจ้าหน้าที่\n\r" + response.message + "\n\r" + response.exception + "\n\r" + response.file + " Line : " + response.line;

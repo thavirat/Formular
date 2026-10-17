@@ -93,4 +93,14 @@ class HomeController extends Controller
         return view('admin.permission_denined',$data);
     }
 
+    /**
+     * ต่ออายุ session และคืน CSRF token ชุดใหม่ ให้หน้าที่เปิดค้างไว้นาน
+     * (เช่น ฟอร์ม Quotation หลายแถว) ping มาเป็นระยะ กัน session/token หมดอายุ
+     * แล้ว save ไม่ผ่าน (419 CSRF token mismatch)
+     */
+    public function keepAlive()
+    {
+        return response()->json(['status' => 1, 'token' => csrf_token()]);
+    }
+
 }
