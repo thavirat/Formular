@@ -70,10 +70,16 @@
     $linePricing = function ($line) use ($fmt) {
         $pip = $line->piProduct;
         $currency = $pip?->pi?->currency;
-        $unitPrice = $pip?->price_per_item;
-        $amount = $pip?->total_price;
-        if (($amount === null || $amount === '') && $unitPrice !== null && $unitPrice !== '' && $line->qty) {
-            $amount = (float) $unitPrice * (float) $line->qty;
+        // ราคาต่อหน่วย: ใช้ที่แก้ในหน้า Invoice (unit_price) ก่อน ถ้าว่าง fallback ไป PI
+        $hasOwn = $line->unit_price !== null && $line->unit_price !== '';
+        $unitPrice = $hasOwn ? $line->unit_price : $pip?->price_per_item;
+        if ($hasOwn) {
+            $amount = (float) $line->unit_price * (float) ($line->qty ?? 0);
+        } else {
+            $amount = $pip?->total_price;
+            if (($amount === null || $amount === '') && $unitPrice !== null && $unitPrice !== '' && $line->qty) {
+                $amount = (float) $unitPrice * (float) $line->qty;
+            }
         }
 
         return [
@@ -195,7 +201,9 @@
                 $curSymbol = $pip?->pi?->currency?->symbol ?? '';
             }
             $amt = $pip?->total_price;
-            if (($amt === null || $amt === '') && $pip?->price_per_item && $line->qty) {
+            if ($line->unit_price !== null && $line->unit_price !== '') {
+                $amt = (float) $line->unit_price * (float) ($line->qty ?? 0);
+            } elseif (($amt === null || $amt === '') && $pip?->price_per_item && $line->qty) {
                 $amt = (float) $pip->price_per_item * (float) $line->qty;
             }
             $sumAmount += (float) $amt;

@@ -245,6 +245,13 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::get('/PackingForm/{id}/pdf/accounting', 'Admin\PackingFormController@pdfAccounting');
                 Route::resource('/PackingForm', Admin\PackingFormController::class)->except(['show']);
 
+                // ===== Invoice (แก้ราคา + ดูเฉพาะใบ Invoice) ใช้สิทธิ์ร่วมกับ PackingForm =====
+                Route::get('/Invoice', 'Admin\InvoiceController@index');
+                Route::post('/Invoice/Lists', 'Admin\InvoiceController@lists');
+                Route::get('/Invoice/{id}/EditPrice', 'Admin\InvoiceController@editPrice');
+                Route::put('/Invoice/{id}/UpdatePrice', 'Admin\InvoiceController@updatePrice');
+                Route::get('/Invoice/{id}/pdf', 'Admin\InvoiceController@pdf');
+
                 // ===== Credit Note / Debit Note =====
                 Route::post('/CreditNote/Lists', 'Admin\CreditNoteController@lists');
                 Route::get('/CreditNote/CustomerInvoices', 'Admin\CreditNoteController@customerInvoices');
