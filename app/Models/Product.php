@@ -52,6 +52,16 @@ class Product extends Model
         return $this->belongsTo(ProductCategory::class, 'category_id');
     }
 
+    public function subCategory()
+    {
+        return $this->belongsTo(SubCategory::class, 'sub_category_id');
+    }
+
+    public function brand()
+    {
+        return $this->belongsTo(BrandProduct::class, 'brand_id');
+    }
+
     // Catalog: รถที่รองรับ (fitment) + เลข OE  — ดู CATALOG_PLAN.md
     public function fitments()
     {
