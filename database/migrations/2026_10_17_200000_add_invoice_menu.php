@@ -10,68 +10,62 @@ use Illuminate\Support\Facades\Cache;
  *
  * ทำเป็น migration (ไม่ใช่ seeder) เพราะ post-deploy รัน `migrate` อัตโนมัติ
  * → เมนูขึ้นเองตอน deploy ไม่ต้องรัน composer dump-autoload / db:seed บน server
+ * คอลัมน์ insert อิง pattern เดียวกับ add_credit_note_menu (ที่รันผ่านจริงบน production)
  * idempotent: ถ้ามีเมนู Invoice แล้วจะข้าม
  */
 return new class extends Migration
 {
     public function up(): void
     {
-        if (DB::table('menus')->where('url', 'Invoice')->exists()) {
-            return;
+        if (!DB::table('menus')->where('url', 'Invoice')->exists()) {
+            $pack = DB::table('menus')->where('url', 'PackingForm')->first();
+
+            DB::table('menus')->insert([
+                'main_menu_id' => $pack->main_menu_id ?? null,
+                'icon' => 'fa fa-file-invoice-dollar',
+                'img' => null,
+                'title_th' => 'Invoice',
+                'title_en' => 'Invoice',
+                'url' => 'Invoice',
+                'badge' => null,
+                'label' => null,
+                'highlight' => null,
+                'show' => 'T',
+                'sort_id' => $pack ? ((int) $pack->sort_id) : 93,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
 
+        $menuId = DB::table('menus')->where('url', 'Invoice')->value('id');
         $pack = DB::table('menus')->where('url', 'PackingForm')->first();
 
-        $menuId = DB::table('menus')->insertGetId([
-            'main_menu_id' => $pack->main_menu_id ?? null,
-            'icon' => 'fa fa-file-invoice-dollar',
-            'title' => 'Invoice',
-            'title_en' => 'Invoice',
-            'title_th' => 'Invoice',
-            'url' => 'Invoice',
-            'show' => 'T',
-            'sort_id' => $pack ? ((int) $pack->sort_id) : 99,
-        ]);
+        // ให้สิทธิ์ผู้ใช้ที่มีสิทธิ์ PackingForm (อ่าน+แก้) ไม่งั้น fallback ให้ทุก admin
+        $userIds = $pack
+            ? DB::table('crud_menus')->where('menu_id', $pack->id)->pluck('user_id')->all()
+            : DB::table('admin_users')->pluck('id')->all();
 
-        $now = now();
-
-        $grant = function ($userId) use ($menuId, $now) {
-            DB::table('crud_menus')->insert([
-                'user_id' => $userId,
-                'menu_id' => $menuId,
-                'created' => 'F',
-                'readed' => 'T',
-                'updated' => 'T',
-                'deleted' => 'F',
-                'printed' => 'T',
-                'export_excel' => 'F',
-                'export_pdf' => 'F',
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
+        foreach (array_unique($userIds) as $userId) {
+            $has = DB::table('crud_menus')->where('user_id', $userId)->where('menu_id', $menuId)->exists();
+            if (!$has) {
+                DB::table('crud_menus')->insert([
+                    'user_id' => $userId,
+                    'menu_id' => $menuId,
+                    'created' => 'F', 'readed' => 'T', 'updated' => 'T', 'deleted' => 'F',
+                    'printed' => 'T', 'export_excel' => 'F', 'export_pdf' => 'F',
+                    'created_at' => now(), 'updated_at' => now(),
+                ]);
+            }
             Cache::forget("user_perms_{$userId}");
-        };
-
-        $granted = 0;
-        if ($pack) {
-            foreach (DB::table('crud_menus')->where('menu_id', $pack->id)->get() as $c) {
-                $grant($c->user_id);
-                $granted++;
-            }
-        }
-        if ($granted === 0) {
-            foreach (DB::table('admin_users')->pluck('id') as $uid) {
-                $grant($uid);
-            }
         }
     }
 
     public function down(): void
     {
-        $menu = DB::table('menus')->where('url', 'Invoice')->first();
-        if ($menu) {
-            DB::table('crud_menus')->where('menu_id', $menu->id)->delete();
-            DB::table('menus')->where('id', $menu->id)->delete();
+        $menuId = DB::table('menus')->where('url', 'Invoice')->value('id');
+        if ($menuId) {
+            DB::table('crud_menus')->where('menu_id', $menuId)->delete();
+            DB::table('menus')->where('id', $menuId)->delete();
         }
     }
 };
