@@ -63,6 +63,7 @@
                                 <th>G.T.</th>
                                 <th>UOM</th>
                                 <th>From CO</th>
+                                <th style="min-width:110px">Mark &amp; No.</th>
                                 <th width="3%"></th>
                             </tr>
                         </thead>
@@ -275,6 +276,7 @@ $(document).ready(function() {
             <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_weight_gt[]" min="0" step="0.01"></td>
             <td><input type="text" class="form-control form-control-sm packing-tab" name="uom[]"></td>
             <td><input type="text" class="form-control form-control-sm packing-tab" name="from_co[]"></td>
+            <td><input type="text" class="form-control form-control-sm packing-tab" name="mark_no[]" placeholder="เว้นว่าง = FA อัตโนมัติ"></td>
             <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-remove-row" tabindex="-1"><i class="fa fa-trash"></i></button></td>
         </tr>`;
         var $tr = $(newRow);

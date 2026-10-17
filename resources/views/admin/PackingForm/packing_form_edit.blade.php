@@ -53,6 +53,7 @@
                                 <th>G.T.</th>
                                 <th>UOM</th>
                                 <th>From CO</th>
+                                <th style="min-width:110px">Mark &amp; No.</th>
                                 <th width="3%"></th>
                             </tr>
                         </thead>

@@ -128,17 +128,30 @@
         return \Illuminate\Support\Str::startsWith($doc, 'PI') ? 'FA'.substr($doc, 2) : $doc;
     };
 
-    // จัดกลุ่มซ้อน: FA (หัวใหญ่) -> Product Category (ย่อย) -> รายการ; คงลำดับเดิม
-    $faGroups = [];
+    // Mark & No. ต่อรายการ: ใช้ค่าที่ผู้ใช้พิมพ์ (mark_no) ถ้าว่างใช้เลข FA อัตโนมัติ
+    $markOf = function ($line) use ($faOf) {
+        $m = trim((string) ($line->mark_no ?? ''));
+        return $m !== '' ? $m : $faOf($line);
+    };
+
+    // จัดกลุ่มซ้อน: Product Category (หัวใหญ่) -> Mark & No. (ย่อย) -> รายการ; คงลำดับเดิม
+    $catGroups = [];
     foreach ($packingForm->details as $line) {
-        $fa = $faOf($line);
         $cat = $line->piProduct?->product?->category?->name_en
             ?: ($line->piProduct?->product?->category?->name ?? '');
         $catKey = $cat !== '' ? $cat : '__NONE__';
-        $faGroups[$fa][$catKey][] = $line;
+        $mark = $markOf($line);
+        $catGroups[$catKey][$mark][] = $line;
     }
-    // เลข FA ที่ไม่ซ้ำ (ไว้เติมใน marks)
-    $faList = array_values(array_filter(array_keys($faGroups), fn($f) => $f !== ''));
+    // Mark & No. ที่ไม่ซ้ำ (ไว้เติมใน marks block)
+    $faList = [];
+    foreach ($catGroups as $marks) {
+        foreach (array_keys($marks) as $m) {
+            if ($m !== '' && !in_array($m, $faList, true)) {
+                $faList[] = $m;
+            }
+        }
+    }
 
     // จำนวนคาร์ตันรวม = ผลรวมจำนวนกล่องทุกแถว Σ(to − from + 1) — คำนวณสด ไม่พึ่งค่า pkg (M8)
     // + ผลรวมน้ำหนัก NET/GROSS (สำหรับ Invoice) + incoterm จาก PI (บรรทัด FOB)
@@ -464,15 +477,15 @@
         </tr>
         @endif
         @endif
-        @forelse($faGroups as $fa => $cats)
-            @if($fa !== '')
-            <tr class="fa-row"><td colspan="{{ $isAccounting ? 5 : 7 }}">MARK &amp; NO. : {{ $fa }}</td></tr>
-            @endif
-            @foreach($cats as $catKey => $catLines)
+        @forelse($catGroups as $catKey => $marks)
             @if($catKey !== '__NONE__')
-            <tr class="cat-row"><td colspan="{{ $isAccounting ? 5 : 7 }}">{{ $catKey }}</td></tr>
+            <tr class="fa-row"><td colspan="{{ $isAccounting ? 5 : 7 }}">{{ $catKey }}</td></tr>
             @endif
-            @foreach($catLines as $line)
+            @foreach($marks as $mark => $markLines)
+            @if($mark !== '')
+            <tr class="cat-row"><td colspan="{{ $isAccounting ? 5 : 7 }}">MARK &amp; NO. : {{ $mark }}</td></tr>
+            @endif
+            @foreach($markLines as $line)
             @php($price = $linePricing($line)) @php($k++)
             <tr class="item-row">
                 <td align="center">{{ $isAccounting ? $k : $markNo($line) }}</td>
@@ -507,7 +520,7 @@
             </tr>
         @endforelse
         {{-- Invoice: ถ้าไม่มีหน่วยให้สรุป ปิดเส้นล่างใต้แถวสุดท้ายเอง (item-row ตัด border-bottom ไว้) --}}
-        @if($isAccounting && count($faGroups) && count($qtyByUom) === 0)
+        @if($isAccounting && count($catGroups) && count($qtyByUom) === 0)
         <tr><td colspan="5" style="border:none; border-top:1px solid #000; padding:0; height:1px; line-height:1px;"></td></tr>
         @endif
     </tbody>

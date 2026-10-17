@@ -38,5 +38,6 @@
     <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_weight_gt[]" value="{{ $detail?->weight_gt }}" min="0" step="0.01"></td>
     <td><input type="text" class="form-control form-control-sm packing-tab" name="uom[]" value="{{ $detail?->uom }}"></td>
     <td><input type="text" class="form-control form-control-sm packing-tab" name="from_co[]" value="{{ $detail?->from_co }}"></td>
+    <td><input type="text" class="form-control form-control-sm packing-tab" name="mark_no[]" value="{{ $detail?->mark_no }}" placeholder="เว้นว่าง = FA อัตโนมัติ"></td>
     <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-remove-row" tabindex="-1"><i class="fa fa-trash"></i></button></td>
 </tr>

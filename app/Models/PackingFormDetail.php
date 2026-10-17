@@ -28,6 +28,7 @@ class PackingFormDetail extends Model
         'weight_gt',
         'uom',
         'from_co',
+        'mark_no',
     ];
 
     protected $casts = [

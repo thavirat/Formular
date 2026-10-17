@@ -439,6 +439,7 @@ class PackingFormController extends AdminController
             $gts = $request->input('detail_weight_gt', []);
             $uoms = $request->input('uom', []);
             $fromCos = $request->input('from_co', []);
+            $markNos = $request->input('mark_no', []);
 
             foreach ($partNos as $idx => $partNo) {
                 $partNo = trim((string) $partNo);
@@ -466,6 +467,7 @@ class PackingFormController extends AdminController
                 $detail->weight_gt = $this->nullableDecimalInput($gts[$idx] ?? null);
                 $detail->uom = isset($uoms[$idx]) && trim((string) $uoms[$idx]) !== '' ? trim((string) $uoms[$idx]) : null;
                 $detail->from_co = isset($fromCos[$idx]) && trim((string) $fromCos[$idx]) !== '' ? trim((string) $fromCos[$idx]) : null;
+                $detail->mark_no = isset($markNos[$idx]) && trim((string) $markNos[$idx]) !== '' ? trim((string) $markNos[$idx]) : null;
                 $pid = $piProductIds[$idx] ?? null;
                 $detail->pi_product_id = $pid !== '' && $pid !== null ? (int) $pid : null;
                 $detail->save();
@@ -614,6 +616,7 @@ class PackingFormController extends AdminController
             $gts = $request->input('detail_weight_gt', []);
             $uoms = $request->input('uom', []);
             $fromCos = $request->input('from_co', []);
+            $markNos = $request->input('mark_no', []);
 
             foreach ($partNos as $idx => $partNo) {
                 $partNo = trim((string) $partNo);
@@ -653,6 +656,7 @@ class PackingFormController extends AdminController
                 $detail->weight_gt = $this->nullableDecimalInput($gts[$idx] ?? null);
                 $detail->uom = isset($uoms[$idx]) && trim((string) $uoms[$idx]) !== '' ? trim((string) $uoms[$idx]) : null;
                 $detail->from_co = isset($fromCos[$idx]) && trim((string) $fromCos[$idx]) !== '' ? trim((string) $fromCos[$idx]) : null;
+                $detail->mark_no = isset($markNos[$idx]) && trim((string) $markNos[$idx]) !== '' ? trim((string) $markNos[$idx]) : null;
                 $pid = $piProductIds[$idx] ?? null;
                 $detail->pi_product_id = $pid !== '' && $pid !== null ? (int) $pid : null;
                 $detail->save();
