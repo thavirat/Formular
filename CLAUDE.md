@@ -24,6 +24,11 @@ Packing (import จากโรงงาน) → แยกเป็น Invoice (
 - **Post-deploy actions รันอัตโนมัติ** (ไม่ต้องสั่งให้ user รันเอง):
   `artisan config:clear`, `cache:clear`, `view:clear`, `route:clear`, **`migrate`**
   (แต่ **ไม่รัน `db:seed`** — seeder ต้องสั่งเองบน server ครั้งเดียว)
+- **รัน seeder ตัวเดียวบน production** (seeder เป็น global classmap, แอปเป็น production):
+  `php artisan db:seed --class="\ชื่อSeeder" --force`
+  - ต้องมี **`\` นำหน้า** (Laravel 12 เติม `Database\Seeders\` ให้อัตโนมัติ แต่ seeder นี้ไม่มี namespace)
+  - ต้องมี **`--force`** (ข้าม prompt เพราะ production)
+  - ถ้าขึ้น "class does not exist" → `composer dump-autoload` ก่อน (deploy ไม่ได้ dump classmap ให้)
 - ⇒ ของขึ้น `main` แล้ว migration + clear cache รันเอง — เวลาบอกวิธีใช้ **ไม่ต้องสั่ง user รัน migrate/clear เอง**
 - push แค่ branch อื่น = ยังไม่ขึ้น production (ต้อง merge เข้า main ก่อน)
 

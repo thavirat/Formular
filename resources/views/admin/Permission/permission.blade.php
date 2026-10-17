@@ -25,6 +25,7 @@
                             </div>
                         </div>
 
+                        <div class="table-responsive">
                         <table id="TableList" class="table table-border-x brc-secondary-l4 border-0 mb-0 w-100">
                             <thead class="">
                                 <tr>
@@ -38,6 +39,7 @@
                             <tbody class="mt-1">
                             </tbody>
                         </table>
+                        </div>
 
 
                     </div><!-- /.card-body -->
@@ -148,8 +150,6 @@ var TableList = null;
 $(function(){
 
     TableList = $('#TableList').dataTable({
-        scrollY : height-380,
-        scrollX : true,
         "pageLength": 50,
         "ajax": {
             "url": url_gb+"/admin/Permission/Lists",
