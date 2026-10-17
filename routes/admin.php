@@ -228,6 +228,12 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::get('/PackingForm/{id}/pdf/accounting', 'Admin\PackingFormController@pdfAccounting');
                 Route::resource('/PackingForm', Admin\PackingFormController::class)->except(['show']);
 
+                Route::get('/Invoice', 'Admin\InvoiceController@index');
+                Route::post('/Invoice/Lists', 'Admin\InvoiceController@lists');
+                Route::get('/Invoice/{id}/EditPrice', 'Admin\InvoiceController@editPrice');
+                Route::put('/Invoice/{id}/UpdatePrice', 'Admin\InvoiceController@updatePrice');
+                Route::get('/Invoice/{id}/pdf', 'Admin\InvoiceController@pdf');
+
                 Route::post('/AccountCredit/Lists', 'Admin\AccountCreditController@lists');
     Route::get('/AccountCredit/ExportPDF', 'Admin\AccountCreditController@export_pdf');
     Route::get('/AccountCredit/ExportExcel', 'Admin\AccountCreditController@export_excel');

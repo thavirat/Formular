@@ -45,20 +45,30 @@
         }
         return \Illuminate\Support\Str::limit($desc, 80);
     };
-    /** ราคาจาก PI ที่ผูกกับแถว (pi_product_id) */
-    $linePricing = function ($line) use ($fmt) {
+    /** ราคาต่อหน่วย: ใช้ที่แก้ในหน้า Invoice (unit_price) ก่อน ถ้าว่าง fallback ไป PI */
+    $lineAmount = function ($line) {
+        $pip = $line->piProduct;
+        $hasOwn = $line->unit_price !== null && $line->unit_price !== '';
+        if ($hasOwn) {
+            return (float) $line->unit_price * (float) ($line->qty ?? 0);
+        }
+        $amount = $pip?->total_price;
+        if (($amount === null || $amount === '') && $pip?->price_per_item && $line->qty) {
+            $amount = (float) $pip->price_per_item * (float) $line->qty;
+        }
+        return (float) $amount;
+    };
+    $linePricing = function ($line) use ($fmt, $lineAmount) {
         $pip = $line->piProduct;
         $currency = $pip?->pi?->currency;
-        $unitPrice = $pip?->price_per_item;
-        $amount = $pip?->total_price;
-        if (($amount === null || $amount === '') && $unitPrice !== null && $unitPrice !== '' && $line->qty) {
-            $amount = (float) $unitPrice * (float) $line->qty;
-        }
+        $hasOwn = $line->unit_price !== null && $line->unit_price !== '';
+        $unitPrice = $hasOwn ? $line->unit_price : $pip?->price_per_item;
+        $amount = $lineAmount($line);
 
         return [
             'symbol' => $currency?->symbol ?? '',
             'unit_price' => $unitPrice !== null && $unitPrice !== '' ? $fmt($unitPrice) : '',
-            'amount' => $amount !== null && $amount !== '' ? $fmt($amount) : '',
+            'amount' => $amount ? $fmt($amount) : '',
         ];
     };
     $lineUom = function ($line) {
@@ -114,11 +124,7 @@
             if ($curSymbol === '') {
                 $curSymbol = $pip?->pi?->currency?->symbol ?? '';
             }
-            $amt = $pip?->total_price;
-            if (($amt === null || $amt === '') && $pip?->price_per_item && $line->qty) {
-                $amt = (float) $pip->price_per_item * (float) $line->qty;
-            }
-            $sumAmount += (float) $amt;
+            $sumAmount += $lineAmount($line);
         }
     }
 
