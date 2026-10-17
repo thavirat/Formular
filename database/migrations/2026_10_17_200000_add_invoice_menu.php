@@ -1,25 +1,22 @@
 <?php
 
-use Illuminate\Database\Seeder;
+use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * เพิ่มเมนู "Invoice" ในแถบข้าง (เป็นเมนูข้าง ๆ PackingForm)
- * และให้สิทธิ์ (crud_menus: อ่าน+แก้ไข) กับผู้ใช้ทุกคนที่มีสิทธิ์ PackingForm อยู่แล้ว
+ * เพิ่มเมนู "Invoice" ในแถบข้าง (ข้าง ๆ PackingForm) + ให้สิทธิ์ (crud_menus: อ่าน+แก้)
+ * กับผู้ใช้ทุกคนที่มีสิทธิ์ PackingForm อยู่แล้ว
  *
- * รัน:  php artisan db:seed --class=AddInvoiceMenuSeeder
- *       php artisan cache:clear   (ให้เมนูขึ้นทันที)
- *
- * หมายเหตุ: หน้า Invoice ใช้สิทธิ์ร่วมกับ PackingForm อยู่แล้ว เมนูนี้แค่ทำลิงก์ให้กดง่าย
+ * ทำเป็น migration (ไม่ใช่ seeder) เพราะ post-deploy รัน `migrate` อัตโนมัติ
+ * → เมนูขึ้นเองตอน deploy ไม่ต้องรัน composer dump-autoload / db:seed บน server
+ * idempotent: ถ้ามีเมนู Invoice แล้วจะข้าม
  */
-class AddInvoiceMenuSeeder extends Seeder
+return new class extends Migration
 {
-    public function run()
+    public function up(): void
     {
         if (DB::table('menus')->where('url', 'Invoice')->exists()) {
-            $this->command->info('มีเมนู Invoice อยู่แล้ว — ข้าม');
-
             return;
         }
 
@@ -37,9 +34,8 @@ class AddInvoiceMenuSeeder extends Seeder
         ]);
 
         $now = now();
-        $granted = 0;
 
-        $grant = function ($userId) use ($menuId, $now, &$granted) {
+        $grant = function ($userId) use ($menuId, $now) {
             DB::table('crud_menus')->insert([
                 'user_id' => $userId,
                 'menu_id' => $menuId,
@@ -54,21 +50,28 @@ class AddInvoiceMenuSeeder extends Seeder
                 'updated_at' => $now,
             ]);
             Cache::forget("user_perms_{$userId}");
-            $granted++;
         };
 
+        $granted = 0;
         if ($pack) {
             foreach (DB::table('crud_menus')->where('menu_id', $pack->id)->get() as $c) {
                 $grant($c->user_id);
+                $granted++;
             }
         }
-
         if ($granted === 0) {
             foreach (DB::table('admin_users')->pluck('id') as $uid) {
                 $grant($uid);
             }
         }
-
-        $this->command->info("เพิ่มเมนู Invoice แล้ว (ให้สิทธิ์ {$granted} ผู้ใช้) — อย่าลืม php artisan cache:clear");
     }
-}
+
+    public function down(): void
+    {
+        $menu = DB::table('menus')->where('url', 'Invoice')->first();
+        if ($menu) {
+            DB::table('crud_menus')->where('menu_id', $menu->id)->delete();
+            DB::table('menus')->where('id', $menu->id)->delete();
+        }
+    }
+};
