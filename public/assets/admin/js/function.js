@@ -19,6 +19,31 @@ function refreshCsrfToken() {
     });
 }
 
+// จัดการ 419 (CSRF token mismatch) ที่เดียว: ต่ออายุ token ใหม่ + แจ้งผู้ใช้แบบเป็นมิตร
+// มี lock กันเด้งซ้ำ เผื่อทั้ง global handler และ .fail() ของหน้ายิงพร้อมกัน
+var _csrf419Lock = false;
+function handleCsrf419() {
+    refreshCsrfToken();
+    if (_csrf419Lock) { return; }
+    _csrf419Lock = true;
+    setTimeout(function () { _csrf419Lock = false; }, 1500);
+    if (typeof Swal !== 'undefined') {
+        Swal.fire(
+            'เซสชันหมดอายุ',
+            'ระบบต่ออายุการใช้งานให้ใหม่แล้ว กรุณากดบันทึก/ยืนยันอีกครั้ง (ข้อมูลในหน้านี้ยังอยู่ครบ ไม่ต้องกรอกใหม่)',
+            'warning'
+        );
+    }
+}
+
+// ตัวดัก 419 แบบ global: ครอบ ajax ทุกจุดในระบบ แม้หน้าที่ไม่ได้เรียก ajaxFail
+$(document).ajaxError(function (event, jqxhr, settings) {
+    if (!jqxhr || jqxhr.status !== 419) { return; }
+    // เว้น KeepAlive เอง กัน loop
+    if (settings && settings.url && settings.url.indexOf('/admin/KeepAlive') !== -1) { return; }
+    handleCsrf419();
+});
+
 $.extend( true, $.fn.dataTable.defaults, {
     "pageLength": 50,
     "oClasses": {
@@ -130,14 +155,9 @@ $('.modal').on('shown.bs.modal', function() {
 
 function ajaxFail(res, form) {
     // 419 = CSRF token mismatch (session/token หมดอายุ เพราะเปิดหน้าค้างไว้นาน)
-    // ต่ออายุ token ให้ใหม่ แล้วบอกผู้ใช้กด Save ซ้ำ — ข้อมูลในหน้ายังอยู่ครบ ไม่ต้องคีย์ใหม่
+    // ใช้ตัวจัดการกลาง (มี lock กันเด้งซ้ำกับ global ajaxError) — ข้อมูลในหน้ายังอยู่ครบ
     if (res && res.status === 419) {
-        refreshCsrfToken();
-        Swal.fire(
-            'เซสชันหมดอายุ',
-            'ระบบต่ออายุการใช้งานให้ใหม่แล้ว กรุณากดบันทึกอีกครั้ง (ข้อมูลในหน้านี้ยังอยู่ครบ ไม่ต้องกรอกใหม่)',
-            'warning'
-        );
+        handleCsrf419();
         if (form) { resetButton(form.find('button[type=submit]')); }
         return;
     }

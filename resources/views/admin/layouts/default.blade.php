@@ -298,7 +298,7 @@
 
 
     <script src="{{asset('assets/global/js/modal.js')}}"></script>
-    <script src="{{asset('assets/admin/js/function.js')}}?v=4"></script>
+    <script src="{{asset('assets/admin/js/function.js')}}?v=5"></script>
 
     {{-- Jquery Validate --}}
     <script src="{{asset('assets/admin/node_modules/jquery-validation/dist/jquery.validate.js')}}"></script>
