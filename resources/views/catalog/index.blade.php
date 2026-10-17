@@ -1,32 +1,32 @@
 @extends('catalog.layout')
-@section('title', 'FORMULA — แคตตาล็อกอะไหล่แอร์รถยนต์')
+@section('title', 'FORMULA — '.__('catalog.list_title'))
 
 @section('content')
 <section class="hero"><div class="wrap">
   <div>
-    <div class="eyebrow">THE RIGHT PART. THE RIGHT FIT.</div>
-    <h1>ค้นหาอะไหล่แอร์รถยนต์<br>Formula ได้ในที่เดียว</h1>
-    <p>ค้นหาสินค้าจากรหัสสินค้าหรือชื่อ และเลือกดูตามหมวดหมู่อะไหล่ระบบปรับอากาศรถยนต์</p>
+    <div class="eyebrow">{{ __('catalog.hero_eyebrow') }}</div>
+    <h1>{!! __('catalog.hero_title') !!}</h1>
+    <p>{{ __('catalog.hero_desc') }}</p>
   </div>
-  <div class="art"><svg role="img" aria-label="ภาพประกอบคอนเดนเซอร์"><use href="#condenser"/></svg></div>
+  <div class="art"><svg role="img" aria-label="condenser"><use href="#condenser"/></svg></div>
 </div></section>
 
 <div class="wrap"><div class="searchbox">
   <form action="{{ route('catalog.products') }}" method="GET">
     <div class="fields">
-      <label style="width:100%">ค้นหาด้วยรหัสสินค้า หรือชื่อสินค้า
-        <input name="q" placeholder="เช่น 5205-0302-00 หรือ คอนเดนเซอร์ หรือ COMPRESSOR">
+      <label style="width:100%">{{ __('catalog.search_label') }}
+        <input name="q" placeholder="{{ __('catalog.search_placeholder') }}">
       </label>
-      <button class="primary">ค้นหาสินค้า →</button>
+      <button class="primary">{{ __('catalog.search_btn') }} →</button>
     </div>
   </form>
-  <p class="hint">ค้นจากข้อมูลสินค้าจริงในระบบ · หรือเลือกตามหมวดหมู่ด้านล่าง</p>
+  <p class="hint">{{ __('catalog.search_hint') }}</p>
 </div></div>
 
 <section class="section wrap" id="categories">
   <div class="sectionhead">
-    <div><h2>เลือกตามหมวดหมู่สินค้า</h2><p>สำรวจชิ้นส่วนในระบบปรับอากาศรถยนต์</p></div>
-    <a class="textlink" href="{{ route('catalog.products') }}">ดูสินค้าทั้งหมด ↗</a>
+    <div><h2>{{ __('catalog.categories_title') }}</h2><p>{{ __('catalog.categories_desc') }}</p></div>
+    <a class="textlink" href="{{ route('catalog.products') }}">{{ __('catalog.view_all') }} ↗</a>
   </div>
   <div class="cats">
     @foreach($categories as $cat)
@@ -40,15 +40,15 @@
       @endphp
       <a class="cat" href="{{ route('catalog.products', ['sub' => $cat->id]) }}">
         <svg role="img" aria-label="{{ $cat->name_en }}"><use href="#{{ $art }}"/></svg>
-        <span><strong>{{ $cat->name_th ?: $cat->name_en }}</strong><small>{{ $cat->name_en }} · {{ number_format($cat->products_count) }} รายการ</small></span>
+        <span><strong>{{ $cat->catalogName() }}</strong><small>{{ number_format($cat->products_count) }} {{ __('catalog.items') }}</small></span>
       </a>
     @endforeach
   </div>
 </section>
 
 <section class="gray section"><div class="wrap">
-  <div class="sectionhead"><div><div class="eyebrow">FEATURED</div><h2 style="margin-top:7px">สินค้าตัวอย่างในระบบ</h2></div>
-    <a class="textlink" href="{{ route('catalog.products') }}">เปิดแคตตาล็อก ↗</a></div>
+  <div class="sectionhead"><div><div class="eyebrow">{{ __('catalog.featured_eyebrow') }}</div><h2 style="margin-top:7px">{{ __('catalog.featured_title') }}</h2></div>
+    <a class="textlink" href="{{ route('catalog.products') }}">{{ __('catalog.open_catalogue') }} ↗</a></div>
   <div class="products">
     @foreach($featured as $p)
       @include('catalog._card', ['p' => $p])

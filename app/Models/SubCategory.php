@@ -16,4 +16,13 @@ class SubCategory extends Model
     {
         return $this->hasMany(Product::class, 'sub_category_id');
     }
+
+    /** ชื่อหมวดตามภาษาที่เลือก (en = default) */
+    public function catalogName()
+    {
+        $th = Product::cleanName($this->name_th);
+        $en = Product::cleanName($this->name_en);
+
+        return app()->getLocale() === 'th' ? ($th ?: $en) : ($en ?: $th);
+    }
 }

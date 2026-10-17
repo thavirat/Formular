@@ -57,6 +57,30 @@ class Product extends Model
         return $this->belongsTo(SubCategory::class, 'sub_category_id');
     }
 
+    /** ชื่อสินค้าตามภาษาที่เลือก (en = default) */
+    public function catalogName()
+    {
+        $th = self::cleanName($this->name_th);
+        $en = self::cleanName($this->name_en);
+
+        return app()->getLocale() === 'th' ? ($th ?: $en) : ($en ?: $th);
+    }
+
+    /** ชื่ออีกภาษา (ไว้แสดงเป็นบรรทัดรอง) */
+    public function catalogAltName()
+    {
+        return app()->getLocale() === 'th'
+            ? self::cleanName($this->name_en)
+            : self::cleanName($this->name_th);
+    }
+
+    /** ตัดค่าว่าง/สตริง "NULL" ในดีบีออก */
+    public static function cleanName($v)
+    {
+        $v = trim((string) $v);
+        return ($v === '' || strcasecmp($v, 'NULL') === 0) ? null : $v;
+    }
+
     public function brand()
     {
         return $this->belongsTo(BrandProduct::class, 'brand_id');

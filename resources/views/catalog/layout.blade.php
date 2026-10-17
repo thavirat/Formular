@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="th">
+<html lang="{{ $lang ?? 'en' }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>@yield('title', 'FORMULA — แคตตาล็อกอะไหล่แอร์รถยนต์')</title>
+<title>@yield('title', 'FORMULA — Automotive A/C Catalogue')</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -17,6 +17,8 @@ button,input,select{font:inherit}button,a,select{cursor:pointer}a{color:inherit;
 header{border-bottom:1px solid var(--line);background:white}header .wrap{height:88px}
 .logo{font:italic 900 30px Arial;letter-spacing:-1.6px;color:var(--blue)}.logo small{display:block;font:9px Arial;letter-spacing:3px;color:var(--muted);margin-top:-3px}
 nav{display:flex;gap:32px;font-size:14px}nav a.active{color:var(--blue)}
+.lang{display:flex;gap:7px;align-items:center;font-size:13px;border:1px solid var(--line);border-radius:4px;padding:6px 11px}
+.lang a{color:var(--muted)}.lang a.on{color:var(--blue);font-weight:700}.lang span{color:var(--line)}
 .hero{background:linear-gradient(110deg,#f3f7fa 55%,#e5eef5);overflow:hidden}
 .hero .wrap{position:relative;display:grid;grid-template-columns:1.2fr 1fr;align-items:center;min-height:335px;padding-top:35px;padding-bottom:68px}
 .eyebrow{color:var(--blue);font:700 11px 'Kanit',sans-serif;letter-spacing:2.4px}
@@ -68,27 +70,30 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;p
 </head>
 <body>
 @include('catalog._svg')
-<div class="utility"><div class="wrap"><span>FORMULA / AUTOMOTIVE AIR CONDITIONING</span><span>ONLINE CATALOGUE</span></div></div>
+<div class="utility"><div class="wrap"><span>FORMULA / AUTOMOTIVE AIR CONDITIONING</span><span>{{ __('catalog.utility_tagline') }}</span></div></div>
 <header><div class="wrap">
-  <a class="logo" href="{{ route('catalog.home') }}" aria-label="Formula หน้าหลัก">FORMULA<small>AUTOMOTIVE AIR CONDITIONING</small></a>
+  <a class="logo" href="{{ route('catalog.home') }}" aria-label="Formula">FORMULA<small>AUTOMOTIVE AIR CONDITIONING</small></a>
   <nav>
-    <a href="{{ route('catalog.products') }}">แคตตาล็อกสินค้า</a>
-    <a href="{{ route('catalog.home') }}#categories">หมวดหมู่สินค้า</a>
-    <a href="{{ route('catalog.home') }}#contact">ติดต่อเรา</a>
+    <a href="{{ route('catalog.products') }}">{{ __('catalog.nav_catalog') }}</a>
+    <a href="{{ route('catalog.home') }}#categories">{{ __('catalog.nav_categories') }}</a>
+    <a href="{{ route('catalog.home') }}#contact">{{ __('catalog.nav_contact') }}</a>
   </nav>
-  <span></span>
+  <div class="lang" aria-label="Language">
+    <a href="{{ request()->fullUrlWithQuery(['lang' => 'en']) }}" class="{{ ($lang ?? 'en') === 'en' ? 'on' : '' }}">EN</a>
+    <span>·</span>
+    <a href="{{ request()->fullUrlWithQuery(['lang' => 'th']) }}" class="{{ ($lang ?? 'en') === 'th' ? 'on' : '' }}">TH</a>
+  </div>
 </div></header>
 <main>
 @yield('content')
 </main>
 <section class="section" id="contact" style="border-top:1px solid var(--line)"><div class="wrap">
-  <div class="sectionhead"><div><h2>ต้องการตรวจสอบอะไหล่ที่เหมาะกับรถ?</h2>
-  <p>เตรียมรหัสสินค้าเพื่อให้ทีมงานตรวจสอบเพิ่มเติม — ช่องทางติดต่อจะเพิ่มในขั้นถัดไป</p></div></div>
+  <div class="sectionhead"><div><h2>{{ __('catalog.contact_title') }}</h2><p>{{ __('catalog.contact_desc') }}</p></div></div>
 </div></section>
 <footer><div class="wrap"><div class="footgrid">
-  <div><div class="logo">FORMULA</div><p>อะไหล่ระบบปรับอากาศรถยนต์<br>ค้นหาข้อมูลสินค้าได้อย่างเป็นระบบ</p></div>
-  <div><strong>แคตตาล็อก</strong><a href="{{ route('catalog.products') }}">สินค้าทั้งหมด</a><a href="{{ route('catalog.home') }}#categories">หมวดหมู่สินค้า</a></div>
-  <div><strong>ข้อมูลบริษัท</strong><a href="{{ route('catalog.home') }}#contact">ติดต่อเรา</a></div>
+  <div><div class="logo">FORMULA</div><p>{!! __('catalog.footer_tagline') !!}</p></div>
+  <div><strong>{{ __('catalog.footer_catalog') }}</strong><a href="{{ route('catalog.products') }}">{{ __('catalog.footer_all') }}</a><a href="{{ route('catalog.home') }}#categories">{{ __('catalog.nav_categories') }}</a></div>
+  <div><strong>{{ __('catalog.footer_company') }}</strong><a href="{{ route('catalog.home') }}#contact">{{ __('catalog.nav_contact') }}</a></div>
 </div></div></footer>
 </body>
 </html>
