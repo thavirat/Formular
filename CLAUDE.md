@@ -3,6 +3,12 @@
 ระบบ CRM/เทรด-ส่งออก (Laravel). โฟลว์หลัก: ใบเสนอราคา → Proforma Invoice (PI) →
 Packing (import จากโรงงาน) → แยกเป็น Invoice (บัญชี) + Packing List (จัดส่ง) → เก็บเงินตามเรต.
 
+## ⭐ Workflow (กฎสำคัญ — ห้ามลืม)
+- **ทำงานบน branch แยกเสมอ** ห้าม commit/push ตรงเข้า `main`
+- **เมื่อทำเสร็จต้องถามทุกครั้ง** ว่าจะ merge เข้า `main` ไหม — **ห้าม merge เอง**
+- **ก่อน merge ต้องเช็ค divergence กับ main ทุกครั้ง**: `main` เดินหน้าเร็วมาก (มีหลายเซสชันทำคู่ขนาน + hotfix production) — การ merge branch เก่าทับอาจย้อน hotfix/งานใหม่ → เว็บพัง (เพราะ auto-deploy)
+- **เริ่มงานใหม่ ให้ branch จาก `main` ล่าสุดเสมอ** (`git fetch origin main` ก่อน) ไม่ต่อยอดจาก branch เก่า
+
 ## Stack
 - Laravel 12, PHP **8.4**
 - PDF: `niklasravnsborg/laravel-pdf` (เป็น **mPDF** — ใช้ `{PAGENO}/{nbpg}`, `<htmlpageheader>` ได้)
