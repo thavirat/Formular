@@ -44,6 +44,7 @@
                             </div>
                         </div>
 
+                        <div class="table-responsive">
                         <table id="TableList" class="table table-border-x brc-secondary-l4 border-0 mb-0 w-100">
                             <thead class="text-dark-tp3 bgc-grey-l4 text-90 border-b-1 brc-transparent">
                                 <tr>
@@ -61,6 +62,7 @@
                             <tbody class="mt-1">
                             </tbody>
                         </table>
+                        </div>
 
 
                     </div><!-- /.card-body -->
@@ -424,7 +426,6 @@
         $(function(){
 
             TableList = $('#TableList').dataTable({
-                scrollX : true,
         		"pageLength": 50,
         		"ajax": {
         			"method" : "GET",
