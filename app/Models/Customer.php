@@ -16,6 +16,7 @@ class Customer extends Model
         'mobile',
         'fax',
         'remark',
+        'shipping_mark',
         'level_id',
         'short_name',
         'credit_day',

@@ -91,6 +91,7 @@ class CustomerController extends AdminController
                 $Customer->mobile = $mobile;
                 $Customer->fax = $fax;
                 $Customer->remark = $remark;
+                $Customer->shipping_mark = $request->input('shipping_mark');
                 $Customer->level_id = $level_id;
                 $Customer->save();
                 DB::commit();
@@ -179,6 +180,7 @@ class CustomerController extends AdminController
                 $Customer->mobile = $mobile;
                 $Customer->fax = $fax;
                 $Customer->remark = $remark;
+                $Customer->shipping_mark = $request->input('shipping_mark');
                 $Customer->level_id = $level_id;
                 $Customer->save();
                 DB::commit();

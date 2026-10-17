@@ -183,6 +183,12 @@
                                     <input type="text" name="remark" id="add_remark" class="form-control " >
                                 </div>
                             </div>
+                            <div class="col-md-12 col-sm-12">
+                                <div class="form-group">
+                                    <label for="add_shipping_mark">Shipping Mark (ค่าประจำลูกค้า)</label>
+                                    <textarea name="shipping_mark" id="add_shipping_mark" rows="3" class="form-control" placeholder="พิมพ์ได้หลายบรรทัด — จะใช้เติมช่อง Shipping Marks ในใบ PI"></textarea>
+                                </div>
+                            </div>
 
                         </div>
                     </div>
@@ -294,6 +300,12 @@
                                 <div class="form-group">
                                     <label for="edit_remark">Remark</label>
                                     <input type="text" name="remark" id="edit_remark" class="form-control " >
+                                </div>
+                            </div>
+                            <div class="col-md-12 col-sm-12">
+                                <div class="form-group">
+                                    <label for="edit_shipping_mark">Shipping Mark (ค่าประจำลูกค้า)</label>
+                                    <textarea name="shipping_mark" id="edit_shipping_mark" rows="3" class="form-control" placeholder="พิมพ์ได้หลายบรรทัด — จะใช้เติมช่อง Shipping Marks ในใบ PI"></textarea>
                                 </div>
                             </div>
 
@@ -446,6 +458,7 @@
             $("#edit_mobile").val(res.content.mobile);
             $("#edit_fax").val(res.content.fax);
             $("#edit_remark").val(res.content.remark);
+            $("#edit_shipping_mark").val(res.content.shipping_mark);
             $("#edit_level_id").val(res.content.level_id);
             $('#ModalEdit').modal('show');
         }).fail(function(res){

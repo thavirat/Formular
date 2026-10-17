@@ -164,6 +164,7 @@
                                 <div class="form-group">
                                     <label for="ship_remark">{{__('Ship Remark')}} (Shipping Marks)</label>
                                     <textarea name="ship_remark" id="ship_remark" class="form-control" rows="3" placeholder="พิมพ์ได้หลายบรรทัด">{{ $ProformaInvoice->ship_remark }}</textarea>
+                                    <button type="button" id="loadCustomerShipMark" class="btn btn-outline-secondary btn-sm mt-1" title="แทนที่ด้วย Shipping Mark ประจำลูกค้า"><i class="fa fa-history"></i> โหลด Shipping Mark ของลูกค้า</button>
                                 </div>
                                 <div class="form-group">
                                     <label for="shipment_to">TO</label>
@@ -632,6 +633,19 @@ $(document).ready(function() {
                     $body.append($x);
                 });
             });
+        });
+    });
+
+    // โหลด Shipping Mark ประจำลูกค้ามาเติมช่อง ship_remark
+    $('#loadCustomerShipMark').on('click', function() {
+        var customer_id = $('#customer_id').val();
+        if (!customer_id) { return; }
+        $.get(url_gb + "/admin/ProformaInvoice/CustomerShipMark/" + customer_id).done(function(res) {
+            if (res.status == 1 && res.shipping_mark && res.shipping_mark.trim() !== '') {
+                $('#ship_remark').val(res.shipping_mark);
+            } else {
+                Swal.fire({ icon: 'info', title: 'ไม่พบ Shipping Mark', text: 'ลูกค้ารายนี้ยังไม่ได้ตั้งค่า Shipping Mark (ตั้งได้ที่หน้าลูกค้า)', timer: 2500, showConfirmButton: false });
+            }
         });
     });
 

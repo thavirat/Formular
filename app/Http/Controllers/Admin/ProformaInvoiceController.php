@@ -222,6 +222,19 @@ class ProformaInvoiceController extends AdminController
     }
 
     /**
+     * คืนค่า shipping_mark ประจำลูกค้า (สำหรับปุ่มโหลดในหน้า PI เติมช่อง ship_remark)
+     */
+    public function customerShipMark(Request $request, $customer_id)
+    {
+        $customer = \App\Models\Customer::find($customer_id);
+
+        return response()->json([
+            'status' => 1,
+            'shipping_mark' => $customer->shipping_mark ?? '',
+        ]);
+    }
+
+    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
