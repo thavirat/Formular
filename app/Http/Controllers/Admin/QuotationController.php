@@ -102,6 +102,11 @@ class QuotationController extends AdminController
             return redirect('/admin/PermissionDenined');
         }
 
+        // เลี่ยงเลขซ้ำก่อน validate: ถ้าเลขอัตโนมัติที่ฟอร์มส่งมาถูกใช้ไปแล้ว
+        // (ฟอร์มเปิดค้างไว้นาน) ให้ขยับเป็นเลขว่างถัดไปอัตโนมัติ
+        $resolvedDoc = $this->resolveQuotationDocNo($request->input('doc_no'), $request->input('doc_date'));
+        $request->merge(['doc_no' => $resolvedDoc['doc_no']]);
+
         $validator = Validator::make($request->all(), [
             'customer_id' => 'required',
             'doc_no' => 'required|string|max:50|unique:quotations,doc_no',
@@ -140,8 +145,7 @@ class QuotationController extends AdminController
 
             // --- จัดการเลขที่เอกสาร ---
             $doc_no = trim((string) $request->input('doc_no'));
-            $suggested = $this->suggestQuotationDocNo($doc_date);
-            $run_no = $suggested['run_no'];
+            $run_no = $resolvedDoc['run_no'];
 
             DB::beginTransaction();
             try {
@@ -211,7 +215,8 @@ class QuotationController extends AdminController
         } else {
             $return['status'] = 0;
             $return['title'] = __('messages.error');
-            $return['content'] = 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน';
+            // แสดงสาเหตุจริงที่ validation ไม่ผ่าน (เช่น doc_no ซ้ำ) แทนข้อความรวมที่คลุมเครือ
+            $return['content'] = $validator->errors()->first() ?: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน';
         }
 
         return $return;
@@ -1137,9 +1142,47 @@ class QuotationController extends AdminController
             ->orderBy('run_no', 'desc')
             ->first();
         $run_no = $check ? ((int) $check->run_no) + 1 : 1;
-        $doc_no = 'QT-'.date('ym', strtotime($docDate)).sprintf('%03d', $run_no);
+        $prefix = 'QT-'.date('ym', strtotime($docDate));
+        $doc_no = $prefix.sprintf('%03d', $run_no);
+
+        // กันเลขซ้ำ: run_no ที่คำนวณจาก max+1 อาจชนเลขที่มีอยู่แล้ว
+        // (ฟอร์มค้างไว้นาน / มีการ import / ลบ) ขยับขึ้นจนกว่าจะได้เลขที่ยังว่าง
+        while (Quotation::where('doc_no', $doc_no)->exists()) {
+            $run_no++;
+            $doc_no = $prefix.sprintf('%03d', $run_no);
+        }
 
         return ['run_no' => $run_no, 'doc_no' => $doc_no];
+    }
+
+    /**
+     * หาเลขเอกสารสุดท้ายที่จะบันทึกจริง โดยเลี่ยงเลขซ้ำ
+     * - เลขที่ผู้ใช้กรอกมาและยังว่าง -> ใช้ตามนั้น
+     * - เลขอัตโนมัติ (QT-xxxxxx) ที่ดันซ้ำ (ฟอร์มค้าง) -> ขยับเป็นเลขว่างถัดไปอัตโนมัติ
+     * - เลขที่ผู้ใช้ตั้งเองและซ้ำ -> คงไว้ให้ validator แจ้ง duplicate ชัดเจน
+     *
+     * @return array{run_no: int, doc_no: string}
+     */
+    private function resolveQuotationDocNo(?string $submitted, ?string $docDate): array
+    {
+        $suggested = $this->suggestQuotationDocNo($docDate);
+        $submitted = trim((string) $submitted);
+
+        if ($submitted === '') {
+            return $suggested;
+        }
+
+        if (!Quotation::where('doc_no', $submitted)->exists()) {
+            $tail = (int) substr($submitted, -3);
+            return ['doc_no' => $submitted, 'run_no' => $tail ?: $suggested['run_no']];
+        }
+
+        // ซ้ำแล้ว + เป็นรูปแบบเลขอัตโนมัติ -> ใช้เลขว่างถัดไป
+        if (preg_match('/^QT-\d{6,7}$/', $submitted)) {
+            return $suggested;
+        }
+
+        return ['doc_no' => $submitted, 'run_no' => $suggested['run_no']];
     }
 
     private function parseExcelDateValue($value): ?string
