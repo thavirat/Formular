@@ -867,8 +867,11 @@ class ProformaInvoiceController extends AdminController
                 $str .= '</div>';
                 return $str;
             })
+            ->addColumn('select_box', function ($rec) {
+                return '<input type="checkbox" class="pi-check" value="'.$rec->id.'" data-doc="'.e($rec->doc_no).'">';
+            })
             ->addIndexColumn()
-            ->rawColumns(['doc_info', 'customer_info', 'total', 'produced_progress', 'status_name', 'comment_box', 'action_btns'])
+            ->rawColumns(['select_box', 'doc_info', 'customer_info', 'total', 'produced_progress', 'status_name', 'comment_box', 'action_btns'])
             ->make(true);
     }
 
@@ -1149,6 +1152,56 @@ class ProformaInvoiceController extends AdminController
         $docNo = $data['ProformaInvoice']->doc_no;
         $faNo = \Illuminate\Support\Str::startsWith($docNo, 'PI') ? 'FA'.substr($docNo, 2) : $docNo;
         return $pdf->stream('EXPORT_PRODUCT_' . $faNo . '.pdf');
+    }
+
+    /**
+     * PDF สรุปรวม คิว (CBM) + น้ำหนัก ของ PI หลายใบ (เลือกจากหน้ารายการด้วย checkbox)
+     * พารามิเตอร์: ids = "1,2,3" (ลำดับตามที่เลือก)
+     */
+    public function weightSummary(Request $request)
+    {
+        if (!Help::CheckPermissionMenu($this->current_menu, 'r')) {
+            return redirect('/admin/PermissionDenined');
+        }
+
+        $ids = collect(explode(',', (string) $request->input('ids', '')))
+            ->map(fn ($v) => (int) trim($v))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($ids)) {
+            abort(400, 'กรุณาเลือก PI อย่างน้อย 1 ใบ');
+        }
+
+        $pis = ProformaInvoice::with([
+            'products' => function ($q) {
+                $q->leftJoin('products', 'proforma_invoice_products.product_id', '=', 'products.id')
+                    ->select(
+                        'proforma_invoice_products.*',
+                        'products.name_en as product_name',
+                        'products.width as p_width',
+                        'products.length as p_length',
+                        'products.height as p_height',
+                        'products.content as p_content',
+                        'products.weight as p_weight'
+                    )
+                    ->orderBy('proforma_invoice_products.seq', 'asc');
+            },
+            'customer',
+        ])
+            ->whereIn('id', $ids)
+            ->orderByRaw('FIELD(id, '.implode(',', $ids).')')
+            ->get();
+
+        if ($pis->isEmpty()) {
+            abort(404, 'ไม่พบ PI ที่เลือก');
+        }
+
+        $pdf = \PDF::loadView('admin.ProformaInvoice.proforma_invoice_weight_summary', ['pis' => $pis]);
+
+        return $pdf->stream('PI_WEIGHT_CBM_SUMMARY_'.date('Ymd_His').'.pdf');
     }
 
     public function fic_2_fi(Request $request, $id)

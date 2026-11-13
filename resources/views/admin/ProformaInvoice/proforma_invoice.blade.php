@@ -87,6 +87,11 @@
                 </span>
                 <i class="fa fa-industry text-110 w-2 h-2"></i>
             </a>
+            <button type="button" id="btn-weight-summary" class="btn btn-light-blue btn-h-blue btn-a-blue border-0 radius-3 py-2 text-600 text-90" title="เลือก PI (ติ๊กช่อง) แล้วกดดูสรุปคิว/น้ำหนักรวมเป็น PDF">
+                <span class="d-none d-sm-inline mr-1">คำนวณน้ำหนัก/คิว</span>
+                <i class="fa fa-weight-hanging text-110 w-2 h-2"></i>
+                <span id="weight-count" class="badge badge-sm bgc-white text-blue-d1 ml-1" style="display:none;">0</span>
+            </button>
             @if( $my_menu_permission[$currentMenu->url]['c'] == 'T' )
                 <button type="button" id="btn-open-import-pi" class="btn btn-light-primary btn-h-primary btn-a-primary border-0 radius-3 py-2 text-600 text-90" title="นำเข้า PI จากไฟล์ CSV (ใบสั่งจอง)">
                     <span class="d-none d-sm-inline mr-1">นำเข้า PI (CSV)</span>
@@ -214,6 +219,7 @@
                     <table id="tableProformaInvoice" class="table table-striped-primary table-borderless border-0 mb-0 w-100 table-hover">
                         <thead>
                             <tr class="bgc-primary-d1 text-white">
+                                <th class="text-center" width="30"><input type="checkbox" id="chk-all-pi" title="เลือกทั้งหมด"></th>
                                 <th class="text-center" width="5%">#</th>
                                 <th>เลขที่ / วันที่เอกสาร</th>
                                 <th>ลูกค้า / ผู้จัดทำ</th>
@@ -368,6 +374,7 @@
         },
         "responsive": false,
         "columns": [
+            {"data": "select_box", 'searchable': false, 'orderable': false, "class": "text-center align-middle"},
             {"data": "DT_RowIndex", 'searchable': false, 'orderable': false, "class": "text-center"},
             {"data": "doc_info", "name": 'doc_no', "className": "align-middle"},
             {"data": "customer_info", "name": 'company_name', "className": "align-middle"},
@@ -388,7 +395,52 @@
             },
 
         ],
-        "order": [[1, "desc"]]
+        "order": [[2, "desc"]]
+    });
+
+    // ===== เลือกหลาย PI เพื่อคำนวณคิว/น้ำหนักรวม (เก็บ selection ข้ามหน้าได้) =====
+    var selectedPi = {};  // id -> doc_no
+    function updateWeightCount(){
+        var n = Object.keys(selectedPi).length;
+        var $b = $('#weight-count');
+        if(n > 0){ $b.text(n).show(); } else { $b.hide(); }
+    }
+    function syncSelectAll(){
+        var $boxes = $('#tableProformaInvoice').find('.pi-check');
+        var checked = $boxes.filter(':checked').length;
+        $('#chk-all-pi').prop('checked', $boxes.length > 0 && checked === $boxes.length);
+    }
+    $('body').on('change', '.pi-check', function(){
+        var id = $(this).val();
+        if($(this).prop('checked')){ selectedPi[id] = $(this).data('doc'); } else { delete selectedPi[id]; }
+        syncSelectAll();
+        updateWeightCount();
+    });
+    $('body').on('change', '#chk-all-pi', function(){
+        var chk = $(this).prop('checked');
+        $('#tableProformaInvoice').find('.pi-check').each(function(){
+            $(this).prop('checked', chk);
+            var id = $(this).val();
+            if(chk){ selectedPi[id] = $(this).data('doc'); } else { delete selectedPi[id]; }
+        });
+        updateWeightCount();
+    });
+    // หลัง redraw (เปลี่ยนหน้า/กรอง): ติ๊กกลับให้แถวที่เคยเลือกไว้
+    tableProformaInvoice.on('draw', function(){
+        $('#tableProformaInvoice').find('.pi-check').each(function(){
+            if(selectedPi[$(this).val()]){ $(this).prop('checked', true); }
+        });
+        syncSelectAll();
+        updateWeightCount();
+    });
+
+    $('body').on('click', '#btn-weight-summary', function(){
+        var ids = Object.keys(selectedPi);
+        if(ids.length === 0){
+            Swal.fire({ icon: 'info', title: 'ยังไม่ได้เลือก PI', text: 'กรุณาติ๊กเลือก PI อย่างน้อย 1 ใบก่อนกดคำนวณ (เลือกข้ามหน้าได้)' });
+            return;
+        }
+        window.open(url_gb + '/admin/ProformaInvoice/WeightSummary?ids=' + ids.join(','), '_blank');
     });
 
     $('body').on('submit', '#FormEdit', function(e){
