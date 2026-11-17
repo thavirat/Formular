@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>PI Weight / CBM Summary</title>
     <style>
-        @page { margin: 1.2cm; }
+        @page { sheet-size: A4-L; margin: 1.2cm; }
         body { font-family: 'garuda'; font-size: 11px; color: #222; }
         .title { text-align: center; font-weight: bold; font-size: 20px; margin-bottom: 2px; }
         .subtitle { text-align: center; font-size: 11px; margin-bottom: 14px; color: #555; }
@@ -39,6 +39,7 @@
                 <tr>
                     <th width="32">ITM.</th>
                     <th width="110">Part No.</th>
+                    <th width="90">Dwg.</th>
                     <th>Description</th>
                     <th width="52">W</th>
                     <th width="52">L</th>
@@ -69,6 +70,7 @@
                     <tr>
                         <td class="text-center">{{ $loop->iteration }}</td>
                         <td>{{ $product->part_no ?: '-' }}</td>
+                        <td class="text-center">{{ $product->drawing ?: '-' }}</td>
                         <td>{{ $product->product_name ?: $product->detail_eng ?: '-' }}</td>
                         <td class="text-right">{{ number_format($w, 2) }}</td>
                         <td class="text-right">{{ number_format($l, 2) }}</td>
@@ -80,10 +82,10 @@
                         <td class="text-right">{{ number_format($lineWeight, 2) }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="11" class="text-center">ไม่มีรายการสินค้า</td></tr>
+                    <tr><td colspan="12" class="text-center">ไม่มีรายการสินค้า</td></tr>
                 @endforelse
                 <tr class="sub">
-                    <td colspan="7" class="text-right">รวม {{ $pi->doc_no }}</td>
+                    <td colspan="8" class="text-right">รวม {{ $pi->doc_no }}</td>
                     <td class="text-right">{{ number_format($piQty, 0) }}</td>
                     <td class="text-right">{{ number_format($piCube, 3) }}</td>
                     <td></td>
