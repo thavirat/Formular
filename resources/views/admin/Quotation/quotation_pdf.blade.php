@@ -318,7 +318,8 @@
         <thead>
             <tr>
                 <th width="30">ITM.</th>
-                <th width="120">Part No.</th>
+                <th width="110">Part No.</th>
+                <th width="70">Dwg.</th>
                 <th>Description</th>
                 <th width="58">W</th>
                 <th width="50">L</th>
@@ -344,6 +345,7 @@
                 <tr>
                     <td class="text-center">{{ $loop->iteration }}</td>
                     <td>{{ $product->part_no ?: '-' }}</td>
+                    <td class="text-center">{{ $product->drawing ?: '-' }}</td>
                     <td>{{ $product->product_name ?: $product->detail_eng ?: '-' }}</td>
                     <td class="text-right">{{ number_format($width, 2) }}</td>
                     <td class="text-right">{{ number_format($length, 2) }}</td>
@@ -354,13 +356,13 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" class="text-center">No products found</td>
+                    <td colspan="10" class="text-center">No products found</td>
                 </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr style="background:#f7f7f7;">
-                <td colspan="8" class="text-right text-bold">Total Volume (CBM)</td>
+                <td colspan="9" class="text-right text-bold">Total Volume (CBM)</td>
                 <td class="text-right text-bold">{{ number_format($grandCube, 3) }}</td>
             </tr>
         </tfoot>
