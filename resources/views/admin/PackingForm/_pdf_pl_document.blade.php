@@ -4,6 +4,25 @@
     $variant = $variant ?? 'customer';
     $isAccounting = $variant === 'accounting';
 
+    /** @var string $priceType normal|under_value|freight — เลือกชุดราคาสำหรับ Invoice (ช่องว่าง fallback ราคาปกติ) */
+    $priceType = $priceType ?? 'normal';
+    // ราคาต่อหน่วยตามชุดที่เลือก: under_value/freight ถ้าว่าง -> ใช้ราคาปกติ (unit_price -> PI price_per_item)
+    $effUnitPrice = function ($line) use ($priceType) {
+        $pip = $line->piProduct;
+        $normal = ($line->unit_price !== null && $line->unit_price !== '')
+            ? (float) $line->unit_price
+            : (($pip?->price_per_item !== null && $pip?->price_per_item !== '') ? (float) $pip->price_per_item : null);
+        if ($priceType === 'under_value') {
+            $v = $line->under_value_price;
+            return ($v !== null && $v !== '') ? (float) $v : $normal;
+        }
+        if ($priceType === 'freight') {
+            $v = $line->freight_price;
+            return ($v !== null && $v !== '') ? (float) $v : $normal;
+        }
+        return $normal;
+    };
+
     /** @var string $descSource master|customer — เลือกว่า description ใช้ master ของสินค้า หรือ master ของลูกค้า */
     $descSource = $descSource ?? 'customer';
     $custDescMap = $custDescMap ?? [];
@@ -67,19 +86,25 @@
         return \Illuminate\Support\Str::limit($desc, 80);
     };
     /** ราคาจาก PI ที่ผูกกับแถว (pi_product_id) */
-    $linePricing = function ($line) use ($fmt) {
+    $linePricing = function ($line) use ($fmt, $priceType, $effUnitPrice) {
         $pip = $line->piProduct;
         $currency = $pip?->pi?->currency;
-        // ราคาต่อหน่วย: ใช้ที่แก้ในหน้า Invoice (unit_price) ก่อน ถ้าว่าง fallback ไป PI
-        $hasOwn = $line->unit_price !== null && $line->unit_price !== '';
-        $unitPrice = $hasOwn ? $line->unit_price : $pip?->price_per_item;
-        if ($hasOwn) {
-            $amount = (float) $line->unit_price * (float) ($line->qty ?? 0);
-        } else {
-            $amount = $pip?->total_price;
-            if (($amount === null || $amount === '') && $unitPrice !== null && $unitPrice !== '' && $line->qty) {
-                $amount = (float) $unitPrice * (float) $line->qty;
+        if ($priceType === 'normal') {
+            // ราคาต่อหน่วย: ใช้ที่แก้ในหน้า Invoice (unit_price) ก่อน ถ้าว่าง fallback ไป PI
+            $hasOwn = $line->unit_price !== null && $line->unit_price !== '';
+            $unitPrice = $hasOwn ? $line->unit_price : $pip?->price_per_item;
+            if ($hasOwn) {
+                $amount = (float) $line->unit_price * (float) ($line->qty ?? 0);
+            } else {
+                $amount = $pip?->total_price;
+                if (($amount === null || $amount === '') && $unitPrice !== null && $unitPrice !== '' && $line->qty) {
+                    $amount = (float) $unitPrice * (float) $line->qty;
+                }
             }
+        } else {
+            // Under Value / Freight: ใช้ราคาที่เลือก (ว่าง -> ราคาปกติ) × จำนวน
+            $unitPrice = $effUnitPrice($line);
+            $amount = $unitPrice !== null ? (float) $unitPrice * (float) ($line->qty ?? 0) : null;
         }
 
         return [
@@ -200,11 +225,16 @@
             if ($curSymbol === '') {
                 $curSymbol = $pip?->pi?->currency?->symbol ?? '';
             }
-            $amt = $pip?->total_price;
-            if ($line->unit_price !== null && $line->unit_price !== '') {
-                $amt = (float) $line->unit_price * (float) ($line->qty ?? 0);
-            } elseif (($amt === null || $amt === '') && $pip?->price_per_item && $line->qty) {
-                $amt = (float) $pip->price_per_item * (float) $line->qty;
+            if ($priceType === 'normal') {
+                $amt = $pip?->total_price;
+                if ($line->unit_price !== null && $line->unit_price !== '') {
+                    $amt = (float) $line->unit_price * (float) ($line->qty ?? 0);
+                } elseif (($amt === null || $amt === '') && $pip?->price_per_item && $line->qty) {
+                    $amt = (float) $pip->price_per_item * (float) $line->qty;
+                }
+            } else {
+                $eff = $effUnitPrice($line);
+                $amt = $eff !== null ? (float) $eff * (float) ($line->qty ?? 0) : 0;
             }
             $sumAmount += (float) $amt;
         }

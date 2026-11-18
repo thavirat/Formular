@@ -109,13 +109,22 @@ class InvoiceController extends AdminController
             $form = PackingForm::findOrFail($id);
             $ids = $request->input('detail_id', []);
             $prices = $request->input('unit_price', []);
+            $underValues = $request->input('under_value_price', []);
+            $freights = $request->input('freight_price', []);
 
             foreach ($ids as $i => $detailId) {
-                $price = $this->nullablePrice($prices[$i] ?? null);
                 PackingFormDetail::where('id', (int) $detailId)
                     ->where('packing_form_id', $form->id)
-                    ->update(['unit_price' => $price]);
+                    ->update([
+                        'unit_price' => $this->nullablePrice($prices[$i] ?? null),
+                        'under_value_price' => $this->nullablePrice($underValues[$i] ?? null),
+                        'freight_price' => $this->nullablePrice($freights[$i] ?? null),
+                    ]);
             }
+
+            // เก็บ % Under Value รวมไว้ที่หัวเอกสาร (ไว้ re-calc ตอนเปิดแก้อีกครั้ง)
+            $form->under_value_percent = $this->nullablePrice($request->input('under_value_percent'));
+            $form->save();
 
             DB::commit();
 
@@ -128,11 +137,15 @@ class InvoiceController extends AdminController
     }
 
     /** ดูเฉพาะใบ Invoice (variant accounting) */
-    public function pdf($id)
+    public function pdf(Request $request, $id)
     {
         if (!Help::CheckPermissionMenu($this->current_menu, 'r')) {
             return redirect('/admin/PermissionDenined');
         }
+
+        $priceType = in_array($request->query('price'), ['under_value', 'freight'], true)
+            ? $request->query('price')
+            : 'normal';
 
         $packingForm = PackingForm::with([
             'details' => function ($q) {
@@ -147,6 +160,7 @@ class InvoiceController extends AdminController
 
         $pdf = \PDF::loadView('admin.PackingForm.packing_form_pdf_accounting', [
             'packingForm' => $packingForm,
+            'priceType' => $priceType,
         ], [], [
             'format' => 'A4',
             'margin_left' => 8,

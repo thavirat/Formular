@@ -72,19 +72,35 @@
                     <div class="border-1 brc-success-l2 radius-2 p-3 h-100 bgc-success-l5">
                         <div class="d-flex align-items-center mb-2">
                             <span class="badge badge-success text-100 px-2 py-1"><i class="fa fa-file-invoice-dollar mr-1"></i> Invoice (บัญชี)</span>
+                            @if($can_u)
+                                <a href="{{ url('admin/'.$route_locale.'/Invoice/'.$packingForm->id.'/EditPrice') }}" class="btn btn-sm btn-warning btn-h-warning text-85 px-2 py-1 ml-auto">
+                                    <i class="fa fa-dollar-sign mr-1"></i> แก้ไขราคา
+                                </a>
+                            @endif
                         </div>
+
+                        {{-- เลือกชุดราคาสำหรับ Invoice PDF --}}
+                        <div class="mb-2">
+                            <span class="text-85 text-muted mr-1">ราคาที่ใช้:</span>
+                            <div class="btn-group btn-group-sm" role="group" id="inv-price-group">
+                                <button type="button" class="btn btn-outline-secondary active" data-price="normal">ปกติ</button>
+                                <button type="button" class="btn btn-outline-secondary" data-price="under_value">Under Value</button>
+                                <button type="button" class="btn btn-outline-secondary" data-price="freight">Freight</button>
+                            </div>
+                        </div>
+
                         <div class="d-flex flex-wrap" style="gap:.5rem;">
-                            <a href="{{ $base.'/pdf/accounting' }}" target="_blank" class="btn btn-success btn-h-success text-90 px-3 py-25">
+                            <a href="{{ $base.'/pdf/accounting' }}" target="_blank" data-desc="customer" class="btn btn-success btn-h-success text-90 px-3 py-25 inv-pdf-link">
                                 <i class="fa fa-file-pdf mr-1"></i> ดู / พิมพ์ <span>(ลูกค้า)</span>
                             </a>
-                            <a href="{{ $base.'/pdf/accounting?desc=master' }}" target="_blank" class="btn btn-outline-success text-90 px-3 py-25">
+                            <a href="{{ $base.'/pdf/accounting?desc=master' }}" target="_blank" data-desc="master" class="btn btn-outline-success text-90 px-3 py-25 inv-pdf-link">
                                 <i class="fa fa-file-pdf mr-1"></i> ดู / พิมพ์ <span>(Master)</span>
                             </a>
                             <a href="{{ $base.'/excel?variant=accounting' }}" target="_blank" class="btn btn-outline-success text-90 px-3 py-25">
                                 <i class="fa fa-file-excel mr-1"></i> Excel
                             </a>
                         </div>
-                        <div class="text-85 text-muted mt-2">ใบ Invoice สำหรับบัญชี (มีราคา) — เปิดในแท็บใหม่</div>
+                        <div class="text-85 text-muted mt-2">ใบ Invoice สำหรับบัญชี — เลือกชุดราคา (ปกติ / Under Value / Freight) ก่อนเปิด PDF · Excel ใช้ราคาปกติ</div>
                     </div>
                 </div>
             </div>
@@ -228,6 +244,32 @@
 
 @push('scripts')
 <script>
+    // ---- เลือกชุดราคา -> ปรับลิงก์ Invoice PDF ----
+    (function () {
+        var invBase = "{{ $base }}/pdf/accounting";
+        var curPrice = 'normal';
+        function buildHref(desc) {
+            var params = [];
+            if (desc === 'master') params.push('desc=master');
+            if (curPrice !== 'normal') params.push('price=' + curPrice);
+            return invBase + (params.length ? ('?' + params.join('&')) : '');
+        }
+        function refresh() {
+            document.querySelectorAll('.inv-pdf-link').forEach(function (a) {
+                a.setAttribute('href', buildHref(a.getAttribute('data-desc')));
+            });
+        }
+        document.querySelectorAll('#inv-price-group button').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('#inv-price-group button').forEach(function (b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                curPrice = btn.getAttribute('data-price');
+                refresh();
+            });
+        });
+        refresh();
+    })();
+
     $('#btn-delete-pf').on('click', function () {
         Swal.fire({
             title: 'ลบ Packing list นี้?',

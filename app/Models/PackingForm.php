@@ -31,6 +31,7 @@ class PackingForm extends Model
         'run_no',
         'pkg',
         'qty',
+        'under_value_percent',
         'cubic_meter',
         'weight_nw',
         'weight_gw',

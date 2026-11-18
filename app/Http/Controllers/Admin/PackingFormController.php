@@ -212,13 +212,21 @@ class PackingFormController extends AdminController
 
     public function pdfAccounting(Request $request, $id)
     {
-        return $this->streamPlPdf($id, 'accounting', $this->descSourceFrom($request));
+        return $this->streamPlPdf($id, 'accounting', $this->descSourceFrom($request), $this->priceTypeFrom($request));
     }
 
     /** อ่านแหล่ง description จาก query ?desc=master|customer (ค่าเริ่มต้น customer) */
     private function descSourceFrom(Request $request): string
     {
         return $request->query('desc') === 'master' ? 'master' : 'customer';
+    }
+
+    /** อ่านชุดราคาจาก query ?price=under_value|freight (ค่าเริ่มต้น normal) — ใช้เฉพาะ Invoice */
+    private function priceTypeFrom(Request $request): string
+    {
+        return in_array($request->query('price'), ['under_value', 'freight'], true)
+            ? $request->query('price')
+            : 'normal';
     }
 
     /** โหลด packing form + แผนที่ description ลูกค้า (ใช้ร่วมกันทั้ง PDF และ Excel) */
@@ -276,7 +284,7 @@ class PackingFormController extends AdminController
         return Excel::download(new PackingDocumentExport($packingForm, $variant, $descSource, $custDescMap), $filename);
     }
 
-    private function streamPlPdf($id, string $variant, string $descSource = 'customer')
+    private function streamPlPdf($id, string $variant, string $descSource = 'customer', string $priceType = 'normal')
     {
         $permission = Help::CheckPermissionMenu($this->current_menu, 'r');
         if (!$permission) {
@@ -293,6 +301,7 @@ class PackingFormController extends AdminController
             'packingForm' => $packingForm,
             'descSource' => $descSource,
             'custDescMap' => $custDescMap,
+            'priceType' => $priceType,
         ], [], [
             'format' => 'A4',
             'margin_left' => 8,
@@ -304,6 +313,9 @@ class PackingFormController extends AdminController
 
         $suffix = $variant === 'accounting' ? '_Invoice' : '_PackingList';
         $suffix .= $descSource === 'master' ? '_Master' : '_Customer';
+        if ($variant === 'accounting' && $priceType !== 'normal') {
+            $suffix .= $priceType === 'under_value' ? '_UnderValue' : '_Freight';
+        }
         $filename = ($packingForm->doc_no ?: 'Doc').$suffix.'_'.date('Ymd').'.pdf';
 
         return $pdf->stream($filename);
