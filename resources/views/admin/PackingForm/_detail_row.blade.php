@@ -15,6 +15,11 @@
     <td><input type="number" class="form-control form-control-sm packing-tab" name="line_to[]" value="{{ $detail?->to }}" min="0" step="1"></td>
     <td>
         <input type="hidden" name="detail_id[]" value="{{ $detail?->id }}">
+        {{-- คอลัมน์ Formular/W/L/H ซ่อนจากตาราง (ไม่แก้บนหน้านี้) แต่คงค่าเดิมไว้ตอนบันทึก --}}
+        <input type="hidden" name="formular_number[]" value="{{ $detail?->formular_number }}">
+        <input type="hidden" name="width[]" value="{{ $detail?->width }}">
+        <input type="hidden" name="lenght[]" value="{{ $detail?->lenght }}">
+        <input type="hidden" name="height[]" value="{{ $detail?->height }}">
         <input type="text" class="form-control form-control-sm part-no-input packing-tab" name="part_no[]" value="{{ $detail?->part_no }}" required>
     </td>
     <td>
@@ -26,10 +31,6 @@
     </td>
     <td><input type="text" class="form-control form-control-sm packing-tab" name="cus_part_no[]" value="{{ $detail?->cus_part_no }}"></td>
     <td><input type="text" class="form-control form-control-sm packing-tab" name="description[]" value="{{ $detail?->description }}"></td>
-    <td><input type="text" class="form-control form-control-sm packing-tab" name="formular_number[]" value="{{ $detail?->formular_number }}"></td>
-    <td><input type="number" class="form-control form-control-sm packing-tab" name="width[]" value="{{ $detail?->width }}" min="0" step="0.01"></td>
-    <td><input type="number" class="form-control form-control-sm packing-tab" name="lenght[]" value="{{ $detail?->lenght }}" min="0" step="0.01"></td>
-    <td><input type="number" class="form-control form-control-sm packing-tab" name="height[]" value="{{ $detail?->height }}" min="0" step="0.01"></td>
     <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_qty[]" value="{{ $detail?->qty ?? 0 }}" min="0" step="1" required></td>
     <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_cubic_meter[]" value="{{ $detail?->cubic_meter }}" min="0" step="0.001"></td>
     <td><input type="number" class="form-control form-control-sm packing-tab" name="detail_weight_nw[]" value="{{ $detail?->weight_nw }}" min="0" step="0.01"></td>

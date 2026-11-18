@@ -41,10 +41,6 @@
                                 <th style="min-width:200px">PI / บรรทัด</th>
                                 <th>Cus part</th>
                                 <th style="min-width:140px">รายละเอียด</th>
-                                <th>Formular</th>
-                                <th>W</th>
-                                <th>L</th>
-                                <th>H</th>
                                 <th>Qty</th>
                                 <th>CBM</th>
                                 <th>N.W.</th>
