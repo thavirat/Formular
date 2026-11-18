@@ -37,8 +37,8 @@
                                 <th width="3%">แถว</th>
                                 <th width="4%">From</th>
                                 <th width="4%">To</th>
-                                <th>Part no</th>
-                                <th style="min-width:200px">PI / บรรทัด</th>
+                                <th style="min-width:150px">Part no</th>
+                                <th style="min-width:100px">PI / บรรทัด</th>
                                 <th>Cus part</th>
                                 <th style="min-width:140px">รายละเอียด</th>
                                 <th>Qty</th>
@@ -93,11 +93,16 @@
 </div>
 @endsection
 
-@push('styles')
+@section('css')
 <style>
     .packing-detail-scroll { overflow-x: auto; }
-    #detailTable .form-control-sm { min-width: 4.5rem; }
+    #detailTable .form-control-sm { min-width: 3.4rem; padding-left: .35rem; padding-right: .35rem; }
+    #detailTable td, #detailTable th { padding: .25rem .3rem; }
     #detailTable td { vertical-align: middle; }
+    /* ซ่อนลูกศร spinner ของช่องตัวเลข เพื่อไม่ให้ตัวเลขโดนบังตอนจอเล็ก */
+    #detailTable input[type=number] { -moz-appearance: textfield; }
+    #detailTable input[type=number]::-webkit-outer-spin-button,
+    #detailTable input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     .form-control:focus {
         border-color: #67bbb9;
         box-shadow: 0 0 0 0.2rem rgba(103, 187, 185, 0.25);
@@ -110,7 +115,7 @@
     .select2-container--default .select2-selection--single { height: calc(1.5em + 0.5rem + 2px); min-height: 31px; }
     .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 1.5; padding-top: 2px; }
 </style>
-@endpush
+@endsection
 
 @push('scripts')
 <script type="text/template" id="detail-row-tpl">
