@@ -245,7 +245,7 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::get('/PackingForm/{id}/pdf', 'Admin\PackingFormController@pdf');
                 Route::get('/PackingForm/{id}/pdf/customer', 'Admin\PackingFormController@pdfCustomer');
                 Route::get('/PackingForm/{id}/pdf/accounting', 'Admin\PackingFormController@pdfAccounting');
-                Route::resource('/PackingForm', Admin\PackingFormController::class)->except(['show']);
+                Route::resource('/PackingForm', Admin\PackingFormController::class);
 
                 // ===== Invoice (แก้ราคา + ดูเฉพาะใบ Invoice) ใช้สิทธิ์ร่วมกับ PackingForm =====
                 Route::get('/Invoice', 'Admin\InvoiceController@index');

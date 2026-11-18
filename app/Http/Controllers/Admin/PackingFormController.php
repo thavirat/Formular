@@ -98,25 +98,11 @@ class PackingFormController extends AdminController
             })
             ->addColumn('action_btns', function ($rec) use ($lang) {
                 $str = '<div class="btn-group btn-group-sm">';
-                $u = Help::CheckPermissionMenu($this->current_menu, 'u');
                 $d = Help::CheckPermissionMenu($this->current_menu, 'd');
                 $r = Help::CheckPermissionMenu($this->current_menu, 'r');
                 if ($r) {
-                    $plUrl = url('admin/'.$lang.'/PackingForm/'.$rec->id.'/pdf/customer');
-                    $invUrl = url('admin/'.$lang.'/PackingForm/'.$rec->id.'/pdf/accounting');
-                    // description ของลูกค้า (ค่าเริ่มต้น)
-                    $str .= '<a href="'.$plUrl.'" class="btn btn-xs btn-info" title="Packing List (description ลูกค้า)" target="_blank"><i class="fa fa-box"></i> PL</a> ';
-                    $str .= '<a href="'.$invUrl.'" class="btn btn-xs btn-success" title="Invoice (description ลูกค้า)" target="_blank"><i class="fa fa-file-invoice-dollar"></i> INV</a> ';
-                    // description จาก master สินค้า
-                    $str .= '<a href="'.$plUrl.'?desc=master" class="btn btn-xs btn-outline-info" title="Packing List (description master)" target="_blank"><i class="fa fa-box"></i> PL-M</a> ';
-                    $str .= '<a href="'.$invUrl.'?desc=master" class="btn btn-xs btn-outline-success" title="Invoice (description master)" target="_blank"><i class="fa fa-file-invoice-dollar"></i> INV-M</a> ';
-                    // Export Excel เอกสาร (เผื่อ custom ต่อ)
-                    $xlsUrl = url('admin/'.$lang.'/PackingForm/'.$rec->id.'/excel');
-                    $str .= '<a href="'.$xlsUrl.'?variant=customer" class="btn btn-xs btn-outline-secondary" title="Packing List เป็น Excel" target="_blank"><i class="fa fa-file-excel"></i> PL.xls</a> ';
-                    $str .= '<a href="'.$xlsUrl.'?variant=accounting" class="btn btn-xs btn-outline-secondary" title="Invoice เป็น Excel" target="_blank"><i class="fa fa-file-excel"></i> INV.xls</a> ';
-                }
-                if ($u) {
-                    $str .= '<a href="'.url('admin/'.$lang.'/PackingForm/'.$rec->id.'/edit').'" class="btn btn-xs btn-warning" title="แก้ไข"><i class="fa fa-edit"></i></a> ';
+                    $showUrl = url('admin/'.$lang.'/PackingForm/'.$rec->id);
+                    $str .= '<a href="'.$showUrl.'" class="btn btn-xs btn-primary" title="ดูรายละเอียด / จัดการเอกสาร"><i class="fa fa-folder-open"></i> รายละเอียด</a> ';
                 }
                 if ($d) {
                     $str .= '<button type="button" class="btn btn-xs btn-danger btn-delete" data-id="'.$rec->id.'" title="ลบ"><i class="fa fa-trash"></i></button>';
@@ -489,6 +475,30 @@ class PackingFormController extends AdminController
 
             return response()->json(['status' => 0, 'title' => 'ผิดพลาด', 'content' => $e->getMessage()]);
         }
+    }
+
+    public function show(Request $request, $id)
+    {
+        $permission = Help::CheckPermissionMenu($this->current_menu, 'r');
+        if (!$permission) {
+            return redirect('/admin/PermissionDenined');
+        }
+        $data['SidebarMenus'] = Menu::Active()->get();
+        $data['currentMenu'] = Menu::where('url', $this->current_menu)->first();
+        $data['route_locale'] = config('app.locale');
+        $data['packingForm'] = PackingForm::withCount('details')->with([
+            'details' => function ($q) {
+                $q->orderBy('excel_row')->orderBy('id');
+            },
+            'details.piProduct.pi',
+            'details.piProduct.product',
+            'services',
+        ])->findOrFail($id);
+        $data['admin_lang_slash'] = in_array($request->segment(2), ['th', 'en', 'ch'], true)
+            ? $request->segment(2).'/'
+            : '';
+
+        return view('admin.PackingForm.packing_form_show', $data);
     }
 
     public function edit(Request $request, $id)
