@@ -114,6 +114,10 @@
     }
     .select2-container--default .select2-selection--single { height: calc(1.5em + 0.5rem + 2px); min-height: 31px; }
     .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 1.5; padding-top: 2px; }
+    /* คอลัมน์ PI / บรรทัด (ที่ 5): บังคับให้แคบลงครึ่งหนึ่ง — select2 ไม่ย่อตาม td เอง */
+    #detailTable th:nth-child(5), #detailTable td:nth-child(5) { width: 110px; max-width: 110px; }
+    #detailTable td:nth-child(5) .select2-container { width: 110px !important; min-width: 0; }
+    #detailTable td:nth-child(5) .select2-selection__rendered { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 20px; }
 </style>
 @endsection
 
