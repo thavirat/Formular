@@ -202,12 +202,12 @@ class PackingFormController extends AdminController
 
     public function pdf(Request $request, $id)
     {
-        return $this->streamPlPdf($id, 'customer', $this->descSourceFrom($request));
+        return $this->streamPlPdf($id, 'customer', $this->descSourceFrom($request), 'normal', $this->weightModeFrom($request));
     }
 
     public function pdfCustomer(Request $request, $id)
     {
-        return $this->streamPlPdf($id, 'customer', $this->descSourceFrom($request));
+        return $this->streamPlPdf($id, 'customer', $this->descSourceFrom($request), 'normal', $this->weightModeFrom($request));
     }
 
     public function pdfAccounting(Request $request, $id)
@@ -227,6 +227,12 @@ class PackingFormController extends AdminController
         return in_array($request->query('price'), ['under_value', 'freight'], true)
             ? $request->query('price')
             : 'normal';
+    }
+
+    /** อ่านโหมดน้ำหนักจาก query ?weight=total (ค่าเริ่มต้น unit) — ใช้เฉพาะ Packing List (ต่อกล่อง N.W./G.W. หรือ รวม N.T./G.T.) */
+    private function weightModeFrom(Request $request): string
+    {
+        return $request->query('weight') === 'total' ? 'total' : 'unit';
     }
 
     /** โหลด packing form + แผนที่ description ลูกค้า (ใช้ร่วมกันทั้ง PDF และ Excel) */
@@ -284,7 +290,7 @@ class PackingFormController extends AdminController
         return Excel::download(new PackingDocumentExport($packingForm, $variant, $descSource, $custDescMap), $filename);
     }
 
-    private function streamPlPdf($id, string $variant, string $descSource = 'customer', string $priceType = 'normal')
+    private function streamPlPdf($id, string $variant, string $descSource = 'customer', string $priceType = 'normal', string $weightMode = 'unit')
     {
         $permission = Help::CheckPermissionMenu($this->current_menu, 'r');
         if (!$permission) {
@@ -302,6 +308,7 @@ class PackingFormController extends AdminController
             'descSource' => $descSource,
             'custDescMap' => $custDescMap,
             'priceType' => $priceType,
+            'weightMode' => $weightMode,
         ], [], [
             'format' => 'A4',
             'margin_left' => 8,
@@ -315,6 +322,9 @@ class PackingFormController extends AdminController
         $suffix .= $descSource === 'master' ? '_Master' : '_Customer';
         if ($variant === 'accounting' && $priceType !== 'normal') {
             $suffix .= $priceType === 'under_value' ? '_UnderValue' : '_Freight';
+        }
+        if ($variant !== 'accounting' && $weightMode === 'total') {
+            $suffix .= '_TotalWeight';
         }
         $filename = ($packingForm->doc_no ?: 'Doc').$suffix.'_'.date('Ymd').'.pdf';
 

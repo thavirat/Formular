@@ -53,18 +53,28 @@
                         <div class="d-flex align-items-center mb-2">
                             <span class="badge badge-info text-100 px-2 py-1"><i class="fa fa-box mr-1"></i> Packing List</span>
                         </div>
+
+                        {{-- เลือกชุดน้ำหนักสำหรับ Packing List PDF (ต่อกล่อง หรือ รวม) --}}
+                        <div class="mb-2">
+                            <span class="text-85 text-muted mr-1">น้ำหนัก:</span>
+                            <div class="btn-group btn-group-sm" role="group" id="pl-weight-group">
+                                <button type="button" class="btn btn-outline-secondary active" data-weight="unit">ต่อกล่อง (N.W./G.W.)</button>
+                                <button type="button" class="btn btn-outline-secondary" data-weight="total">รวม (N.T./G.T.)</button>
+                            </div>
+                        </div>
+
                         <div class="d-flex flex-wrap" style="gap:.5rem;">
-                            <a href="{{ $base.'/pdf/customer' }}" target="_blank" class="btn btn-info btn-h-info text-90 px-3 py-25">
+                            <a href="{{ $base.'/pdf/customer' }}" target="_blank" data-desc="customer" class="btn btn-info btn-h-info text-90 px-3 py-25 pl-pdf-link">
                                 <i class="fa fa-file-pdf mr-1"></i> ดู / พิมพ์ <span class="text-muted-l3">(ลูกค้า)</span>
                             </a>
-                            <a href="{{ $base.'/pdf/customer?desc=master' }}" target="_blank" class="btn btn-outline-info text-90 px-3 py-25">
+                            <a href="{{ $base.'/pdf/customer?desc=master' }}" target="_blank" data-desc="master" class="btn btn-outline-info text-90 px-3 py-25 pl-pdf-link">
                                 <i class="fa fa-file-pdf mr-1"></i> ดู / พิมพ์ <span>(Master)</span>
                             </a>
                             <a href="{{ $base.'/excel?variant=customer' }}" target="_blank" class="btn btn-outline-success text-90 px-3 py-25">
                                 <i class="fa fa-file-excel mr-1"></i> Excel
                             </a>
                         </div>
-                        <div class="text-85 text-muted mt-2">(ลูกค้า) = ใช้ description ที่ลูกค้าตั้ง · (Master) = description จากคลังสินค้า</div>
+                        <div class="text-85 text-muted mt-2">(ลูกค้า) = ใช้ description ที่ลูกค้าตั้ง · (Master) = description จากคลังสินค้า · เลือกน้ำหนักต่อกล่อง/รวม ก่อนเปิด PDF · Excel ใช้น้ำหนักต่อกล่อง</div>
                     </div>
                 </div>
                 {{-- Invoice --}}
@@ -264,6 +274,32 @@
                 document.querySelectorAll('#inv-price-group button').forEach(function (b) { b.classList.remove('active'); });
                 btn.classList.add('active');
                 curPrice = btn.getAttribute('data-price');
+                refresh();
+            });
+        });
+        refresh();
+    })();
+
+    // ---- เลือกชุดน้ำหนัก (ต่อกล่อง/รวม) -> ปรับลิงก์ Packing List PDF ----
+    (function () {
+        var plBase = "{{ $base }}/pdf/customer";
+        var curWeight = 'unit';
+        function buildHref(desc) {
+            var params = [];
+            if (desc === 'master') params.push('desc=master');
+            if (curWeight === 'total') params.push('weight=total');
+            return plBase + (params.length ? ('?' + params.join('&')) : '');
+        }
+        function refresh() {
+            document.querySelectorAll('.pl-pdf-link').forEach(function (a) {
+                a.setAttribute('href', buildHref(a.getAttribute('data-desc')));
+            });
+        }
+        document.querySelectorAll('#pl-weight-group button').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('#pl-weight-group button').forEach(function (b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                curWeight = btn.getAttribute('data-weight');
                 refresh();
             });
         });

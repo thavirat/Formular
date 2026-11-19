@@ -4,6 +4,10 @@
     $variant = $variant ?? 'customer';
     $isAccounting = $variant === 'accounting';
 
+    /** @var string $weightMode unit|total — Packing List: unit=น้ำหนักต่อกล่อง (N.W./G.W.), total=น้ำหนักรวม (N.T./G.T.) */
+    $weightMode = $weightMode ?? 'unit';
+    $isTotalWeight = $weightMode === 'total';
+
     /** @var string $priceType normal|under_value|freight — เลือกชุดราคาสำหรับ Invoice (ช่องว่าง fallback ราคาปกติ) */
     $priceType = $priceType ?? 'normal';
     // ราคาต่อหน่วยตามชุดที่เลือก: under_value/freight ถ้าว่าง -> ใช้ราคาปกติ (unit_price -> PI price_per_item)
@@ -139,6 +143,8 @@
     $qtyByUom = [];
     $sumDetailNw = 0.0;
     $sumDetailGw = 0.0;
+    $sumDetailNt = 0.0;
+    $sumDetailGt = 0.0;
     foreach ($packingForm->details as $line) {
         $uom = $lineUom($line);
         if ($uom === '') {
@@ -148,7 +154,12 @@
         $qtyByUom[$uom] = ($qtyByUom[$uom] ?? 0) + $qtyVal;
         $sumDetailNw += (float) ($line->weight_nw ?? 0);
         $sumDetailGw += (float) ($line->weight_gw ?? 0);
+        $sumDetailNt += (float) ($line->weight_nt ?? 0);
+        $sumDetailGt += (float) ($line->weight_gt ?? 0);
     }
+    // ค่าน้ำหนักรวม subtotal ตามโหมดที่เลือก (ต่อกล่อง = N.W./G.W. | รวม = N.T./G.T.)
+    $sumDetailNShow = $isTotalWeight ? $sumDetailNt : $sumDetailNw;
+    $sumDetailGShow = $isTotalWeight ? $sumDetailGt : $sumDetailGw;
 
     // FA ต่อรายการ = doc_no ของ PI ที่ผูก สลับ PI -> FA (เลขเต็ม); ไม่มี PI = ''
     $faOf = function ($line) {
@@ -490,8 +501,8 @@
             <th>DESCRIPTIONS</th>
             <th colspan="2" width="15%">QUANTITY</th>
             <th width="9%">TOTAL QTY.</th>
-            <th width="10%">N.W.(KGS.)</th>
-            <th width="10%">G.W.(KGS.)</th>
+            <th width="10%">{{ $isTotalWeight ? 'N.T.(KGS.)' : 'N.W.(KGS.)' }}</th>
+            <th width="10%">{{ $isTotalWeight ? 'G.T.(KGS.)' : 'G.W.(KGS.)' }}</th>
         </tr>
         @endif
     </thead>
@@ -546,8 +557,8 @@
                 </td>
                 <td class="text-center col-qty-uom" width="8%">{{ $lineUom($line) }}</td>
                 <td class="text-right">{{ $fmtInt($lineTotalQty($line)) }}</td>
-                <td class="text-right">{{ $fmt($line->weight_nw) }}</td>
-                <td class="text-right">{{ $fmt($line->weight_gw) }}</td>
+                <td class="text-right">{{ $fmt($isTotalWeight ? $line->weight_nt : $line->weight_nw) }}</td>
+                <td class="text-right">{{ $fmt($isTotalWeight ? $line->weight_gt : $line->weight_gw) }}</td>
                 @endif
             </tr>
             @endforeach
@@ -592,8 +603,8 @@
             <td class="col-qty-num" style="border-top:1px solid #000;"></td>
             <td class="col-qty-uom" style="border-top:1px solid #000;"></td>
             <td style="border-top:1px solid #000;"></td>
-            <td class="text-right" style="border-top:1px solid #000;">{{ $fmt($sumDetailNw) }}</td>
-            <td class="text-right" style="border-top:1px solid #000;">{{ $fmt($sumDetailGw) }}</td>
+            <td class="text-right" style="border-top:1px solid #000;">{{ $fmt($sumDetailNShow) }}</td>
+            <td class="text-right" style="border-top:1px solid #000;">{{ $fmt($sumDetailGShow) }}</td>
         </tr>
         @endif
         {{-- เส้นปิดแถวสุดท้ายเส้นเดียว --}}
@@ -631,42 +642,25 @@
     <tr><td class="text-bold" style="padding-top:4px;">TOTAL : {{ \App\Help::numberToWords($grandTotal, ($curSymbol === 'USD' ? 'US DOLLARS' : strtoupper($curSymbol ?: 'DOLLARS'))) }}</td></tr>
 </table>
 @else
+{{-- กล่องสรุป: โชว์เฉพาะชุดน้ำหนักที่เลือก (ต่อกล่อง = N.W./G.W. | รวม = N.T./G.T.) ให้ตรงกับคอลัมน์ในตาราง --}}
 <table class="totals">
     <tr>
-        <td width="14%" class="text-bold text-center">PKG</td>
-        <td width="14%" class="text-bold text-center">N.W.</td>
-        <td width="14%" class="text-bold text-center">G.W.</td>
-        <td width="14%" class="text-bold text-center">N.T.</td>
-        <td width="14%" class="text-bold text-center">G.T.</td>
-        <td width="14%" class="text-bold text-center">CBM</td>
-        <td width="16%" class="text-bold text-center">QTY</td>
+        <td width="18%" class="text-bold text-center">PKG</td>
+        <td width="20%" class="text-bold text-center">{{ $isTotalWeight ? 'N.T.' : 'N.W.' }}</td>
+        <td width="20%" class="text-bold text-center">{{ $isTotalWeight ? 'G.T.' : 'G.W.' }}</td>
+        <td width="20%" class="text-bold text-center">CBM</td>
+        <td width="22%" class="text-bold text-center">QTY</td>
     </tr>
     <tr>
         <td class="text-center">{{ $fmtInt($totalCartons) }}</td>
-        <td class="text-center">{{ $fmt($packingForm->weight_nw) }}</td>
-        <td class="text-center">{{ $fmt($packingForm->weight_gw) }}</td>
-        <td class="text-center">{{ $fmt($packingForm->weight_nt) }}</td>
-        <td class="text-center">{{ $fmt($packingForm->weight_gt) }}</td>
+        <td class="text-center">{{ $fmt($isTotalWeight ? $packingForm->weight_nt : $packingForm->weight_nw) }}</td>
+        <td class="text-center">{{ $fmt($isTotalWeight ? $packingForm->weight_gt : $packingForm->weight_gw) }}</td>
         <td class="text-center">{{ $fmt($packingForm->cubic_meter, 3) }}</td>
         <td class="text-center">{{ $fmtInt($packingForm->qty) }}</td>
     </tr>
 </table>
 
-{{-- ===== Remark ตาม PI: PI แรก + PI ใหม่ที่โผล่ในรายการ (ต่อท้าย ไม่ขึ้นหน้าใหม่) ===== --}}
-@if(count($piRemarks) > 0)
-<table width="100%" style="margin-top:8px; font-size:9px;">
-    @foreach($piRemarks as $pr)
-        <tr>
-            <td style="vertical-align:top; padding:2px 0;">
-                <span class="text-bold">REMARK @if(count($piRemarks) > 1)({{ $pr['doc_no'] }})@endif :</span>
-                @foreach($pr['remarks'] as $rm)
-                    <div style="padding-left:10px;">{{ $loop->iteration }}. {{ $rm->remark }}</div>
-                @endforeach
-            </td>
-        </tr>
-    @endforeach
-</table>
-@endif
+{{-- หมายเหตุ (REMARK ตาม PI) ถูกเอาออกจากใบ Packing List ตามที่ลูกค้าต้องการ --}}
 @endif
 
 </body>
