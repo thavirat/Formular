@@ -185,8 +185,23 @@
                             </div>
                             <div class="col-md-12 col-sm-12">
                                 <div class="form-group">
-                                    <label for="add_shipping_mark">Shipping Mark (ค่าประจำลูกค้า)</label>
-                                    <textarea name="shipping_mark" id="add_shipping_mark" rows="3" class="form-control" placeholder="พิมพ์ได้หลายบรรทัด — จะใช้เติมช่อง Shipping Marks ในใบ PI"></textarea>
+                                    <label class="d-block">Shipping Mark ประจำลูกค้า <small class="text-muted">(มีได้หลายชุด · เลือกชุดเริ่มต้นได้ · ใช้เติมช่อง Shipping Marks ในใบ PI)</small></label>
+                                    <table class="table table-bordered table-sm mb-1" id="add_sm_table">
+                                        <thead class="bgc-grey-l3">
+                                            <tr>
+                                                <th width="70" class="text-center">เริ่มต้น</th>
+                                                <th width="180">ชื่อชุด</th>
+                                                <th>Shipping Mark (หลายบรรทัดได้)</th>
+                                                <th width="40"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                        <tfoot>
+                                            <tr><td colspan="4">
+                                                <button type="button" class="btn btn-outline-primary btn-sm sm-add-row" data-prefix="add"><i class="fa fa-plus"></i> เพิ่มชุด Shipping Mark</button>
+                                            </td></tr>
+                                        </tfoot>
+                                    </table>
                                 </div>
                             </div>
 
@@ -304,8 +319,23 @@
                             </div>
                             <div class="col-md-12 col-sm-12">
                                 <div class="form-group">
-                                    <label for="edit_shipping_mark">Shipping Mark (ค่าประจำลูกค้า)</label>
-                                    <textarea name="shipping_mark" id="edit_shipping_mark" rows="3" class="form-control" placeholder="พิมพ์ได้หลายบรรทัด — จะใช้เติมช่อง Shipping Marks ในใบ PI"></textarea>
+                                    <label class="d-block">Shipping Mark ประจำลูกค้า <small class="text-muted">(มีได้หลายชุด · เลือกชุดเริ่มต้นได้ · ใช้เติมช่อง Shipping Marks ในใบ PI)</small></label>
+                                    <table class="table table-bordered table-sm mb-1" id="edit_sm_table">
+                                        <thead class="bgc-grey-l3">
+                                            <tr>
+                                                <th width="70" class="text-center">เริ่มต้น</th>
+                                                <th width="180">ชื่อชุด</th>
+                                                <th>Shipping Mark (หลายบรรทัดได้)</th>
+                                                <th width="40"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                        <tfoot>
+                                            <tr><td colspan="4">
+                                                <button type="button" class="btn btn-outline-primary btn-sm sm-add-row" data-prefix="edit"><i class="fa fa-plus"></i> เพิ่มชุด Shipping Mark</button>
+                                            </td></tr>
+                                        </tfoot>
+                                    </table>
                                 </div>
                             </div>
 
@@ -351,12 +381,14 @@
     });
 
     $('body').on('click','.btn-add',function(data){
+        smRender('add', []);   // เริ่มด้วย 1 แถวว่าง
         $('#ModalAdd').modal('show');
     });
 
     $('body').on('submit', '#FormAdd', function(e){
         e.preventDefault();
         var form = $(this);
+        smReindex('add');      // จัดลำดับ default ให้ตรง DOM ก่อนส่ง
         loadingButton(form.find('button[type=submit]'));
         $.ajax({
             method: "POST",
@@ -382,6 +414,7 @@
         e.preventDefault();
         var id = $("#Customer_edit_id").val();
         var form = $(this);
+        smReindex('edit');     // จัดลำดับ default ให้ตรง DOM ก่อนส่ง
         loadingButton(form.find('button[type=submit]'));
         $.ajax({
             method: "PUT",
@@ -458,7 +491,7 @@
             $("#edit_mobile").val(res.content.mobile);
             $("#edit_fax").val(res.content.fax);
             $("#edit_remark").val(res.content.remark);
-            $("#edit_shipping_mark").val(res.content.shipping_mark);
+            smRender('edit', res.content.shipping_marks || []);
             $("#edit_level_id").val(res.content.level_id);
             $('#ModalEdit').modal('show');
         }).fail(function(res){
@@ -466,8 +499,52 @@
         });
     });
 
+    // ===== Shipping Mark หลายชุดต่อลูกค้า (ใช้ทั้ง modal add/edit) =====
+    function smEsc(s){ return $('<div>').text(s == null ? '' : s).html(); }
 
+    function smRowHtml(d){
+        d = d || {};
+        var checked = d.is_default ? 'checked' : '';
+        return '<tr class="sm-row">'
+            + '<td class="text-center align-middle"><input type="radio" name="sm_default" value="0" '+checked+'></td>'
+            + '<td><input type="hidden" name="sm_id[]" value="'+(d.id != null ? d.id : '')+'">'
+            + '<input type="text" class="form-control form-control-sm" name="sm_name[]" value="'+smEsc(d.name)+'" placeholder="เช่น ปกติ / ทางเรือ"></td>'
+            + '<td><textarea class="form-control form-control-sm" name="sm_content[]" rows="2" placeholder="พิมพ์ได้หลายบรรทัด">'+smEsc(d.content)+'</textarea></td>'
+            + '<td class="text-center align-middle"><button type="button" class="btn btn-outline-danger btn-sm sm-remove-row" tabindex="-1"><i class="fa fa-trash"></i></button></td>'
+            + '</tr>';
+    }
 
+    function smReindex(prefix){
+        var $rows = $('#'+prefix+'_sm_table tbody tr.sm-row');
+        var anyChecked = $rows.find('input[name="sm_default"]:checked').length > 0;
+        $rows.each(function(i){
+            $(this).find('input[name="sm_default"]').val(i);
+            if(!anyChecked && i === 0){ $(this).find('input[name="sm_default"]').prop('checked', true); }
+        });
+    }
+
+    function smRender(prefix, marks){
+        var $b = $('#'+prefix+'_sm_table tbody');
+        $b.empty();
+        if(marks && marks.length){
+            marks.forEach(function(m){ $b.append(smRowHtml(m)); });
+        } else {
+            $b.append(smRowHtml({ is_default: true }));
+        }
+        smReindex(prefix);
+    }
+
+    $('body').on('click', '.sm-add-row', function(){
+        var prefix = $(this).data('prefix');
+        $('#'+prefix+'_sm_table tbody').append(smRowHtml({}));
+        smReindex(prefix);
+    });
+
+    $('body').on('click', '.sm-remove-row', function(){
+        var prefix = $(this).closest('table').attr('id').replace('_sm_table','');
+        $(this).closest('tr').remove();
+        smReindex(prefix);
+    });
 
 
 

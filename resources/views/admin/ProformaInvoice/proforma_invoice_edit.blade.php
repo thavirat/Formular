@@ -641,13 +641,40 @@ $(document).ready(function() {
         var customer_id = $('#customer_id').val();
         if (!customer_id) { return; }
         $.get(url_gb + "/admin/ProformaInvoice/CustomerShipMark/" + customer_id).done(function(res) {
-            if (res.status == 1 && res.shipping_mark && res.shipping_mark.trim() !== '') {
-                $('#ship_remark').val(res.shipping_mark);
-            } else {
-                Swal.fire({ icon: 'info', title: 'ไม่พบ Shipping Mark', text: 'ลูกค้ารายนี้ยังไม่ได้ตั้งค่า Shipping Mark (ตั้งได้ที่หน้าลูกค้า)', timer: 2500, showConfirmButton: false });
-            }
+            pickShippingMark((res && res.marks) ? res.marks : []);
         });
     });
+
+    // เลือกชุด Shipping Mark มาเติมช่อง ship_remark (แทนที่ของเดิม) — หลายชุดให้เลือกก่อน
+    function pickShippingMark(marks) {
+        if (!marks.length) {
+            Swal.fire({ icon: 'info', title: 'ไม่พบ Shipping Mark', text: 'ลูกค้ารายนี้ยังไม่ได้ตั้งค่า Shipping Mark (ตั้งได้ที่หน้าลูกค้า)', timer: 2500, showConfirmButton: false });
+            return;
+        }
+        if (marks.length === 1) {
+            $('#ship_remark').val(marks[0].content || '');
+            return;
+        }
+        var opts = {}, def = 0;
+        marks.forEach(function(m, i) {
+            opts[i] = (m.name || ('ชุด ' + (i + 1))) + (m.is_default ? ' (เริ่มต้น)' : '');
+            if (m.is_default) def = i;
+        });
+        Swal.fire({
+            title: 'เลือกชุด Shipping Mark',
+            input: 'select',
+            inputOptions: opts,
+            inputValue: def,
+            showCancelButton: true,
+            confirmButtonText: 'ใช้ชุดนี้',
+            cancelButtonText: 'ยกเลิก'
+        }).then(function(r) {
+            if (r.isConfirmed) {
+                var idx = parseInt(r.value, 10) || 0;
+                $('#ship_remark').val((marks[idx] && marks[idx].content) || '');
+            }
+        });
+    }
 
     if ($('#customer_id').val()) {
         $('#customer_id, #currency_id').attr('readonly', true).css('pointer-events', 'none');

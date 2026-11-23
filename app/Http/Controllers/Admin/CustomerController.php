@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Menu;
 use App\Models\Customer;
+use App\Models\CustomerShippingMark;
 use App\Models\CustomerLevel;
 use App\Models\Product;
 use App\Imports\CustomerImport;
@@ -94,6 +95,7 @@ class CustomerController extends AdminController
                 $Customer->shipping_mark = $request->input('shipping_mark');
                 $Customer->level_id = $level_id;
                 $Customer->save();
+                $this->syncShippingMarks($Customer, $request);
                 DB::commit();
                 $return['status'] = 1;
                 $return['title'] = __('messages.save');
@@ -113,6 +115,56 @@ class CustomerController extends AdminController
     }
 
     /**
+     * Sync ชุด Shipping Mark ของลูกค้า (หลายชุด) จากฟอร์ม:
+     * sm_id[], sm_name[], sm_content[] และ sm_default = index ของแถวที่เลือกเป็นชุดเริ่มต้น
+     * แถวที่ชื่อ+เนื้อหาว่างทั้งคู่ = ข้าม, ชุดที่ถูกเอาออกจากฟอร์ม = ลบทิ้ง
+     */
+    private function syncShippingMarks(Customer $customer, Request $request): void
+    {
+        $ids      = (array) $request->input('sm_id', []);
+        $names    = (array) $request->input('sm_name', []);
+        $contents = (array) $request->input('sm_content', []);
+        $defaultIdx = $request->input('sm_default'); // index ของแถว default
+
+        $keepIds = [];
+        $hasDefault = false;
+        $count = max(count($ids), count($names), count($contents));
+        for ($i = 0; $i < $count; $i++) {
+            $name    = trim((string) ($names[$i] ?? ''));
+            $content = trim((string) ($contents[$i] ?? ''));
+            if ($name === '' && $content === '') {
+                continue; // แถวว่าง
+            }
+            $isDefault = ((string) $defaultIdx === (string) $i);
+            if ($isDefault) {
+                $hasDefault = true;
+            }
+            $rid  = $ids[$i] ?? null;
+            $mark = $rid ? CustomerShippingMark::where('customer_id', $customer->id)->find($rid) : null;
+            if (!$mark) {
+                $mark = new CustomerShippingMark();
+                $mark->customer_id = $customer->id;
+            }
+            $mark->name       = $name;
+            $mark->content    = $content;
+            $mark->is_default = $isDefault;
+            $mark->active     = true;
+            $mark->save();
+            $keepIds[] = $mark->id;
+        }
+
+        // ลบชุดที่ถูกเอาออกจากฟอร์ม (keepIds ว่าง = ลบทั้งหมด)
+        CustomerShippingMark::where('customer_id', $customer->id)
+            ->when(!empty($keepIds), fn ($q) => $q->whereNotIn('id', $keepIds))
+            ->delete();
+
+        // ไม่มีชุดไหนถูกตั้ง default แต่มีชุดอยู่ -> ตั้งชุดแรกเป็น default
+        if (!$hasDefault && !empty($keepIds)) {
+            CustomerShippingMark::where('id', $keepIds[0])->update(['is_default' => true]);
+        }
+    }
+
+    /**
      * Display the specified resource.
      *
      * @param  int  $id
@@ -120,7 +172,7 @@ class CustomerController extends AdminController
      */
     public function show($id)
     {
-        $Customer = Customer::find($id);
+        $Customer = Customer::with('shippingMarks')->find($id);
 
                 $return['status'] = 1;
                 $return['title'] = 'Get Customer';
@@ -183,6 +235,7 @@ class CustomerController extends AdminController
                 $Customer->shipping_mark = $request->input('shipping_mark');
                 $Customer->level_id = $level_id;
                 $Customer->save();
+                $this->syncShippingMarks($Customer, $request);
                 DB::commit();
                 $return['status'] = 1;
                 $return['title'] = __('messages.save');

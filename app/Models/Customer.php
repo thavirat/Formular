@@ -23,4 +23,10 @@ class Customer extends Model
         'bill_name',
         'active',
     ];
+
+    /** ชุด Shipping Mark ของลูกค้า (หลายชุด, จัดการในหน้าแก้ไขลูกค้า) */
+    public function shippingMarks()
+    {
+        return $this->hasMany(CustomerShippingMark::class)->orderByDesc('is_default')->orderBy('id');
+    }
 }

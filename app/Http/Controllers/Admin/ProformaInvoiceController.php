@@ -226,11 +226,29 @@ class ProformaInvoiceController extends AdminController
      */
     public function customerShipMark(Request $request, $customer_id)
     {
-        $customer = \App\Models\Customer::find($customer_id);
+        // คืน "ลิสต์" ชุด Shipping Mark ของลูกค้า (หลายชุด) ให้ปุ่มในหน้า PI เลือกเติม
+        $marks = \App\Models\CustomerShippingMark::where('customer_id', $customer_id)
+            ->where('active', true)
+            ->orderByDesc('is_default')
+            ->orderBy('id')
+            ->get(['id', 'name', 'content', 'is_default']);
+
+        // fallback: ถ้ายังไม่มีชุดในตารางใหม่ ใช้ค่าเดิมบน customers.shipping_mark
+        if ($marks->isEmpty()) {
+            $customer = \App\Models\Customer::find($customer_id);
+            if ($customer && trim((string) $customer->shipping_mark) !== '') {
+                $marks = collect([[
+                    'id'         => null,
+                    'name'       => 'ปกติ',
+                    'content'    => $customer->shipping_mark,
+                    'is_default' => true,
+                ]]);
+            }
+        }
 
         return response()->json([
             'status' => 1,
-            'shipping_mark' => $customer->shipping_mark ?? '',
+            'marks'  => $marks,
         ]);
     }
 
