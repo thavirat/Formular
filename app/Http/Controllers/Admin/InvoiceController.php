@@ -35,7 +35,12 @@ class InvoiceController extends AdminController
 
     public function lists(Request $request)
     {
-        $result = PackingForm::query()->withCount('details')->orderByDesc('id');
+        $result = PackingForm::query()
+            ->withCount('details')
+            ->withCount(['details as fic_count' => function ($q) {
+                $q->whereNotNull('fic_snapshot');
+            }])
+            ->orderByDesc('id');
         $lang = config('app.locale');
 
         return DataTables::of($result)
@@ -59,6 +64,9 @@ class InvoiceController extends AdminController
                 }
                 if ($u) {
                     $str .= '<a href="'.url('admin/'.$lang.'/Invoice/'.$rec->id.'/EditPrice').'" class="btn btn-xs btn-warning" title="แก้ไขราคา"><i class="fa fa-dollar-sign"></i> แก้ราคา</a> ';
+                }
+                if ($r && (int) ($rec->fic_count ?? 0) > 0) {
+                    $str .= '<a href="'.url('admin/'.$lang.'/Invoice/'.$rec->id.'/pdf?original=1').'" class="btn btn-xs btn-outline-secondary" title="ดูตัวเลขก่อน FIC (snapshot เดิม)" target="_blank"><i class="fa fa-history"></i> ก่อน FIC</a> ';
                 }
                 $str .= '</div>';
 
@@ -158,6 +166,21 @@ class InvoiceController extends AdminController
             'details.piProduct.product.category',
         ])->findOrFail($id);
 
+        // ดูตัวเลขก่อน FIC: สลับค่าจาก snapshot ลงในโมเดลชั่วคราว (ไม่ save) แล้ว render ด้วย template เดิม
+        $original = filter_var($request->query('original'), FILTER_VALIDATE_BOOLEAN);
+        if ($original) {
+            foreach ($packingForm->details as $d) {
+                $snap = $d->fic_snapshot;
+                if (is_array($snap)) {
+                    foreach (['qty', 'unit_price', 'weight_nw', 'weight_gw', 'weight_nt', 'weight_gt', 'cubic_meter'] as $f) {
+                        if (array_key_exists($f, $snap)) {
+                            $d->{$f} = $snap[$f];
+                        }
+                    }
+                }
+            }
+        }
+
         $pdf = \PDF::loadView('admin.PackingForm.packing_form_pdf_accounting', [
             'packingForm' => $packingForm,
             'priceType' => $priceType,
@@ -170,7 +193,7 @@ class InvoiceController extends AdminController
             'margin_bottom' => 10,
         ]);
 
-        $filename = ($packingForm->doc_no ?: 'Doc').'_Invoice_'.date('Ymd').'.pdf';
+        $filename = ($packingForm->doc_no ?: 'Doc').'_Invoice'.($original ? '_beforeFIC' : '').'_'.date('Ymd').'.pdf';
 
         return $pdf->stream($filename);
     }

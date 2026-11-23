@@ -32,9 +32,12 @@ class PackingFormDetail extends Model
         'uom',
         'from_co',
         'mark_no',
+        'fic_snapshot',
+        'fic_invoice_no',
     ];
 
     protected $casts = [
+        'fic_snapshot' => 'array',
         'width' => 'decimal:2',
         'lenght' => 'decimal:2',
         'height' => 'decimal:2',

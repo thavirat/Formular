@@ -254,6 +254,12 @@ Route::middleware('authAdmin:admin')->group(function () {
                 Route::put('/Invoice/{id}/UpdatePrice', 'Admin\InvoiceController@updatePrice');
                 Route::get('/Invoice/{id}/pdf', 'Admin\InvoiceController@pdf');
 
+                // ===== FIC/SHORT Import (บัญชี import จำนวน/ราคาจริง -> อัปเดต packing + ออก Credit Note) =====
+                Route::post('/Invoice/FicImport/Upload', 'Admin\FicImportController@upload');
+                Route::get('/Invoice/FicImport/{id}/Preview', 'Admin\FicImportController@preview');
+                Route::post('/Invoice/FicImport/{id}/Apply', 'Admin\FicImportController@apply');
+                Route::post('/Invoice/FicImport/{id}/Cancel', 'Admin\FicImportController@cancel');
+
                 // ===== Credit Note / Debit Note =====
                 Route::post('/CreditNote/Lists', 'Admin\CreditNoteController@lists');
                 Route::get('/CreditNote/CustomerInvoices', 'Admin\CreditNoteController@customerInvoices');
