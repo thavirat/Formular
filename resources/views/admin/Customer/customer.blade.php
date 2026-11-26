@@ -204,6 +204,26 @@
                                     </table>
                                 </div>
                             </div>
+                            <div class="col-md-12 col-sm-12">
+                                <div class="form-group">
+                                    <label class="d-block">หมายเหตุประจำลูกค้า (Remark) <small class="text-muted">(มีได้หลายชุด · เปิด/ปิดได้ · ปุ่มโหลดในใบ PI จะดึงเฉพาะที่เปิดอยู่มาทับ)</small></label>
+                                    <table class="table table-bordered table-sm mb-1" id="add_cr_table">
+                                        <thead class="bgc-grey-l3">
+                                            <tr>
+                                                <th width="70" class="text-center">เปิดใช้</th>
+                                                <th>หมายเหตุ (หลายบรรทัดได้)</th>
+                                                <th width="40"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                        <tfoot>
+                                            <tr><td colspan="3">
+                                                <button type="button" class="btn btn-outline-primary btn-sm cr-add-row" data-prefix="add"><i class="fa fa-plus"></i> เพิ่มหมายเหตุ</button>
+                                            </td></tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
 
                         </div>
                     </div>
@@ -338,6 +358,26 @@
                                     </table>
                                 </div>
                             </div>
+                            <div class="col-md-12 col-sm-12">
+                                <div class="form-group">
+                                    <label class="d-block">หมายเหตุประจำลูกค้า (Remark) <small class="text-muted">(มีได้หลายชุด · เปิด/ปิดได้ · ปุ่มโหลดในใบ PI จะดึงเฉพาะที่เปิดอยู่มาทับ)</small></label>
+                                    <table class="table table-bordered table-sm mb-1" id="edit_cr_table">
+                                        <thead class="bgc-grey-l3">
+                                            <tr>
+                                                <th width="70" class="text-center">เปิดใช้</th>
+                                                <th>หมายเหตุ (หลายบรรทัดได้)</th>
+                                                <th width="40"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                        <tfoot>
+                                            <tr><td colspan="3">
+                                                <button type="button" class="btn btn-outline-primary btn-sm cr-add-row" data-prefix="edit"><i class="fa fa-plus"></i> เพิ่มหมายเหตุ</button>
+                                            </td></tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
 
                         </div>
                     </div>
@@ -382,6 +422,7 @@
 
     $('body').on('click','.btn-add',function(data){
         smRender('add', []);   // เริ่มด้วย 1 แถวว่าง
+        crRender('add', []);   // หมายเหตุ: เริ่มจากตารางว่าง
         $('#ModalAdd').modal('show');
     });
 
@@ -492,6 +533,7 @@
             $("#edit_fax").val(res.content.fax);
             $("#edit_remark").val(res.content.remark);
             smRender('edit', res.content.shipping_marks || []);
+            crRender('edit', res.content.remarks || []);
             $("#edit_level_id").val(res.content.level_id);
             $('#ModalEdit').modal('show');
         }).fail(function(res){
@@ -544,6 +586,46 @@
         var prefix = $(this).closest('table').attr('id').replace('_sm_table','');
         $(this).closest('tr').remove();
         smReindex(prefix);
+    });
+
+    // ===== หมายเหตุ (Remark) หลายชุดต่อลูกค้า + เปิด/ปิด (ใช้ทั้ง modal add/edit) =====
+    function crEsc(s){ return $('<div>').text(s == null ? '' : s).html(); }
+
+    function crRowHtml(d){
+        d = d || {};
+        var active = (d.active === undefined) ? true : !!d.active; // แถวใหม่เปิดไว้ก่อน
+        return '<tr class="cr-row">'
+            + '<td class="text-center align-middle">'
+            +   '<input type="hidden" name="cr_active[]" value="'+(active ? '1' : '0')+'">'
+            +   '<label class="mb-0"><input type="checkbox" class="cr-active-toggle" '+(active ? 'checked' : '')+'></label>'
+            + '</td>'
+            + '<td><input type="hidden" name="cr_id[]" value="'+(d.id != null ? d.id : '')+'">'
+            +   '<textarea class="form-control form-control-sm" name="cr_content[]" rows="2" placeholder="พิมพ์ได้หลายบรรทัด">'+crEsc(d.content)+'</textarea></td>'
+            + '<td class="text-center align-middle"><button type="button" class="btn btn-outline-danger btn-sm cr-remove-row" tabindex="-1"><i class="fa fa-trash"></i></button></td>'
+            + '</tr>';
+    }
+
+    function crRender(prefix, remarks){
+        var $b = $('#'+prefix+'_cr_table tbody');
+        $b.empty();
+        if(remarks && remarks.length){
+            remarks.forEach(function(r){ $b.append(crRowHtml(r)); });
+        }
+        // เริ่มจากว่าง: ไม่ใส่แถวเริ่มต้นอัตโนมัติ (ผู้ใช้กด "เพิ่มหมายเหตุ" เอง)
+    }
+
+    // checkbox เป็นแค่ UI -> sync ค่าไปที่ hidden cr_active[] (serialize ให้ตรง index)
+    $('body').on('change', '.cr-active-toggle', function(){
+        $(this).closest('tr').find('input[name="cr_active[]"]').val(this.checked ? '1' : '0');
+    });
+
+    $('body').on('click', '.cr-add-row', function(){
+        var prefix = $(this).data('prefix');
+        $('#'+prefix+'_cr_table tbody').append(crRowHtml({}));
+    });
+
+    $('body').on('click', '.cr-remove-row', function(){
+        $(this).closest('tr').remove();
     });
 
 

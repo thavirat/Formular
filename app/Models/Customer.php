@@ -29,4 +29,10 @@ class Customer extends Model
     {
         return $this->hasMany(CustomerShippingMark::class)->orderByDesc('is_default')->orderBy('id');
     }
+
+    /** ชุดหมายเหตุ (Remark) ของลูกค้า (หลายชุด, เปิด/ปิดได้, จัดการในหน้าแก้ไขลูกค้า) */
+    public function remarks()
+    {
+        return $this->hasMany(CustomerRemark::class)->orderBy('seq')->orderBy('id');
+    }
 }

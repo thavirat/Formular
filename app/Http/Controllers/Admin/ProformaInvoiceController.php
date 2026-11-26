@@ -199,24 +199,18 @@ class ProformaInvoiceController extends AdminController
      */
     public function customerRemarks(Request $request, $customer_id)
     {
-        $lastPi = ProformaInvoice::where('customer_id', $customer_id)
-            ->orderByDesc('doc_date')
-            ->orderByDesc('id')
-            ->first();
-
-        $remarks = [];
-        if ($lastPi) {
-            $remarks = ProformaInvoiceRemark::where('pi_id', $lastPi->id)
-                ->orderBy('seq')
-                ->pluck('remark')
-                ->filter(fn ($r) => trim((string) $r) !== '')
-                ->values()
-                ->all();
-        }
+        // ดึงเฉพาะชุดหมายเหตุที่ "active" ที่ตั้งค่าไว้ในหน้าลูกค้า (มาทับตาราง Remark ในหน้า PI)
+        $remarks = \App\Models\CustomerRemark::where('customer_id', $customer_id)
+            ->where('active', true)
+            ->orderBy('seq')
+            ->orderBy('id')
+            ->pluck('content')
+            ->filter(fn ($r) => trim((string) $r) !== '')
+            ->values()
+            ->all();
 
         return response()->json([
             'status'  => 1,
-            'doc_no'  => $lastPi->doc_no ?? null,
             'remarks' => $remarks,
         ]);
     }

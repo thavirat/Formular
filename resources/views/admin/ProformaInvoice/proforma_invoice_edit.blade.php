@@ -281,7 +281,7 @@
                                                 @endforeach
                                             </tbody>
                                             <tfoot><tr><td colspan="3"><button type="button" class="btn btn-outline-primary btn-sm" id="addRemark"><i class="fa fa-plus"></i> {{__('Add Remark')}}</button>
-                                                <button type="button" class="btn btn-outline-secondary btn-sm ml-1" id="loadCustomerRemarks" title="แทนที่ด้วยหมายเหตุจาก PI ล่าสุดของลูกค้า"><i class="fa fa-history"></i> โหลด remark ล่าสุดของลูกค้า</button></td></tr></tfoot>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm ml-1" id="loadCustomerRemarks" title="แทนที่ด้วยหมายเหตุที่ตั้งค่าไว้ของลูกค้า (เฉพาะที่เปิดใช้)"><i class="fa fa-history"></i> โหลดหมายเหตุของลูกค้า</button></td></tr></tfoot>
                                         </table>
                                     </div>
                                 </div>
@@ -610,24 +610,28 @@ $(document).ready(function() {
     $('body').on('click', '.removeRemark', function() { $(this).closest('tr').remove(); });
     if ($('#remarkTable tbody').sortable) { $('#remarkTable tbody').sortable({ handle: '.remark-handle', placeholder: 'ui-state-highlight' }); }
 
-    // โหลด remark จาก PI ล่าสุดของลูกค้ามาแทนที่ (ยืนยันก่อน เพราะทับของเดิม)
+    // โหลดหมายเหตุที่ตั้งค่าไว้ของลูกค้า (เฉพาะที่ active) มาแทนที่ (ยืนยันก่อน เพราะทับของเดิม)
     $('#loadCustomerRemarks').on('click', function() {
         var customer_id = $('#customer_id').val();
-        if (!customer_id) { return; }
+        if (!customer_id) {
+            Swal.fire({ icon: 'warning', title: 'เลือกลูกค้าก่อน', timer: 2000, showConfirmButton: false });
+            return;
+        }
         $.get(url_gb + "/admin/ProformaInvoice/CustomerRemarks/" + customer_id).done(function(res) {
-            if (!(res.status == 1 && res.remarks && res.remarks.length)) {
-                Swal.fire({ icon: 'info', title: 'ไม่พบหมายเหตุ', text: 'ลูกค้ารายนี้ยังไม่มีหมายเหตุจาก PI ก่อนหน้า' });
+            var remarks = (res && res.remarks) ? res.remarks : [];
+            if (!remarks.length) {
+                Swal.fire({ icon: 'info', title: 'ไม่พบหมายเหตุ', text: 'ลูกค้ารายนี้ยังไม่ได้ตั้งค่าหมายเหตุ หรือปิดใช้งานทั้งหมด (ตั้งได้ที่หน้าลูกค้า)' });
                 return;
             }
             Swal.fire({
                 icon: 'question', title: 'แทนที่หมายเหตุ?',
-                text: 'จะแทนที่หมายเหตุปัจจุบันด้วยหมายเหตุจาก PI ล่าสุด (' + (res.doc_no || '') + ') จำนวน ' + res.remarks.length + ' รายการ',
+                text: 'จะแทนที่หมายเหตุปัจจุบันด้วยหมายเหตุที่ตั้งค่าไว้ของลูกค้า จำนวน ' + remarks.length + ' รายการ',
                 showCancelButton: true, confirmButtonText: 'แทนที่', cancelButtonText: 'ยกเลิก'
             }).then(function(r) {
                 if (!r.value) { return; }
                 var $body = $('#remarkTable tbody');
                 $body.empty();
-                res.remarks.forEach(function(txt) {
+                remarks.forEach(function(txt) {
                     var $x = $(remarkRow());
                     $x.find('input[name="remark_text[]"]').val(txt);
                     $body.append($x);

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Menu;
 use App\Models\Customer;
 use App\Models\CustomerShippingMark;
+use App\Models\CustomerRemark;
 use App\Models\CustomerLevel;
 use App\Models\Product;
 use App\Imports\CustomerImport;
@@ -96,6 +97,7 @@ class CustomerController extends AdminController
                 $Customer->level_id = $level_id;
                 $Customer->save();
                 $this->syncShippingMarks($Customer, $request);
+                $this->syncRemarks($Customer, $request);
                 DB::commit();
                 $return['status'] = 1;
                 $return['title'] = __('messages.save');
@@ -165,6 +167,44 @@ class CustomerController extends AdminController
     }
 
     /**
+     * บันทึกชุดหมายเหตุ (Remark) ของลูกค้า — เปิด/ปิด (active) ได้
+     * form: cr_id[], cr_content[], cr_active[] (อาเรย์เรียงตรงกัน)
+     */
+    private function syncRemarks(Customer $customer, Request $request): void
+    {
+        $ids      = (array) $request->input('cr_id', []);
+        $contents = (array) $request->input('cr_content', []);
+        $actives  = (array) $request->input('cr_active', []);
+
+        $keepIds = [];
+        $seq = 1;
+        $count = max(count($ids), count($contents));
+        for ($i = 0; $i < $count; $i++) {
+            $content = trim((string) ($contents[$i] ?? ''));
+            if ($content === '') {
+                continue; // แถวว่าง
+            }
+            $active = (string) ($actives[$i] ?? '1') === '1';
+            $rid = $ids[$i] ?? null;
+            $rec = $rid ? CustomerRemark::where('customer_id', $customer->id)->find($rid) : null;
+            if (!$rec) {
+                $rec = new CustomerRemark();
+                $rec->customer_id = $customer->id;
+            }
+            $rec->content = $content;
+            $rec->active  = $active;
+            $rec->seq     = $seq++;
+            $rec->save();
+            $keepIds[] = $rec->id;
+        }
+
+        // ลบชุดที่ถูกเอาออกจากฟอร์ม (keepIds ว่าง = ลบทั้งหมด)
+        CustomerRemark::where('customer_id', $customer->id)
+            ->when(!empty($keepIds), fn ($q) => $q->whereNotIn('id', $keepIds))
+            ->delete();
+    }
+
+    /**
      * Display the specified resource.
      *
      * @param  int  $id
@@ -172,7 +212,7 @@ class CustomerController extends AdminController
      */
     public function show($id)
     {
-        $Customer = Customer::with('shippingMarks')->find($id);
+        $Customer = Customer::with(['shippingMarks', 'remarks'])->find($id);
 
                 $return['status'] = 1;
                 $return['title'] = 'Get Customer';
@@ -236,6 +276,7 @@ class CustomerController extends AdminController
                 $Customer->level_id = $level_id;
                 $Customer->save();
                 $this->syncShippingMarks($Customer, $request);
+                $this->syncRemarks($Customer, $request);
                 DB::commit();
                 $return['status'] = 1;
                 $return['title'] = __('messages.save');

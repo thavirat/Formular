@@ -355,32 +355,14 @@
                                                         <th width="40"></th>
                                                     </tr>
                                                 </thead>
-                                                <tbody>
-                                                    @php
-                                                        $defaultRemarks = [
-                                                            'CDS, PFC, CO, LM บรรจุกล่องแบบ "A" และไม่ต้องติดสติ๊กเกอร์ FORMULA ที่ตัวสินค้า',
-                                                            'CDS, PFC ทุกรายการ พิมพ์ JAY AIR ตามแบบที่วางไว้บนกล่อง',
-                                                            'ทุกรายการให้ติดสติ๊กเกอร์ JAY AIR พิมพ์ PART NO. และบาร์โค้ดลูกค้าตามที่วางไว้บนกล่อง',
-                                                            'PFC ทุกรุ่นที่เป็นสี BRONZE ไม่ต้องทำการพ่นสี',
-                                                            'สินค้าตู้แอร์ใช้กล่องแบบ "N"',
-                                                            'ปั้มสกรีน MADE IN THAILAND บนตู้แอร์',
-                                                            'PFC ทุกรายการไม่ต้องพ่นสี',
-                                                            'PFE ทุกรายการที่มีหน้าแปลนใช้ BLOCK VALVE KNOB สีเหลือง',
-                                                        ];
-                                                    @endphp
-                                                    @foreach($defaultRemarks as $dr)
-                                                    <tr>
-                                                        <td class="text-center align-middle"><i class="fas fa-grip-vertical cursor-move text-muted remark-handle"></i></td>
-                                                        <td><input type="text" class="form-control form-control-sm" name="remark_text[]" value="{{ $dr }}"></td>
-                                                        <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm removeRemark" tabindex="-1"><i class="fa fa-trash"></i></button></td>
-                                                    </tr>
-                                                    @endforeach
-                                                </tbody>
+                                                {{-- เริ่มจากตารางว่าง — กดปุ่ม "โหลดหมายเหตุของลูกค้า" เพื่อดึงชุดที่ตั้งค่าไว้ (active) --}}
+                                                <tbody></tbody>
                                                 <tfoot>
                                                     <tr>
                                                         <td colspan="3">
                                                             <button type="button" class="btn btn-outline-primary btn-sm" id="addRemark">
                                                                 <i class="fa fa-plus"></i> {{ __('Add Remark') }}</button>
+                                                            <button type="button" class="btn btn-outline-secondary btn-sm ml-1" id="loadCustomerRemarks" title="แทนที่ด้วยหมายเหตุที่ตั้งค่าไว้ของลูกค้า (เฉพาะที่เปิดใช้)"><i class="fa fa-history"></i> โหลดหมายเหตุของลูกค้า</button>
                                                         </td>
                                                     </tr>
                                                 </tfoot>
@@ -444,25 +426,32 @@
                             $('#fax_no').val(data.fax_no);
                         }
                     });
-                    loadCustomerRemarks(customer_id);
                 }
             });
 
-            // ดึง remark ที่เคยคีย์ให้ลูกค้ารายนี้ (จาก PI ล่าสุด) มาเติมอัตโนมัติ
-            function loadCustomerRemarks(customer_id) {
+            // ปุ่มโหลดหมายเหตุที่ตั้งค่าไว้ของลูกค้า (เฉพาะที่ active) มาทับตาราง Remark
+            $('#loadCustomerRemarks').on('click', function() {
+                var customer_id = $('#customer_id').val();
+                if (!customer_id) {
+                    Swal.fire({ icon: 'warning', title: 'เลือกลูกค้าก่อน', timer: 2000, showConfirmButton: false });
+                    return;
+                }
                 $.get(url_gb + "/admin/ProformaInvoice/CustomerRemarks/" + customer_id)
                     .done(function(res) {
-                        if (res.status == 1 && res.remarks && res.remarks.length) {
-                            var $body = $('#remarkTable tbody');
-                            $body.empty();
-                            res.remarks.forEach(function(txt) {
-                                var $r = $(remarkRow());
-                                $r.find('input[name="remark_text[]"]').val(txt);
-                                $body.append($r);
-                            });
+                        var remarks = (res && res.remarks) ? res.remarks : [];
+                        if (!remarks.length) {
+                            Swal.fire({ icon: 'info', title: 'ไม่พบหมายเหตุ', text: 'ลูกค้ารายนี้ยังไม่ได้ตั้งค่าหมายเหตุ หรือปิดใช้งานทั้งหมด (ตั้งได้ที่หน้าลูกค้า)', timer: 2800, showConfirmButton: false });
+                            return;
                         }
+                        var $body = $('#remarkTable tbody');
+                        $body.empty();
+                        remarks.forEach(function(txt) {
+                            var $r = $(remarkRow());
+                            $r.find('input[name="remark_text[]"]').val(txt);
+                            $body.append($r);
+                        });
                     });
-            }
+            });
 
             // ปุ่มโหลด Shipping Mark ประจำลูกค้ามาเติมช่อง ship_remark
             $('#loadCustomerShipMark').on('click', function() {
