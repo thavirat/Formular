@@ -801,15 +801,8 @@ class PackingFormController extends AdminController
 
     private function recalcProducedQty(array $piProductIds): void
     {
-        $ids = array_filter(array_unique(array_map('intval', $piProductIds)));
-        if (empty($ids)) {
-            return;
-        }
-
-        foreach ($ids as $pipId) {
-            $sum = (int) PackingFormDetail::where('pi_product_id', $pipId)->sum('qty');
-            ProformaInvoiceProduct::where('id', $pipId)->update(['produced_qty' => $sum]);
-        }
+        // นับเฉพาะ packing ใบล่าสุดต่อ pi_product (กันนับซ้ำเมื่อแพ็คหลายใบ) — logic รวมที่ model
+        ProformaInvoiceProduct::syncProducedQty($piProductIds);
     }
 
     private function nullableDecimalInput(mixed $value): ?string
