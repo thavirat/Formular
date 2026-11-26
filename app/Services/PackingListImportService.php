@@ -185,6 +185,13 @@ class PackingListImportService
 
             $firstCustomerId = null;
 
+            // ลูกค้าจากหัวเอกสาร (ชื่อบริษัท) — ใช้ scope การ auto-match part เมื่อบรรทัดไม่มีเลข PI (คอลัมน์ D ว่าง)
+            $fallbackCustomerId = null;
+            $headerCustomerName = trim((string) $form->customer_name);
+            if ($headerCustomerName !== '') {
+                $fallbackCustomerId = \App\Models\Customer::whereRaw('TRIM(company_name) = ?', [$headerCustomerName])->value('id');
+            }
+
             // ---------- รวม product ซ้ำให้เป็นแถวเดียว ----------
             // key = pi_product_id (PI+Part) ถ้าหาไม่เจอใช้ part_no; รวม qty/น้ำหนัก/CBM, ช่วงกล่อง = min..max
             $merged = [];   // key => ข้อมูลรวม
@@ -193,10 +200,14 @@ class PackingListImportService
 
             foreach ($rowsPayload as $payload) {
                 $row = $payload['row'];
-                $piProductId = $this->resolvePiProductId($payload['pi_doc'], $payload['part']);
+                $piProductId = $this->resolvePiProductId($payload['pi_doc'], $payload['part'], $fallbackCustomerId);
                 if ($piProductId === null) {
                     $warnings[] = "แถว {$payload['excel_row']}: ไม่พบ PI/Part (D={$payload['pi_doc']}, E={$payload['part']})";
                 } else {
+                    // auto-match ด้วยลูกค้า+part (ไม่มีเลข PI ในบรรทัด) — แจ้งเพื่อโปร่งใส
+                    if (trim((string) $payload['pi_doc']) === '') {
+                        $warnings[] = "แถว {$payload['excel_row']}: จับคู่อัตโนมัติด้วยลูกค้า+Part (E={$payload['part']}) เพราะไม่มีเลข PI ในไฟล์";
+                    }
                     $line = ProformaInvoiceProduct::query()->find($piProductId);
                     $pi = $line ? ProformaInvoice::find($line->pi_id) : null;
                     if ($firstCustomerId === null && $pi) {
@@ -302,6 +313,11 @@ class PackingListImportService
 
             if ($mergedCount > 0) {
                 $warnings[] = "รวม product ซ้ำ {$mergedCount} แถวเข้ากับรายการเดิม (บวก qty/น้ำหนัก/CBM, ช่วงกล่อง min–max)";
+            }
+
+            // ไม่มีบรรทัดไหน resolve PI ได้ แต่รู้ลูกค้าจากหัวเอกสาร → ผูกลูกค้าให้ฟอร์ม
+            if ($firstCustomerId === null && $fallbackCustomerId) {
+                $form->customer_id = $fallbackCustomerId;
             }
 
             $form->save();
@@ -439,29 +455,58 @@ class PackingListImportService
             ->first();
     }
 
-    private function resolvePiProductId(string $docNo, string $partNo): ?int
+    /**
+     * จับคู่บรรทัด packing เข้ากับ pi_product
+     * 1) ทางหลัก: มีเลข PI (คอลัมน์ D) → หา PI แล้ว match part ในใบนั้น
+     * 2) fallback: ไม่มีเลข PI / หาไม่เจอ → match part เฉพาะใน PI ของ "ลูกค้าบนหัวเอกสาร"
+     *    ผูกเฉพาะเมื่อเจอชุดเดียวเท่านั้น (กัน mislink ข้ามลูกค้า)
+     */
+    private function resolvePiProductId(string $docNo, string $partNo, ?int $fallbackCustomerId = null): ?int
     {
-        if ($docNo === '' || $partNo === '') {
+        if ($partNo === '') {
             return null;
         }
 
-        $pi = $this->resolvePi($docNo);
-
-        if (!$pi) {
-            return null;
+        // 1) ทางหลัก — ยึดเลข PI ในบรรทัด
+        if ($docNo !== '') {
+            $pi = $this->resolvePi($docNo);
+            if ($pi) {
+                $id = ProformaInvoiceProduct::query()
+                    ->where('pi_id', $pi->id)
+                    ->where(function ($q) use ($partNo) {
+                        $q->whereRaw('TRIM(part_no) = ?', [$partNo])
+                            ->orWhereHas('product', function ($productQuery) use ($partNo) {
+                                $productQuery->whereRaw('TRIM(code) = ?', [$partNo]);
+                            });
+                    })
+                    ->value('id');
+                if ($id) {
+                    return (int) $id;
+                }
+            }
         }
 
-        $id = ProformaInvoiceProduct::query()
-            ->where('pi_id', $pi->id)
-            ->where(function ($q) use ($partNo) {
-                $q->whereRaw('TRIM(part_no) = ?', [$partNo])
-                    ->orWhereHas('product', function ($productQuery) use ($partNo) {
-                        $productQuery->whereRaw('TRIM(code) = ?', [$partNo]);
-                    });
-            })
-            ->value('id');
+        // 2) fallback — scope ด้วยลูกค้า, ผูกเฉพาะเมื่อ part ตรง "ชุดเดียว"
+        if ($fallbackCustomerId) {
+            $ids = ProformaInvoiceProduct::query()
+                ->whereHas('pi', function ($q) use ($fallbackCustomerId) {
+                    $q->where('customer_id', $fallbackCustomerId);
+                })
+                ->where(function ($q) use ($partNo) {
+                    $q->whereRaw('TRIM(part_no) = ?', [$partNo])
+                        ->orWhereHas('product', function ($productQuery) use ($partNo) {
+                            $productQuery->whereRaw('TRIM(code) = ?', [$partNo]);
+                        });
+                })
+                ->limit(2)
+                ->pluck('id');
 
-        return $id ? (int) $id : null;
+            if ($ids->count() === 1) {
+                return (int) $ids->first();
+            }
+        }
+
+        return null;
     }
 
     private function str(mixed $v): string
